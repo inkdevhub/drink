@@ -2,10 +2,46 @@ use std::{env, io, process::Command};
 
 use clap::Parser;
 use cli::CliCommand;
+use drink::Sandbox;
 
 mod cli;
 
 const CONTRACT_DIR: &'static str = "../example/";
+
+fn main() {
+    let mut sandbox = Sandbox::new();
+
+    loop {
+        let mut user_input = String::new();
+        io::stdin()
+            .read_line(&mut user_input)
+            .expect("Failed to get user input");
+
+        let cli_command = match CliCommand::try_parse_from(&["", user_input.trim()]) {
+            Ok(cli_command) => cli_command,
+            Err(_) => {
+                eprintln!("Invalid command");
+                continue;
+            }
+        };
+
+        match cli_command {
+            CliCommand::Build => {
+                build_contract();
+            }
+            CliCommand::Deploy => {
+                deploy_contract(&mut sandbox);
+            }
+            CliCommand::Call => {
+                println!("Call");
+            }
+            CliCommand::Exit => {
+                println!("Exit");
+                break;
+            }
+        }
+    }
+}
 
 fn build_contract() {
     println!("Building contract...");
@@ -29,35 +65,16 @@ fn build_contract() {
     }
 }
 
-fn main() {
-    loop {
-        let mut user_input = String::new();
-        io::stdin()
-            .read_line(&mut user_input)
-            .expect("Failed to get user input");
+fn deploy_contract(sandbox: &mut Sandbox) {
+    println!("Deploying contract...");
 
-        let cli_command = match CliCommand::try_parse_from(&["", user_input.trim()]) {
-            Ok(cli_command) => cli_command,
-            Err(_) => {
-                eprintln!("Invalid command");
-                continue;
-            }
-        };
+    let contract_bytes_path = env::current_dir()
+        .expect("Failed to get current directory")
+        .join(CONTRACT_DIR)
+        .join("target/ink/wasm32-unknown-unknown/release/example.wasm");
+    let contract_bytes = std::fs::read(contract_bytes_path).expect("Failed to read contract bytes");
 
-        match cli_command {
-            CliCommand::Build => {
-                build_contract();
-            }
-            CliCommand::Deploy => {
-                println!("Deploy");
-            }
-            CliCommand::Call => {
-                println!("Call");
-            }
-            CliCommand::Exit => {
-                println!("Exit");
-                break;
-            }
-        }
-    }
+    sandbox.deploy_contract(&contract_bytes);
+
+    println!("Contract deployed successfully");
 }

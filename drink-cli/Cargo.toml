@@ -8,3 +8,5 @@ version.workspace = true
 
 [dependencies]
 clap = { workspace = true, features = ["derive"] }
+
+drink = { workspace = true }
