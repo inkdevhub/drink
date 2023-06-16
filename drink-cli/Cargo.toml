@@ -1,0 +1,9 @@
+[package]
+name = "drink-cli"
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+repository.workspace = true
+version.workspace = true
+
+[dependencies]

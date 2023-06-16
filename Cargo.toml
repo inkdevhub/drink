@@ -1,0 +1,15 @@
+[workspace]
+
+members = [
+    "drink",
+    "drink-cli",
+]
+
+[workspace.package]
+authors = ["Cardinal", "Aleph Zero Foundation"]
+edition = "2021"
+homepage = "https://alephzero.org"
+repository = "https://github.com/Cardinal-Cryptography/drink"
+version = "0.1.0"
+
+[workspace.dependencies]
