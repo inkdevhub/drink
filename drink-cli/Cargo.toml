@@ -7,3 +7,4 @@ repository.workspace = true
 version.workspace = true
 
 [dependencies]
+clap = { workspace = true, features = ["derive"] }

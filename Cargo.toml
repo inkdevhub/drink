@@ -5,6 +5,10 @@ members = [
     "drink-cli",
 ]
 
+exclude = [
+    "example"
+]
+
 [workspace.package]
 authors = ["Cardinal", "Aleph Zero Foundation"]
 edition = "2021"
@@ -13,3 +17,4 @@ repository = "https://github.com/Cardinal-Cryptography/drink"
 version = "0.1.0"
 
 [workspace.dependencies]
+clap = { version = "4.3.4" }
