@@ -3,6 +3,7 @@ use std::{env, io, process::Command};
 use clap::Parser;
 use cli::CliCommand;
 use drink::Sandbox;
+use sp_runtime::AccountId32;
 
 mod cli;
 
@@ -10,8 +11,11 @@ const CONTRACT_DIR: &'static str = "../example/";
 
 fn main() {
     let mut sandbox = Sandbox::new();
+    let mut account_id = None;
 
     loop {
+        println!();
+
         let mut user_input = String::new();
         io::stdin()
             .read_line(&mut user_input)
@@ -30,10 +34,31 @@ fn main() {
                 build_contract();
             }
             CliCommand::Deploy => {
-                deploy_contract(&mut sandbox);
+                account_id = Some(deploy_contract(&mut sandbox));
             }
-            CliCommand::Call => {
-                println!("Call");
+            CliCommand::CallGet => {
+                let account_id = match account_id {
+                    Some(ref account_id) => account_id.clone(),
+                    None => {
+                        eprintln!("Contract not deployed");
+                        continue;
+                    }
+                };
+
+                let result = sandbox.call_contract(account_id, "get".to_string());
+                println!("Contract called successfully. Returned: {result:?}")
+            }
+            CliCommand::CallFlip => {
+                let account_id = match account_id {
+                    Some(ref account_id) => account_id.clone(),
+                    None => {
+                        eprintln!("Contract not deployed");
+                        continue;
+                    }
+                };
+
+                let result = sandbox.call_contract(account_id, "flip".to_string());
+                println!("Contract called successfully. Returned: {result:?}")
             }
             CliCommand::Exit => {
                 println!("Exit");
@@ -65,7 +90,7 @@ fn build_contract() {
     }
 }
 
-fn deploy_contract(sandbox: &mut Sandbox) {
+fn deploy_contract(sandbox: &mut Sandbox) -> AccountId32 {
     println!("Deploying contract...");
 
     let contract_bytes_path = env::current_dir()
@@ -74,7 +99,9 @@ fn deploy_contract(sandbox: &mut Sandbox) {
         .join("target/ink/example.wasm");
     let contract_bytes = std::fs::read(contract_bytes_path).expect("Failed to read contract bytes");
 
-    sandbox.deploy_contract(contract_bytes);
+    let account_id = sandbox.deploy_contract(contract_bytes);
 
     println!("Contract deployed successfully");
+
+    account_id
 }

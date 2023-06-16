@@ -1,6 +1,8 @@
 mod runtime;
 
-use frame_support::{assert_ok, weights::Weight};
+use frame_support::weights::Weight;
+use pallet_contracts::Determinism;
+use pallet_contracts_primitives::Code;
 use sp_io::TestExternalities;
 use sp_runtime::AccountId32;
 
@@ -29,17 +31,47 @@ impl Sandbox {
         }
     }
 
-    pub fn deploy_contract(&mut self, contract_bytes: Vec<u8>) {
+    pub fn deploy_contract(&mut self, contract_bytes: Vec<u8>) -> AccountId32 {
         self.externalities.execute_with(|| {
-            assert_ok!(Contracts::instantiate_with_code(
-                RuntimeOrigin::signed(ALICE),
+            let result = Contracts::bare_instantiate(
+                ALICE,
                 0,
                 GAS_LIMIT,
                 None,
-                contract_bytes,
+                Code::Upload(contract_bytes),
                 vec![155, 174, 157, 94],
                 Default::default(),
-            ));
-        });
+                true,
+            );
+            let result = result.result.unwrap();
+            assert!(!result.result.did_revert());
+            result.account_id
+        })
+    }
+
+    pub fn call_contract(&mut self, address: AccountId32, msg: String) -> Vec<u8> {
+        let msg = match msg.as_str() {
+            "flip" => vec![99, 58, 165, 81],
+            "get" => vec![47, 134, 91, 217],
+            _ => panic!("Invalid message"),
+        };
+
+        self.externalities.execute_with(|| {
+            let result = Contracts::bare_call(
+                ALICE,
+                address,
+                0,
+                GAS_LIMIT,
+                None,
+                msg,
+                true,
+                Determinism::Deterministic,
+            )
+            .result
+            .unwrap();
+
+            assert!(!result.did_revert());
+            result.data
+        })
     }
 }

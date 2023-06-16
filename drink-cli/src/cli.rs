@@ -6,8 +6,8 @@ pub enum CliCommand {
     Build,
     #[clap(alias = "d")]
     Deploy,
-    #[clap(alias = "c")]
-    Call,
+    CallGet,
+    CallFlip,
     #[clap(alias = "e")]
     Exit,
 }
