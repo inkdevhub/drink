@@ -71,10 +71,10 @@ fn deploy_contract(sandbox: &mut Sandbox) {
     let contract_bytes_path = env::current_dir()
         .expect("Failed to get current directory")
         .join(CONTRACT_DIR)
-        .join("target/ink/wasm32-unknown-unknown/release/example.wasm");
+        .join("target/ink/example.wasm");
     let contract_bytes = std::fs::read(contract_bytes_path).expect("Failed to read contract bytes");
 
-    sandbox.deploy_contract(&contract_bytes);
+    sandbox.deploy_contract(contract_bytes);
 
     println!("Contract deployed successfully");
 }

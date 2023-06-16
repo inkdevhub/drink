@@ -107,8 +107,8 @@ impl pallet_contracts::Config for SandboxRuntime {
     type CallStack = [Frame<Self>; 5];
     type DeletionQueueDepth = ConstU32<10>;
     type DeletionWeightLimit = DeletionWeightLimit;
-    type DepositPerByte = ConstU64<0>;
-    type DepositPerItem = ConstU64<0>;
+    type DepositPerByte = ConstU64<1>;
+    type DepositPerItem = ConstU64<1>;
     type AddressGenerator = DefaultAddressGenerator;
     type MaxCodeLen = ConstU32<{ 123 * 1024 }>;
     type MaxStorageKeyLen = ConstU32<128>;
