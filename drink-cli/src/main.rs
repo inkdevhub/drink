@@ -46,7 +46,7 @@ fn main() {
                 };
 
                 let result = sandbox.call_contract(account_id, "get".to_string());
-                println!("Contract called successfully. Returned: {result:?}")
+                println!("Contract called successfully.\n\n{result}")
             }
             CliCommand::CallFlip => {
                 let account_id = match account_id {
@@ -58,7 +58,7 @@ fn main() {
                 };
 
                 let result = sandbox.call_contract(account_id, "flip".to_string());
-                println!("Contract called successfully. Returned: {result:?}")
+                println!("Contract called successfully.\n\n{result}")
             }
             CliCommand::Exit => {
                 println!("Exit");

@@ -2,6 +2,8 @@
 
 #[ink::contract]
 mod example {
+    use ink::env::debug_println;
+
     #[ink(storage)]
     pub struct Example {
         value: bool,
@@ -15,7 +17,9 @@ mod example {
 
         #[ink(message)]
         pub fn flip(&mut self) {
+            debug_println!("Previous value: `{}`", self.value);
             self.value = !self.value;
+            debug_println!("Flipped to: `{}`", self.value);
         }
 
         #[ink(message)]
