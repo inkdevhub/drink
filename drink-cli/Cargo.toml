@@ -7,7 +7,11 @@ repository.workspace = true
 version.workspace = true
 
 [dependencies]
+anyhow = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
+crossterm = { workspace = true }
+ratatui = { workspace = true, features = ["all-widgets"]  }
+
 sp-runtime = { workspace = true }
 
 drink = { workspace = true }
