@@ -1,5 +1,5 @@
 ---
-name: Builds unit test binary and run unit tests, runs static rust code analysis and code formatting
+name: Rust checks
 
 on:
   push:
@@ -10,6 +10,9 @@ on:
       - main
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
 
 jobs:
   main:
