@@ -39,6 +39,12 @@ impl Display for CallResult {
     }
 }
 
+impl Default for Sandbox {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Sandbox {
     pub fn new() -> Self {
         let mut storage = frame_system::GenesisConfig::default()

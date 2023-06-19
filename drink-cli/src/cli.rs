@@ -11,3 +11,14 @@ pub enum CliCommand {
     #[clap(alias = "e")]
     Exit,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn verify_cli() {
+        use clap::CommandFactory;
+        CliCommand::command().debug_assert()
+    }
+}

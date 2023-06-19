@@ -7,7 +7,7 @@ use sp_runtime::AccountId32;
 
 mod cli;
 
-const CONTRACT_DIR: &'static str = "../example/";
+const CONTRACT_DIR: &str = "../example/";
 
 fn main() {
     let mut sandbox = Sandbox::new();
@@ -21,7 +21,7 @@ fn main() {
             .read_line(&mut user_input)
             .expect("Failed to get user input");
 
-        let cli_command = match CliCommand::try_parse_from(&["", user_input.trim()]) {
+        let cli_command = match CliCommand::try_parse_from(["", user_input.trim()]) {
             Ok(cli_command) => cli_command,
             Err(_) => {
                 eprintln!("Invalid command");
