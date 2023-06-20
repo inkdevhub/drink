@@ -61,7 +61,12 @@ impl Sandbox {
         }
     }
 
-    pub fn deploy_contract(&mut self, contract_bytes: Vec<u8>) -> AccountId32 {
+    pub fn deploy_contract(
+        &mut self,
+        contract_bytes: Vec<u8>,
+        selector: Vec<u8>,
+        salt: Vec<u8>,
+    ) -> AccountId32 {
         self.externalities.execute_with(|| {
             let result = Contracts::bare_instantiate(
                 ALICE,
@@ -69,8 +74,8 @@ impl Sandbox {
                 GAS_LIMIT,
                 None,
                 Code::Upload(contract_bytes),
-                vec![155, 174, 157, 94],
-                Default::default(),
+                selector,
+                salt,
                 true,
             );
             let result = result.result.unwrap();

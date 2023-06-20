@@ -2,7 +2,7 @@ use std::{env, process::Command};
 
 use anyhow::Result;
 use clap::Parser;
-use sp_runtime::AccountId32;
+use sp_runtime::app_crypto::sp_core::blake2_256;
 
 use crate::{app_state::AppState, cli::CliCommand};
 
@@ -39,14 +39,9 @@ pub fn execute(app_state: &mut AppState) -> Result<()> {
             }
         }
 
-        CliCommand::Build => {
-            build_contract(app_state);
-        }
-        CliCommand::Deploy => {
-            // account_id = Some(deploy_contract(&mut sandbox));
-            app_state.chain_info.deployed_contracts += 1;
-            app_state.chain_info.current_contract_address = Some(AccountId32::new([0; 32]));
-        }
+        CliCommand::Build => build_contract(app_state),
+        CliCommand::Deploy { constructor, salt } => deploy_contract(app_state, constructor, salt),
+
         CliCommand::CallGet => {
             // let account_id = match account_id {
             //     Some(ref account_id) => account_id.clone(),
@@ -83,19 +78,28 @@ fn build_contract(app_state: &mut AppState) {
     }
 }
 
-// fn deploy_contract(sandbox: &mut Sandbox) -> AccountId32 {
-//     println!("Deploying contract...");
-//
-//     let contract_bytes_path = env::current_dir()
-//         .expect("Failed to get current directory")
-//         .join(CONTRACT_DIR)
-//         .join("target/ink/example.wasm");
-//     let contract_bytes = std::fs::read(contract_bytes_path).expect("Failed to read contract bytes");
-//
-//     let account_id = sandbox.deploy_contract(contract_bytes);
-//
-//     println!("Contract deployed successfully");
-//
-//     account_id
-// }
-//
+fn deploy_contract(app_state: &mut AppState, constructor: String, salt: Vec<u8>) {
+    let contract_bytes_path = app_state.ui_state.pwd.join("target/ink/example.wasm");
+    let contract_bytes = match std::fs::read(contract_bytes_path) {
+        Ok(bytes) => bytes,
+        Err(err) => {
+            app_state.print_error(&format!("Failed to read contract bytes\n{err}"));
+            return;
+        }
+    };
+
+    let account_id =
+        app_state
+            .sandbox
+            .deploy_contract(contract_bytes, compute_selector(constructor), salt);
+
+    app_state.print("Contract deployed successfully");
+
+    app_state.chain_info.deployed_contracts += 1;
+    app_state.chain_info.current_contract_address = Some(account_id);
+}
+
+fn compute_selector(name: String) -> Vec<u8> {
+    let name = name.as_bytes();
+    blake2_256(&name)[..4].to_vec()
+}
