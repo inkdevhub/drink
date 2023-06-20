@@ -1,8 +1,6 @@
-use std::{env, io, io::Stdout, process::Command};
+use std::{env, process::Command};
 
 use anyhow::Result;
-use clap::Parser;
-use cli::CliCommand;
 use drink::Sandbox;
 use sp_runtime::AccountId32;
 

@@ -1,7 +1,10 @@
 mod current_env;
+mod footer;
 mod layout;
+mod output;
+mod user_input;
 
-use std::{io, io::Stdout};
+use std::{io, io::Stdout, thread::sleep};
 
 use anyhow::{anyhow, Result};
 use crossterm::{
@@ -11,7 +14,12 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use layout::layout;
-use ratatui::backend::{Backend, CrosstermBackend};
+use ratatui::backend::CrosstermBackend;
+
+use crate::app_state::{
+    AppState, Mode,
+    Mode::{Editing, Managing},
+};
 
 type Terminal = ratatui::Terminal<CrosstermBackend<Stdout>>;
 
@@ -41,11 +49,36 @@ fn restore_original_terminal(mut terminal: Terminal) -> Result<()> {
 }
 
 fn run_ui_app(terminal: &mut Terminal) -> Result<()> {
+    let mut app_state = AppState::default();
+
     loop {
-        terminal.draw(|f| layout(f))?;
+        terminal.draw(|f| layout(f, &mut app_state))?;
+
+        let mode = &mut app_state.ui_state.mode;
         if let Event::Key(key) = event::read()? {
-            if let KeyCode::Char('q') = key.code {
-                break;
+            match (*mode, key.code) {
+                (_, KeyCode::Esc) => {
+                    *mode = Managing;
+                }
+
+                (Managing, KeyCode::Char('q')) => {
+                    break;
+                }
+                (Managing, KeyCode::Char('i')) => {
+                    *mode = Editing;
+                }
+
+                (Editing, KeyCode::Char(c)) => {
+                    app_state.ui_state.user_input.push(c);
+                }
+                (Editing, KeyCode::Backspace) => {
+                    app_state.ui_state.user_input.pop();
+                }
+                (Editing, KeyCode::Enter) => {
+                    app_state.ui_state.user_input.clear();
+                }
+
+                _ => {}
             }
         }
     }
