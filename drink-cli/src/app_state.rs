@@ -24,18 +24,22 @@ impl Default for Mode {
 #[derive(Clone, Eq, PartialEq, Hash, Debug)]
 pub struct UiState {
     pub pwd: PathBuf,
-    pub user_input: String,
     pub mode: Mode,
+
+    pub user_input: String,
+
     pub output: Vec<String>,
+    pub output_offset: u16,
 }
 
 impl Default for UiState {
     fn default() -> Self {
         UiState {
             pwd: env::current_dir().expect("Failed to get current directory"),
-            user_input: Default::default(),
             mode: Default::default(),
+            user_input: Default::default(),
             output: Default::default(),
+            output_offset: 0,
         }
     }
 }

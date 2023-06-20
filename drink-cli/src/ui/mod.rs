@@ -15,10 +15,14 @@ use crossterm::{
 };
 use layout::layout;
 use ratatui::backend::CrosstermBackend;
+use sp_runtime::Saturating;
 
-use crate::app_state::{
-    AppState, Mode,
-    Mode::{Editing, Managing},
+use crate::{
+    app_state::{
+        AppState, Mode,
+        Mode::{Editing, Managing},
+    },
+    executor::execute,
 };
 
 type Terminal = ratatui::Terminal<CrosstermBackend<Stdout>>;
@@ -67,6 +71,14 @@ fn run_ui_app(terminal: &mut Terminal) -> Result<()> {
                 (Managing, KeyCode::Char('i')) => {
                     *mode = Editing;
                 }
+                (Managing, KeyCode::Down) => {
+                    let offset = &mut app_state.ui_state.output_offset;
+                    *offset = offset.saturating_add(1);
+                }
+                (Managing, KeyCode::Up) => {
+                    let offset = &mut app_state.ui_state.output_offset;
+                    *offset = offset.saturating_sub(1);
+                }
 
                 (Editing, KeyCode::Char(c)) => {
                     app_state.ui_state.user_input.push(c);
@@ -75,6 +87,7 @@ fn run_ui_app(terminal: &mut Terminal) -> Result<()> {
                     app_state.ui_state.user_input.pop();
                 }
                 (Editing, KeyCode::Enter) => {
+                    execute(&mut app_state)?;
                     app_state.ui_state.user_input.clear();
                 }
 
