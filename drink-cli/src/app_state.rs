@@ -1,5 +1,7 @@
 use std::{env, path::PathBuf};
 
+use drink::Sandbox;
+use ratatui::text::Line;
 use sp_runtime::AccountId32;
 
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
@@ -9,26 +11,21 @@ pub struct ChainInfo {
     pub current_contract_address: Option<AccountId32>,
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Default)]
 pub enum Mode {
+    #[default]
     Managing,
     Editing,
 }
 
-impl Default for Mode {
-    fn default() -> Self {
-        Mode::Managing
-    }
-}
-
-#[derive(Clone, Eq, PartialEq, Hash, Debug)]
+#[derive(Clone, Eq, PartialEq, Debug)]
 pub struct UiState {
     pub pwd: PathBuf,
     pub mode: Mode,
 
     pub user_input: String,
 
-    pub output: Vec<String>,
+    pub output: Vec<Line<'static>>,
     pub output_offset: u16,
 }
 
@@ -44,8 +41,9 @@ impl Default for UiState {
     }
 }
 
-#[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(Default)]
 pub struct AppState {
+    pub sandbox: Sandbox,
     pub chain_info: ChainInfo,
     pub ui_state: UiState,
 }

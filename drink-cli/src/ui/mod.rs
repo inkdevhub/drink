@@ -2,9 +2,10 @@ mod current_env;
 mod footer;
 mod layout;
 mod output;
+mod print;
 mod user_input;
 
-use std::{io, io::Stdout, thread::sleep};
+use std::{io, io::Stdout};
 
 use anyhow::{anyhow, Result};
 use crossterm::{
@@ -15,11 +16,10 @@ use crossterm::{
 };
 use layout::layout;
 use ratatui::backend::CrosstermBackend;
-use sp_runtime::Saturating;
 
 use crate::{
     app_state::{
-        AppState, Mode,
+        AppState,
         Mode::{Editing, Managing},
     },
     executor::execute,
