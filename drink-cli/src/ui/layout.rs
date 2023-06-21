@@ -6,7 +6,7 @@ use ratatui::{
 
 use crate::{
     app_state::AppState,
-    ui::{current_env, footer, output, user_input},
+    ui::{current_env, footer, help, output, user_input},
 };
 
 pub(super) fn layout<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
@@ -29,7 +29,11 @@ pub(super) fn layout<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
     }
 
     f.render_widget(current_env::build(app_state), chunks[0]);
-    f.render_widget(output::build(app_state), chunks[1]);
+    if app_state.ui_state.show_help {
+        f.render_widget(help::build(app_state), chunks[1]);
+    } else {
+        f.render_widget(output::build(app_state), chunks[1]);
+    }
     f.render_widget(user_input::build(app_state), chunks[2]);
     f.render_widget(footer::build(app_state), chunks[3]);
 }

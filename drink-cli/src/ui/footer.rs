@@ -18,8 +18,10 @@ pub(super) fn build(app_state: &AppState) -> impl Widget {
             Span::raw("Use arrows to scroll through output. Press "),
             Span::styled("'q'", Style::default().fg(Color::Yellow)),
             Span::raw(" to quit. Press "),
+            Span::styled("'h'", Style::default().fg(Color::Yellow)),
+            Span::raw(" to see help. Press "),
             Span::styled("'i'", Style::default().fg(Color::Yellow)),
-            Span::raw(" to enter editing mode"),
+            Span::raw(" to enter editing mode."),
         ],
         Mode::Editing => vec![
             Span::raw("Press "),

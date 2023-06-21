@@ -1,5 +1,6 @@
 mod current_env;
 mod footer;
+mod help;
 mod layout;
 mod output;
 mod print;
@@ -64,7 +65,13 @@ fn run_ui_app(terminal: &mut Terminal) -> Result<()> {
                 (_, KeyCode::Esc) => *mode = Managing,
 
                 (Managing, KeyCode::Char('q')) => break,
-                (Managing, KeyCode::Char('i')) => *mode = Editing,
+                (Managing, KeyCode::Char('i')) => {
+                    *mode = Editing;
+                    app_state.ui_state.show_help = false;
+                }
+                (Managing, KeyCode::Char('h')) => {
+                    app_state.ui_state.show_help = !app_state.ui_state.show_help
+                }
                 (Managing, KeyCode::Down) => {
                     app_state.ui_state.output_scrolling = true;
                     app_state.ui_state.output_offset += 1

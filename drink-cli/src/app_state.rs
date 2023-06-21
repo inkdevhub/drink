@@ -25,6 +25,7 @@ pub struct UiState {
 
     pub user_input: String,
 
+    pub show_help: bool,
     pub output: Vec<Line<'static>>,
     pub output_offset: i16,
     pub output_scrolling: bool,
@@ -36,6 +37,7 @@ impl Default for UiState {
             pwd: env::current_dir().expect("Failed to get current directory"),
             mode: Default::default(),
             user_input: Default::default(),
+            show_help: false,
             output: Default::default(),
             output_offset: 0,
             output_scrolling: false,
