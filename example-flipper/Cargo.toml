@@ -1,5 +1,5 @@
 [package]
-name = "example"
+name = "flipper"
 authors = ["Cardinal", "Aleph Zero Foundation"]
 edition = "2021"
 homepage = "https://alephzero.org"

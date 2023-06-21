@@ -1,4 +1,4 @@
-use std::{env, process::Command};
+use std::{env, fs, process::Command};
 
 use anyhow::Result;
 use clap::Parser;
@@ -67,7 +67,26 @@ fn build_contract(app_state: &mut AppState) {
 }
 
 fn deploy_contract(app_state: &mut AppState, constructor: String, salt: Vec<u8>) {
-    let contract_bytes_path = app_state.ui_state.pwd.join("target/ink/example.wasm");
+    let contract_bytes_path = match fs::read_dir(app_state.ui_state.pwd.join("target/ink")) {
+        Ok(entries) => {
+            match entries
+                .into_iter()
+                .filter_map(|e| e.ok())
+                .find(|e| e.path().extension().unwrap_or_default() == "wasm")
+            {
+                None => {
+                    app_state.print_error("Failed to find contract file");
+                    return;
+                }
+                Some(file) => file.path(),
+            }
+        }
+        Err(err) => {
+            app_state.print_error(&format!("Failed to find contract file\n{err}"));
+            return;
+        }
+    };
+
     let contract_bytes = match std::fs::read(contract_bytes_path) {
         Ok(bytes) => bytes,
         Err(err) => {

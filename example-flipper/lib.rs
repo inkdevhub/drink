@@ -1,15 +1,15 @@
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
 
 #[ink::contract]
-mod example {
+mod flipper {
     use ink::env::debug_println;
 
     #[ink(storage)]
-    pub struct Example {
+    pub struct Flipper {
         value: bool,
     }
 
-    impl Example {
+    impl Flipper {
         #[ink(constructor)]
         pub fn new() -> Self {
             Self { value: false }
