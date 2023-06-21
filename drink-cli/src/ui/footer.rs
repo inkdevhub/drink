@@ -26,7 +26,9 @@ pub(super) fn build(app_state: &AppState) -> impl Widget {
         Mode::Drinking => vec![
             Span::raw("Press "),
             Span::styled("'Esc'", Style::default().fg(Color::Yellow)),
-            Span::raw(" to quit editing mode"),
+            Span::raw(" to quit editing mode. Use "),
+            Span::styled("'Tab'", Style::default().fg(Color::Yellow)),
+            Span::raw(" to switch between deployed contracts."),
         ],
     }
     .into();
