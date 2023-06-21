@@ -1,8 +1,9 @@
+pub mod chain_api;
 mod runtime;
 
-use std::fmt::Display;
+use std::{fmt::Display, time::SystemTime};
 
-use frame_support::weights::Weight;
+use frame_support::{traits::Hooks, weights::Weight};
 use pallet_contracts::Determinism;
 use pallet_contracts_primitives::Code;
 use sp_io::TestExternalities;
@@ -56,9 +57,27 @@ impl Sandbox {
         .assimilate_storage(&mut storage)
         .unwrap();
 
-        Self {
+        let mut slf = Self {
             externalities: TestExternalities::new(storage),
-        }
+        };
+        slf.init_block(0);
+        slf
+    }
+
+    fn init_block(&mut self, height: u64) {
+        self.externalities.execute_with(|| {
+            System::reset_events();
+
+            Balances::on_initialize(height);
+            Timestamp::set_timestamp(
+                SystemTime::now()
+                    .duration_since(SystemTime::UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs(),
+            );
+            Timestamp::on_initialize(height);
+            Contracts::on_initialize(height);
+        });
     }
 
     pub fn deploy_contract(

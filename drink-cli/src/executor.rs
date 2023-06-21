@@ -2,6 +2,7 @@ use std::{env, process::Command};
 
 use anyhow::Result;
 use clap::Parser;
+use drink::chain_api::ChainApi;
 use sp_runtime::app_crypto::sp_core::blake2_256;
 
 use crate::{app_state::AppState, cli::CliCommand};
@@ -24,7 +25,6 @@ pub fn execute(app_state: &mut AppState) -> Result<()> {
 
     match cli_command {
         CliCommand::Clear => app_state.ui_state.output.clear(),
-
         CliCommand::ChangeDir { path } => {
             let target_dir = app_state.ui_state.pwd.join(path);
             match env::set_current_dir(target_dir) {
@@ -37,9 +37,10 @@ pub fn execute(app_state: &mut AppState) -> Result<()> {
             }
         }
 
+        CliCommand::NextBlock { count } => build_blocks(app_state, count),
+
         CliCommand::Build => build_contract(app_state),
         CliCommand::Deploy { constructor, salt } => deploy_contract(app_state, constructor, salt),
-
         CliCommand::Call { message } => call_contract(app_state, message),
     }
 
@@ -103,4 +104,14 @@ fn call_contract(app_state: &mut AppState, message: String) {
 fn compute_selector(name: String) -> Vec<u8> {
     let name = name.as_bytes();
     blake2_256(name)[..4].to_vec()
+}
+
+fn build_blocks(app_state: &mut AppState, count: u64) {
+    for _ in 0..count {
+        app_state.sandbox.build_block();
+    }
+
+    app_state.chain_info.block_height += count;
+
+    app_state.print(&format!("{count} blocks built"));
 }

@@ -9,6 +9,7 @@ use frame_support::{
     weights::Weight,
 };
 use pallet_contracts::{DefaultAddressGenerator, Frame, Schedule};
+use sp_runtime::traits::ConstU128;
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<SandboxRuntime>;
 type Block = frame_system::mocking::MockBlock<SandboxRuntime>;
@@ -44,7 +45,7 @@ impl frame_system::Config for SandboxRuntime {
     type DbWeight = ();
     type Version = ();
     type PalletInfo = PalletInfo;
-    type AccountData = pallet_balances::AccountData<u64>;
+    type AccountData = pallet_balances::AccountData<u128>;
     type OnNewAccount = ();
     type OnKilledAccount = ();
     type SystemWeightInfo = ();
@@ -54,10 +55,10 @@ impl frame_system::Config for SandboxRuntime {
 }
 
 impl pallet_balances::Config for SandboxRuntime {
-    type Balance = u64;
+    type Balance = u128;
     type DustRemoval = ();
     type RuntimeEvent = RuntimeEvent;
-    type ExistentialDeposit = ConstU64<1>;
+    type ExistentialDeposit = ConstU128<1>;
     type AccountStore = System;
     type WeightInfo = ();
     type MaxLocks = ();
@@ -82,7 +83,7 @@ impl Randomness<H256, u64> for SandboxRandomness {
 type BalanceOf = <Balances as Currency<AccountId32>>::Balance;
 impl Convert<Weight, BalanceOf> for SandboxRuntime {
     fn convert(w: Weight) -> BalanceOf {
-        w.ref_time()
+        w.ref_time().into()
     }
 }
 
@@ -107,8 +108,8 @@ impl pallet_contracts::Config for SandboxRuntime {
     type CallStack = [Frame<Self>; 5];
     type DeletionQueueDepth = ConstU32<10>;
     type DeletionWeightLimit = DeletionWeightLimit;
-    type DepositPerByte = ConstU64<1>;
-    type DepositPerItem = ConstU64<1>;
+    type DepositPerByte = ConstU128<1>;
+    type DepositPerItem = ConstU128<1>;
     type AddressGenerator = DefaultAddressGenerator;
     type MaxCodeLen = ConstU32<{ 123 * 1024 }>;
     type MaxStorageKeyLen = ConstU32<128>;

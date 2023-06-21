@@ -9,6 +9,12 @@ pub enum CliCommand {
         path: String,
     },
 
+    #[clap(alias = "nb")]
+    NextBlock {
+        #[clap(default_value = "1")]
+        count: u64,
+    },
+
     #[clap(alias = "b")]
     Build,
     #[clap(alias = "d")]
