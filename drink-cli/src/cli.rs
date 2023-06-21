@@ -13,13 +13,14 @@ pub enum CliCommand {
     Build,
     #[clap(alias = "d")]
     Deploy {
-        #[clap(default_value = "new")]
+        #[clap(long, default_value = "new")]
         constructor: String,
-        #[clap(default_values_t = Vec::<u8>::new())]
+        #[clap(long, default_values_t = Vec::<u8>::new(), value_delimiter = ',')]
         salt: Vec<u8>,
     },
-    CallGet,
-    CallFlip,
+    Call {
+        message: String,
+    },
 }
 
 #[cfg(test)]

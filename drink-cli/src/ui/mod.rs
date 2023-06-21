@@ -61,34 +61,27 @@ fn run_ui_app(terminal: &mut Terminal) -> Result<()> {
         let mode = &mut app_state.ui_state.mode;
         if let Event::Key(key) = event::read()? {
             match (*mode, key.code) {
-                (_, KeyCode::Esc) => {
-                    *mode = Managing;
-                }
+                (_, KeyCode::Esc) => *mode = Managing,
 
-                (Managing, KeyCode::Char('q')) => {
-                    break;
-                }
-                (Managing, KeyCode::Char('i')) => {
-                    *mode = Editing;
-                }
+                (Managing, KeyCode::Char('q')) => break,
+                (Managing, KeyCode::Char('i')) => *mode = Editing,
                 (Managing, KeyCode::Down) => {
-                    let offset = &mut app_state.ui_state.output_offset;
-                    *offset = offset.saturating_add(1);
+                    app_state.ui_state.output_scrolling = true;
+                    app_state.ui_state.output_offset += 1
                 }
                 (Managing, KeyCode::Up) => {
-                    let offset = &mut app_state.ui_state.output_offset;
-                    *offset = offset.saturating_sub(1);
+                    app_state.ui_state.output_scrolling = true;
+                    app_state.ui_state.output_offset -= 1
                 }
 
-                (Editing, KeyCode::Char(c)) => {
-                    app_state.ui_state.user_input.push(c);
-                }
+                (Editing, KeyCode::Char(c)) => app_state.ui_state.user_input.push(c),
                 (Editing, KeyCode::Backspace) => {
                     app_state.ui_state.user_input.pop();
                 }
                 (Editing, KeyCode::Enter) => {
                     execute(&mut app_state)?;
                     app_state.ui_state.user_input.clear();
+                    app_state.ui_state.output_scrolling = false;
                 }
 
                 _ => {}

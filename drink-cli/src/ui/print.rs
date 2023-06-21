@@ -21,26 +21,26 @@ impl AppState {
     }
 
     pub fn print(&mut self, msg: &str) {
-        self.ui_state.output.push(
-            Span::styled(
-                msg.to_string(),
-                Style::default()
-                    .fg(Color::White)
-                    .add_modifier(Modifier::BOLD),
-            )
-            .into(),
+        self.print_sequence(
+            msg.split('\n'),
+            Style::default()
+                .fg(Color::White)
+                .add_modifier(Modifier::BOLD),
         );
     }
 
     pub fn print_error(&mut self, err: &str) {
-        for line in err.split('\n') {
-            self.ui_state.output.push(
-                Span::styled(
-                    line.to_string(),
-                    Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
-                )
-                .into(),
-            )
+        self.print_sequence(
+            err.split('\n'),
+            Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
+        );
+    }
+
+    fn print_sequence<'a, I: Iterator<Item = &'a str>>(&mut self, seq: I, style: Style) {
+        for line in seq {
+            self.ui_state
+                .output
+                .push(Span::styled(line.to_string(), style).into());
         }
     }
 }

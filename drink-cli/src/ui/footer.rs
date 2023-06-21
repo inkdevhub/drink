@@ -15,7 +15,7 @@ pub(super) fn build(app_state: &AppState) -> impl Widget {
 
     let instruction: Line = match app_state.ui_state.mode {
         Mode::Managing => vec![
-            Span::raw("Press "),
+            Span::raw("Use arrows to scroll through output. Press "),
             Span::styled("'q'", Style::default().fg(Color::Yellow)),
             Span::raw(" to quit. Press "),
             Span::styled("'i'", Style::default().fg(Color::Yellow)),

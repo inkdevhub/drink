@@ -23,6 +23,11 @@ pub(super) fn layout<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
         )
         .split(f.size());
 
+    if !app_state.ui_state.output_scrolling {
+        app_state.ui_state.output_offset =
+            (app_state.ui_state.output.len() as u16).saturating_sub(chunks[1].height - 2) as i16;
+    }
+
     f.render_widget(current_env::build(app_state), chunks[0]);
     f.render_widget(output::build(app_state), chunks[1]);
     f.render_widget(user_input::build(app_state), chunks[2]);

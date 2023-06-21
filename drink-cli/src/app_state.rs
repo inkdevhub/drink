@@ -26,7 +26,8 @@ pub struct UiState {
     pub user_input: String,
 
     pub output: Vec<Line<'static>>,
-    pub output_offset: u16,
+    pub output_offset: i16,
+    pub output_scrolling: bool,
 }
 
 impl Default for UiState {
@@ -37,6 +38,7 @@ impl Default for UiState {
             user_input: Default::default(),
             output: Default::default(),
             output_offset: 0,
+            output_scrolling: false,
         }
     }
 }

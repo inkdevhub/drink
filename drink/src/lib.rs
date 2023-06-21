@@ -84,13 +84,7 @@ impl Sandbox {
         })
     }
 
-    pub fn call_contract(&mut self, address: AccountId32, msg: String) -> CallResult {
-        let msg = match msg.as_str() {
-            "flip" => vec![99, 58, 165, 81],
-            "get" => vec![47, 134, 91, 217],
-            _ => panic!("Invalid message"),
-        };
-
+    pub fn call_contract(&mut self, address: AccountId32, selector: Vec<u8>) -> CallResult {
         self.externalities.execute_with(|| {
             let main_result = Contracts::bare_call(
                 ALICE,
@@ -98,7 +92,7 @@ impl Sandbox {
                 0,
                 GAS_LIMIT,
                 None,
-                msg,
+                selector,
                 true,
                 Determinism::Deterministic,
             );

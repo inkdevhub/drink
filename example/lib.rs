@@ -24,6 +24,7 @@ mod example {
 
         #[ink(message)]
         pub fn get(&self) -> bool {
+            debug_println!("Reading value from storage");
             self.value
         }
     }

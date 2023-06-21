@@ -24,7 +24,7 @@ Current contract address: {}"#,
             .chain_info
             .current_contract_address
             .as_ref()
-            .map_or("<none>".to_string(), |addr| format!("{addr}"))
+            .map_or("<none>".to_string(), |addr| format!("{addr}")),
     ))
     .alignment(Alignment::Left)
     .wrap(Wrap { trim: false })

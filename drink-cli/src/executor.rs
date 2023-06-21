@@ -23,10 +23,8 @@ pub fn execute(app_state: &mut AppState) -> Result<()> {
     };
 
     match cli_command {
-        CliCommand::Clear => {
-            app_state.ui_state.output.clear();
-            app_state.ui_state.output_offset = 0;
-        }
+        CliCommand::Clear => app_state.ui_state.output.clear(),
+
         CliCommand::ChangeDir { path } => {
             let target_dir = app_state.ui_state.pwd.join(path);
             match env::set_current_dir(target_dir) {
@@ -42,19 +40,7 @@ pub fn execute(app_state: &mut AppState) -> Result<()> {
         CliCommand::Build => build_contract(app_state),
         CliCommand::Deploy { constructor, salt } => deploy_contract(app_state, constructor, salt),
 
-        CliCommand::CallGet => {
-            // let account_id = match account_id {
-            //     Some(ref account_id) => account_id.clone(),
-            //     None => {
-            //         eprintln!("Contract not deployed");
-            //         continue;
-            //     }
-            // };
-            //
-            // let result = sandbox.call_contract(account_id, "get".to_string());
-            // println!("Contract called successfully.\n\n{result}")
-        }
-        CliCommand::CallFlip => {}
+        CliCommand::Call { message } => call_contract(app_state, message),
     }
 
     Ok(())
@@ -99,7 +85,22 @@ fn deploy_contract(app_state: &mut AppState, constructor: String, salt: Vec<u8>)
     app_state.chain_info.current_contract_address = Some(account_id);
 }
 
+fn call_contract(app_state: &mut AppState, message: String) {
+    let account_id = match app_state.chain_info.current_contract_address {
+        Some(ref account_id) => account_id.clone(),
+        None => {
+            app_state.print_error("No deployed contract");
+            return;
+        }
+    };
+
+    let result = app_state
+        .sandbox
+        .call_contract(account_id, compute_selector(message));
+    app_state.print(&format!("Contract called successfully.\n\n{result}"));
+}
+
 fn compute_selector(name: String) -> Vec<u8> {
     let name = name.as_bytes();
-    blake2_256(&name)[..4].to_vec()
+    blake2_256(name)[..4].to_vec()
 }
