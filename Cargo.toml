@@ -6,8 +6,8 @@ members = [
 ]
 
 exclude = [
-    "example-counter",
-    "example-flipper",
+    "examples/counter",
+    "examples/flipper",
 ]
 
 [workspace.package]
