@@ -21,7 +21,7 @@ use ratatui::backend::CrosstermBackend;
 use crate::{
     app_state::{
         AppState,
-        Mode::{Editing, Managing},
+        Mode::{Drinking, Managing},
     },
     executor::execute,
 };
@@ -66,7 +66,7 @@ fn run_ui_app(terminal: &mut Terminal) -> Result<()> {
 
                 (Managing, KeyCode::Char('q')) => break,
                 (Managing, KeyCode::Char('i')) => {
-                    *mode = Editing;
+                    *mode = Drinking;
                     app_state.ui_state.show_help = false;
                 }
                 (Managing, KeyCode::Char('h')) => {
@@ -81,11 +81,11 @@ fn run_ui_app(terminal: &mut Terminal) -> Result<()> {
                     app_state.ui_state.output_offset -= 1
                 }
 
-                (Editing, KeyCode::Char(c)) => app_state.ui_state.user_input.push(c),
-                (Editing, KeyCode::Backspace) => {
+                (Drinking, KeyCode::Char(c)) => app_state.ui_state.user_input.push(c),
+                (Drinking, KeyCode::Backspace) => {
                     app_state.ui_state.user_input.pop();
                 }
-                (Editing, KeyCode::Enter) => {
+                (Drinking, KeyCode::Enter) => {
                     execute(&mut app_state)?;
                     app_state.ui_state.user_input.clear();
                     app_state.ui_state.output_scrolling = false;

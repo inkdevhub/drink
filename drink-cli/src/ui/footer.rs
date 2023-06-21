@@ -23,7 +23,7 @@ pub(super) fn build(app_state: &AppState) -> impl Widget {
             Span::styled("'i'", Style::default().fg(Color::Yellow)),
             Span::raw(" to enter editing mode."),
         ],
-        Mode::Editing => vec![
+        Mode::Drinking => vec![
             Span::raw("Press "),
             Span::styled("'Esc'", Style::default().fg(Color::Yellow)),
             Span::raw(" to quit editing mode"),

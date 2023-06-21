@@ -7,7 +7,7 @@ use crate::app_state::{AppState, Mode};
 
 pub(super) fn build(app_state: &mut AppState) -> impl Widget {
     let mut style = Style::default();
-    if app_state.ui_state.mode != Mode::Editing {
+    if app_state.ui_state.mode != Mode::Drinking {
         style = style.fg(Color::DarkGray);
     }
 

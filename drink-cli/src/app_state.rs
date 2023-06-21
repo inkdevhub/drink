@@ -14,7 +14,7 @@ pub struct ChainInfo {
 pub enum Mode {
     #[default]
     Managing,
-    Editing,
+    Drinking,
 }
 
 #[derive(Clone, Eq, PartialEq, Debug)]
