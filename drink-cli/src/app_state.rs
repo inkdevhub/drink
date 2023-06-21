@@ -1,4 +1,4 @@
-use std::{env, path::PathBuf};
+use std::{collections::VecDeque, env, path::PathBuf};
 
 use drink::Sandbox;
 use ratatui::text::Line;
@@ -8,7 +8,6 @@ use sp_runtime::AccountId32;
 pub struct ChainInfo {
     pub block_height: u64,
     pub deployed_contracts: u16,
-    pub current_contract_address: Option<AccountId32>,
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Default)]
@@ -21,6 +20,7 @@ pub enum Mode {
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct UiState {
     pub pwd: PathBuf,
+    pub contract_project_name: String,
     pub mode: Mode,
 
     pub user_input: String,
@@ -35,6 +35,7 @@ impl Default for UiState {
     fn default() -> Self {
         UiState {
             pwd: env::current_dir().expect("Failed to get current directory"),
+            contract_project_name: "".to_string(),
             mode: Default::default(),
             user_input: Default::default(),
             show_help: false,
@@ -45,9 +46,17 @@ impl Default for UiState {
     }
 }
 
+#[derive(Clone, Eq, PartialEq, Hash, Debug)]
+pub struct Contract {
+    pub name: String,
+    pub address: AccountId32,
+    pub base_path: PathBuf,
+}
+
 #[derive(Default)]
 pub struct AppState {
     pub sandbox: Sandbox,
     pub chain_info: ChainInfo,
     pub ui_state: UiState,
+    pub contracts: VecDeque<Contract>,
 }

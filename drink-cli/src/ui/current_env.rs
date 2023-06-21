@@ -12,19 +12,25 @@ pub(super) fn build(app_state: &mut AppState) -> impl Widget {
         .border_type(BorderType::Rounded)
         .padding(Padding::horizontal(1));
 
+    let current_contract_info = match app_state.contracts.get(0) {
+        Some(contract) => format!(
+            "name: {} | address: {} | sources: {}",
+            contract.name,
+            contract.address,
+            contract.base_path.to_str().unwrap()
+        ),
+        None => "No deployed contract".to_string(),
+    };
+
     Paragraph::new(format!(
         r#"Current working directory: {}
 Block height: {}
 Deployed contracts: {}
-Current contract address: {}"#,
+Current contract: {{ {} }}"#,
         app_state.ui_state.pwd.to_str().unwrap(),
         app_state.chain_info.block_height,
         app_state.chain_info.deployed_contracts,
-        app_state
-            .chain_info
-            .current_contract_address
-            .as_ref()
-            .map_or("<none>".to_string(), |addr| format!("{addr}")),
+        current_contract_info
     ))
     .alignment(Alignment::Left)
     .wrap(Wrap { trim: false })

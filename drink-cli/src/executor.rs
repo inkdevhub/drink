@@ -5,7 +5,10 @@ use clap::Parser;
 use drink::chain_api::ChainApi;
 use sp_runtime::{app_crypto::sp_core::blake2_256, AccountId32};
 
-use crate::{app_state::AppState, cli::CliCommand};
+use crate::{
+    app_state::{AppState, Contract},
+    cli::CliCommand,
+};
 
 pub fn execute(app_state: &mut AppState) -> Result<()> {
     let command = app_state.ui_state.user_input.clone();
@@ -78,7 +81,16 @@ fn deploy_contract(app_state: &mut AppState, constructor: String, salt: Vec<u8>)
                     app_state.print_error("Failed to find contract file");
                     return;
                 }
-                Some(file) => file.path(),
+                Some(file) => {
+                    app_state.ui_state.contract_project_name = file
+                        .file_name()
+                        .to_str()
+                        .unwrap()
+                        .strip_suffix(".wasm")
+                        .unwrap()
+                        .to_string();
+                    file.path()
+                }
             }
         }
         Err(err) => {
@@ -87,7 +99,7 @@ fn deploy_contract(app_state: &mut AppState, constructor: String, salt: Vec<u8>)
         }
     };
 
-    let contract_bytes = match std::fs::read(contract_bytes_path) {
+    let contract_bytes = match fs::read(contract_bytes_path) {
         Ok(bytes) => bytes,
         Err(err) => {
             app_state.print_error(&format!("Failed to read contract bytes\n{err}"));
@@ -103,12 +115,16 @@ fn deploy_contract(app_state: &mut AppState, constructor: String, salt: Vec<u8>)
     app_state.print("Contract deployed successfully");
 
     app_state.chain_info.deployed_contracts += 1;
-    app_state.chain_info.current_contract_address = Some(account_id);
+    app_state.contracts.push_front(Contract {
+        name: app_state.ui_state.contract_project_name.clone(),
+        address: account_id,
+        base_path: app_state.ui_state.pwd.clone(),
+    });
 }
 
 fn call_contract(app_state: &mut AppState, message: String) {
-    let account_id = match app_state.chain_info.current_contract_address {
-        Some(ref account_id) => account_id.clone(),
+    let account_id = match app_state.contracts.get(0).map(|c| &c.address) {
+        Some(account_id) => account_id.clone(),
         None => {
             app_state.print_error("No deployed contract");
             return;
