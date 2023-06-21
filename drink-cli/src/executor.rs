@@ -3,7 +3,7 @@ use std::{env, process::Command};
 use anyhow::Result;
 use clap::Parser;
 use drink::chain_api::ChainApi;
-use sp_runtime::app_crypto::sp_core::blake2_256;
+use sp_runtime::{app_crypto::sp_core::blake2_256, AccountId32};
 
 use crate::{app_state::AppState, cli::CliCommand};
 
@@ -38,6 +38,7 @@ pub fn execute(app_state: &mut AppState) -> Result<()> {
         }
 
         CliCommand::NextBlock { count } => build_blocks(app_state, count),
+        CliCommand::AddTokens { recipient, value } => add_tokens(app_state, recipient, value),
 
         CliCommand::Build => build_contract(app_state),
         CliCommand::Deploy { constructor, salt } => deploy_contract(app_state, constructor, salt),
@@ -114,4 +115,9 @@ fn build_blocks(app_state: &mut AppState, count: u64) {
     app_state.chain_info.block_height += count;
 
     app_state.print(&format!("{count} blocks built"));
+}
+
+fn add_tokens(app_state: &mut AppState, recipient: AccountId32, value: u128) {
+    app_state.sandbox.add_tokens(recipient.clone(), value);
+    app_state.print(&format!("{value} tokens added to {recipient}",));
 }

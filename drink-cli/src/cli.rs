@@ -1,4 +1,5 @@
 use clap::Parser;
+use sp_runtime::{app_crypto::Ss58Codec, AccountId32};
 
 #[derive(Parser)]
 pub enum CliCommand {
@@ -13,6 +14,11 @@ pub enum CliCommand {
     NextBlock {
         #[clap(default_value = "1")]
         count: u64,
+    },
+    AddTokens {
+        #[clap(value_parser = AccountId32::from_ss58check)]
+        recipient: AccountId32,
+        value: u128,
     },
 
     #[clap(alias = "b")]

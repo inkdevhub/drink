@@ -12,6 +12,6 @@ clap = { workspace = true, features = ["derive"] }
 crossterm = { workspace = true }
 ratatui = { workspace = true, features = ["all-widgets"]  }
 
-sp-runtime = { workspace = true }
+sp-runtime = { workspace = true, features = ["std"] }
 
 drink = { workspace = true }
