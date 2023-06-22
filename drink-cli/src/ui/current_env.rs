@@ -12,7 +12,7 @@ pub(super) fn build(app_state: &mut AppState) -> impl Widget {
         .border_type(BorderType::Rounded)
         .padding(Padding::horizontal(1));
 
-    let current_contract_info = match app_state.contracts.get(0) {
+    let current_contract_info = match app_state.contracts.get(app_state.ui_state.current_contract) {
         Some(contract) => format!("name: {} | address: {}", contract.name, contract.address,),
         None => "No deployed contract".to_string(),
     };

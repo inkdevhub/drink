@@ -119,7 +119,7 @@ fn deploy_contract(app_state: &mut AppState, constructor: String, salt: Vec<u8>)
 
     let contract_name = app_state.ui_state.contract_project_name.clone();
 
-    app_state.contracts.push_front(Contract {
+    app_state.contracts.push(Contract {
         name: contract_name.clone(),
         address: account_id,
         base_path: app_state.ui_state.pwd.clone(),
@@ -131,10 +131,11 @@ fn deploy_contract(app_state: &mut AppState, constructor: String, salt: Vec<u8>)
         )
         .expect("Failed to load contract transcoder"),
     });
+    app_state.ui_state.current_contract = app_state.contracts.len() - 1;
 }
 
 fn call_contract(app_state: &mut AppState, message: String) {
-    let contract = match app_state.contracts.get(0) {
+    let contract = match app_state.contracts.get(app_state.ui_state.current_contract) {
         Some(c) => c,
         None => {
             app_state.print_error("No deployed contract");

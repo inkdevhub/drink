@@ -1,5 +1,5 @@
 use ratatui::{
-    style::{Modifier, Style},
+    style::{Color, Style},
     text::{Line, Span},
     widgets::{Block, BorderType, Borders, List, ListItem, Padding, Widget},
 };
@@ -18,25 +18,14 @@ pub(super) fn build(app_state: &mut AppState) -> impl Widget {
         .iter()
         .enumerate()
         .map(|(idx, contract)| {
-            let style = match idx {
-                0 => Style::default()
-                    .add_modifier(Modifier::BOLD)
-                    .add_modifier(Modifier::ITALIC),
-                _ => Style::default(),
-            };
-
-            let hint = match idx {
-                0 => " (active)",
-                _ => "",
+            let style = if idx == app_state.ui_state.current_contract {
+                Style::default().bg(Color::White).fg(Color::Black)
+            } else {
+                Style::default()
             };
 
             ListItem::new(Line::from(Span::styled(
-                format!(
-                    "{} / {}{}",
-                    contract.name,
-                    &contract.address.to_string()[..8],
-                    hint
-                ),
+                format!("{} / {}", contract.name, &contract.address.to_string()[..8],),
                 style,
             )))
         })

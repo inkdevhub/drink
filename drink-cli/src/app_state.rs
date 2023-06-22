@@ -1,4 +1,4 @@
-use std::{collections::VecDeque, env, path::PathBuf};
+use std::{env, path::PathBuf};
 
 use contract_transcode::ContractMessageTranscoder;
 use drink::Sandbox;
@@ -25,6 +25,7 @@ pub struct UiState {
     pub mode: Mode,
 
     pub user_input: String,
+    pub current_contract: usize,
 
     pub show_help: bool,
     pub output: Vec<Line<'static>>,
@@ -39,6 +40,7 @@ impl Default for UiState {
             contract_project_name: "".to_string(),
             mode: Default::default(),
             user_input: Default::default(),
+            current_contract: 0,
             show_help: false,
             output: Default::default(),
             output_offset: 0,
@@ -59,5 +61,5 @@ pub struct AppState {
     pub sandbox: Sandbox,
     pub chain_info: ChainInfo,
     pub ui_state: UiState,
-    pub contracts: VecDeque<Contract>,
+    pub contracts: Vec<Contract>,
 }
