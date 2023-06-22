@@ -63,6 +63,7 @@ fn build_contract(app_state: &mut AppState) {
     if output.status.success() {
         app_state.print("Contract built successfully");
     } else {
+        // I always hit this error even if I install cargo-contract with `cargo +nightly install cargo-contract`
         let stderr = String::from_utf8_lossy(&output.stderr);
         app_state.print_error(&format!(
             "Error executing 'cargo contract' command:\n{stderr}"
