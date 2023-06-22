@@ -4,6 +4,8 @@
 <h1 align="center"> DRink! </h1>
 <p align="center"> Dechained Ready-to-play ink! playground </p>
 
+https://github.com/Cardinal-Cryptography/drink/assets/27450471/4a45ef8a-a7ec-4a2f-84ab-0a2a36c1cb4e
+
 # What is DRink?
 
 DRink! aims providing support for ink! developers.
