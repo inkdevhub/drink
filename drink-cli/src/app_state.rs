@@ -1,5 +1,6 @@
 use std::{collections::VecDeque, env, path::PathBuf};
 
+use contract_transcode::ContractMessageTranscoder;
 use drink::Sandbox;
 use ratatui::text::Line;
 use sp_runtime::AccountId32;
@@ -46,11 +47,11 @@ impl Default for UiState {
     }
 }
 
-#[derive(Clone, Eq, PartialEq, Hash, Debug)]
 pub struct Contract {
     pub name: String,
     pub address: AccountId32,
     pub base_path: PathBuf,
+    pub transcode: ContractMessageTranscoder,
 }
 
 #[derive(Default)]

@@ -87,11 +87,12 @@ fn run_ui_app(terminal: &mut Terminal) -> Result<()> {
                 }
                 (Drinking, KeyCode::Tab) if app_state.contracts.len() > 1 => {
                     let prev = app_state.contracts.pop_front().unwrap();
-                    app_state.contracts.push_back(prev.clone());
+                    let prev_base_path = prev.base_path.clone();
+                    app_state.contracts.push_back(prev);
 
                     let current = app_state.contracts.front().unwrap();
 
-                    if current.base_path != prev.base_path {
+                    if current.base_path != prev_base_path {
                         let base_path = current.base_path.to_str().unwrap();
                         app_state.ui_state.user_input = format!("cd {base_path}");
                         execute(&mut app_state)?;

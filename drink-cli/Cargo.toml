@@ -10,6 +10,7 @@ version.workspace = true
 anyhow = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
 crossterm = { workspace = true }
+contract-transcode = { workspace = true }
 ratatui = { workspace = true, features = ["all-widgets"]  }
 
 sp-runtime = { workspace = true, features = ["std"] }

@@ -2,7 +2,8 @@ use std::{env, fs, process::Command};
 
 use anyhow::Result;
 use clap::Parser;
-use drink::chain_api::ChainApi;
+use contract_transcode::ContractMessageTranscoder;
+use drink::{chain_api::ChainApi, CallResult};
 use sp_runtime::{app_crypto::sp_core::blake2_256, AccountId32};
 
 use crate::{
@@ -110,34 +111,76 @@ fn deploy_contract(app_state: &mut AppState, constructor: String, salt: Vec<u8>)
     let account_id =
         app_state
             .sandbox
-            .deploy_contract(contract_bytes, compute_selector(constructor), salt);
+            .deploy_contract(contract_bytes, compute_selector(&constructor), salt);
 
     app_state.print("Contract deployed successfully");
 
     app_state.chain_info.deployed_contracts += 1;
+
+    let contract_name = app_state.ui_state.contract_project_name.clone();
+
     app_state.contracts.push_front(Contract {
-        name: app_state.ui_state.contract_project_name.clone(),
+        name: contract_name.clone(),
         address: account_id,
         base_path: app_state.ui_state.pwd.clone(),
+        transcode: ContractMessageTranscoder::load(
+            app_state
+                .ui_state
+                .pwd
+                .join(format!("target/ink/{contract_name}.json")),
+        )
+        .expect("Failed to load contract transcoder"),
     });
 }
 
 fn call_contract(app_state: &mut AppState, message: String) {
-    let account_id = match app_state.contracts.get(0).map(|c| &c.address) {
-        Some(account_id) => account_id.clone(),
+    let contract = match app_state.contracts.get(0) {
+        Some(c) => c,
         None => {
             app_state.print_error("No deployed contract");
             return;
         }
     };
 
+    let account_id = contract.address.clone();
     let result = app_state
         .sandbox
-        .call_contract(account_id, compute_selector(message));
-    app_state.print(&format!("Contract called successfully.\n\n{result}"));
+        .call_contract(account_id, compute_selector(&message));
+
+    app_state.print(&format!(
+        "Contract called successfully.\n\n{}",
+        display_call_result(&message, result, contract)
+    ));
 }
 
-fn compute_selector(name: String) -> Vec<u8> {
+fn display_call_result(message: &str, call_result: CallResult, contract: &Contract) -> String {
+    let result = match contract
+        .transcode
+        .decode_return(message, &mut call_result.result.as_slice())
+    {
+        Ok(value) => value.to_string(),
+        Err(err) => format!(
+            "Failed to decode return value: {err}. Raw bytes: {:?}",
+            call_result.result
+        ),
+    };
+
+    let mut output = format!(
+        r#"Gas consumed: {:?}
+Gas required: {:?}
+Result: {}
+Debug buffer:
+"#,
+        call_result.gas_consumed, call_result.gas_required, result
+    );
+
+    for line in &call_result.debug_message {
+        output.push_str(&format!("  {line}\n"));
+    }
+    output
+}
+
+fn compute_selector(name: &str) -> Vec<u8> {
     let name = name.as_bytes();
     blake2_256(name)[..4].to_vec()
 }

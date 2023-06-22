@@ -1,7 +1,7 @@
 pub mod chain_api;
 mod runtime;
 
-use std::{fmt::Display, time::SystemTime};
+use std::time::SystemTime;
 
 use frame_support::{traits::Hooks, weights::Weight};
 use pallet_contracts::Determinism;
@@ -25,19 +25,6 @@ pub struct CallResult {
 
     pub gas_consumed: Weight,
     pub gas_required: Weight,
-}
-
-impl Display for CallResult {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "Gas consumed: {:?}", self.gas_consumed)?;
-        writeln!(f, "Gas required: {:?}", self.gas_required)?;
-        writeln!(f, "Result: {:?}", self.result)?;
-        writeln!(f, "Debug buffer:")?;
-        for line in &self.debug_message {
-            writeln!(f, "  {line}")?;
-        }
-        Ok(())
-    }
 }
 
 impl Default for Sandbox {
