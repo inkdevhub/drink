@@ -1,3 +1,4 @@
+mod contracts;
 mod current_env;
 mod footer;
 mod help;

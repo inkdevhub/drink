@@ -13,12 +13,7 @@ pub(super) fn build(app_state: &mut AppState) -> impl Widget {
         .padding(Padding::horizontal(1));
 
     let current_contract_info = match app_state.contracts.get(0) {
-        Some(contract) => format!(
-            "name: {} | address: {} | sources: {}",
-            contract.name,
-            contract.address,
-            contract.base_path.to_str().unwrap()
-        ),
+        Some(contract) => format!("name: {} | address: {}", contract.name, contract.address,),
         None => "No deployed contract".to_string(),
     };
 
