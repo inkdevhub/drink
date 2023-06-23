@@ -11,9 +11,11 @@ exclude = [
 ]
 
 [workspace.package]
-authors = ["Cardinal", "Aleph Zero Foundation"]
+authors = ["Cardinal"]
 edition = "2021"
-homepage = "https://alephzero.org"
+homepage = "https://github.com/Cardinal-Cryptography/drink"
+license = "Apache-2.0"
+readme = "README.md"
 repository = "https://github.com/Cardinal-Cryptography/drink"
 version = "0.1.0"
 
