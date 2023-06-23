@@ -53,12 +53,14 @@ pub fn execute(app_state: &mut AppState) -> Result<()> {
 }
 
 fn build_contract(app_state: &mut AppState) {
-    let output = Command::new("cargo-contract")
+    let Ok(output) = Command::new("cargo")
         .arg("contract")
         .arg("build")
         .arg("--release")
-        .output()
-        .expect("Failed to execute 'cargo contract' command");
+        .output() else {
+            app_state.print_error("Failed to execute build command. Make sure `cargo contract` is installed. (`cargo install cargo-contract`)");
+            return;
+        };
 
     if output.status.success() {
         app_state.print("Contract built successfully");
