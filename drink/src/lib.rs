@@ -3,11 +3,11 @@ mod runtime;
 
 use std::time::SystemTime;
 
-use frame_support::{traits::Hooks, weights::Weight};
+use frame_support::{
+    sp_io::TestExternalities, sp_runtime::AccountId32, traits::Hooks, weights::Weight,
+};
+use frame_system::GenesisConfig;
 use pallet_contracts::Determinism;
-use pallet_contracts_primitives::Code;
-use sp_io::TestExternalities;
-use sp_runtime::AccountId32;
 
 use crate::runtime::*;
 
@@ -35,7 +35,7 @@ impl Default for Sandbox {
 
 impl Sandbox {
     pub fn new() -> Self {
-        let mut storage = frame_system::GenesisConfig::default()
+        let mut storage = GenesisConfig::default()
             .build_storage::<SandboxRuntime>()
             .unwrap();
         pallet_balances::GenesisConfig::<SandboxRuntime> {
@@ -79,7 +79,7 @@ impl Sandbox {
                 0,
                 GAS_LIMIT,
                 None,
-                Code::Upload(contract_bytes),
+                contract_bytes.into(),
                 selector,
                 salt,
                 true,
@@ -100,7 +100,7 @@ impl Sandbox {
                 None,
                 selector,
                 true,
-                Determinism::Deterministic,
+                Determinism::Enforced,
             );
             let execution_result = main_result.result.unwrap();
 

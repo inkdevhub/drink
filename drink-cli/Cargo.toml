@@ -14,6 +14,6 @@ crossterm = { workspace = true }
 contract-transcode = { workspace = true }
 ratatui = { workspace = true, features = ["all-widgets"]  }
 
-sp-runtime = { workspace = true, features = ["std"] }
+sp-core = { workspace = true, features = ["serde"] }
 
 drink = { workspace = true }

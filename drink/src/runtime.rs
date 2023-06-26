@@ -5,11 +5,10 @@ use frame_support::{
         traits::{BlakeTwo256, Convert, IdentityLookup},
         AccountId32,
     },
-    traits::{ConstBool, ConstU32, ConstU64, Currency, Randomness},
+    traits::{ConstBool, ConstU128, ConstU32, ConstU64, Currency, Randomness},
     weights::Weight,
 };
 use pallet_contracts::{DefaultAddressGenerator, Frame, Schedule};
-use sp_runtime::traits::ConstU128;
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<SandboxRuntime>;
 type Block = frame_system::mocking::MockBlock<SandboxRuntime>;
@@ -55,15 +54,19 @@ impl frame_system::Config for SandboxRuntime {
 }
 
 impl pallet_balances::Config for SandboxRuntime {
+    type RuntimeEvent = RuntimeEvent;
+    type WeightInfo = ();
     type Balance = u128;
     type DustRemoval = ();
-    type RuntimeEvent = RuntimeEvent;
     type ExistentialDeposit = ConstU128<1>;
     type AccountStore = System;
-    type WeightInfo = ();
+    type ReserveIdentifier = [u8; 8];
+    type HoldIdentifier = ();
+    type FreezeIdentifier = ();
     type MaxLocks = ();
     type MaxReserves = ();
-    type ReserveIdentifier = [u8; 8];
+    type MaxHolds = ();
+    type MaxFreezes = ();
 }
 
 impl pallet_timestamp::Config for SandboxRuntime {
@@ -106,8 +109,6 @@ impl pallet_contracts::Config for SandboxRuntime {
     type ChainExtension = ();
     type Schedule = SandboxSchedule;
     type CallStack = [Frame<Self>; 5];
-    type DeletionQueueDepth = ConstU32<10>;
-    type DeletionWeightLimit = DeletionWeightLimit;
     type DepositPerByte = ConstU128<1>;
     type DepositPerItem = ConstU128<1>;
     type AddressGenerator = DefaultAddressGenerator;

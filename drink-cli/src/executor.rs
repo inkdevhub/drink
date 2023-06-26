@@ -4,7 +4,7 @@ use anyhow::Result;
 use clap::Parser;
 use contract_transcode::ContractMessageTranscoder;
 use drink::{chain_api::ChainApi, CallResult};
-use sp_runtime::{app_crypto::sp_core::blake2_256, AccountId32};
+use sp_core::{blake2_256, crypto::AccountId32};
 
 use crate::{
     app_state::{AppState, Contract},

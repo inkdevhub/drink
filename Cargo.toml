@@ -28,13 +28,16 @@ parity-scale-codec = { version = "3.6.0" }
 ratatui = { version = "0.21.0" }
 scale-info = { version = "2.5.0" }
 
-frame-support = { git = "https://github.com/Cardinal-Cryptography/substrate.git", branch = "aleph-v0.9.41" }
-frame-system = { git = "https://github.com/Cardinal-Cryptography/substrate.git", branch = "aleph-v0.9.41" }
-pallet-balances = { git = "https://github.com/Cardinal-Cryptography/substrate.git", branch = "aleph-v0.9.41" }
-pallet-contracts = { git = "https://github.com/Cardinal-Cryptography/substrate.git", branch = "aleph-v0.9.41" }
-pallet-contracts-primitives = { git = "https://github.com/Cardinal-Cryptography/substrate.git", branch = "aleph-v0.9.41" }
-pallet-timestamp = { git = "https://github.com/Cardinal-Cryptography/substrate.git", branch = "aleph-v0.9.41" }
-sp-io = { git = "https://github.com/Cardinal-Cryptography/substrate.git", branch = "aleph-v0.9.41" }
-sp-runtime = { git = "https://github.com/Cardinal-Cryptography/substrate.git", branch = "aleph-v0.9.41" }
+# Substrate dependencies
 
-drink = { path = "drink/" }
+frame-support = { version = "21.0.0" }
+frame-system = { version = "21.0.0" }
+pallet-balances = { version = "21.0.0" }
+pallet-contracts = { version = "20.0.0" }
+pallet-contracts-primitives = { version = "23.0.0" }
+pallet-timestamp = { version = "20.0.0" }
+sp-core = { version = "20.0.0" }
+
+# Local dependencies
+
+drink = { path = "drink" }

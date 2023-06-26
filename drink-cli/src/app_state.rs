@@ -3,7 +3,7 @@ use std::{env, path::PathBuf};
 use contract_transcode::ContractMessageTranscoder;
 use drink::Sandbox;
 use ratatui::text::Line;
-use sp_runtime::AccountId32;
+use sp_core::crypto::AccountId32;
 
 use crate::user_input::UserInput;
 

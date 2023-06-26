@@ -1,5 +1,7 @@
-use frame_support::traits::{Currency, Hooks};
-use sp_runtime::AccountId32;
+use frame_support::{
+    sp_runtime::AccountId32,
+    traits::{Currency, Hooks},
+};
 
 use crate::{
     runtime::{Balances, Contracts, System, Timestamp},
