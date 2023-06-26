@@ -12,7 +12,7 @@ use crate::{
 };
 
 pub fn execute(app_state: &mut AppState) -> Result<()> {
-    let command = app_state.ui_state.user_input.clone();
+    let command = app_state.ui_state.user_input.current_input().to_string();
     app_state.print_command(&command);
 
     let command = command

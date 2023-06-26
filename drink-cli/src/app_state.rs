@@ -5,6 +5,8 @@ use drink::Sandbox;
 use ratatui::text::Line;
 use sp_runtime::AccountId32;
 
+use crate::user_input::UserInput;
+
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
 pub struct ChainInfo {
     pub block_height: u64,
@@ -24,7 +26,7 @@ pub struct UiState {
     pub contract_project_name: String,
     pub mode: Mode,
 
-    pub user_input: String,
+    pub user_input: UserInput,
     pub current_contract: usize,
 
     pub show_help: bool,

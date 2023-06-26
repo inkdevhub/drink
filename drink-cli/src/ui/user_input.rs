@@ -17,5 +17,5 @@ pub(super) fn build(app_state: &mut AppState) -> impl Widget {
         .border_type(BorderType::Rounded)
         .style(style);
 
-    Paragraph::new(app_state.ui_state.user_input.clone()).block(block)
+    Paragraph::new(app_state.ui_state.user_input.current_input().to_string()).block(block)
 }

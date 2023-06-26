@@ -96,14 +96,16 @@ fn run_ui_app(terminal: &mut Terminal) -> Result<()> {
 
                     if current.base_path != *prev_base_path {
                         let base_path = current.base_path.to_str().unwrap();
-                        app_state.ui_state.user_input = format!("cd {base_path}");
+                        app_state.ui_state.user_input.set(format!("cd {base_path}"));
                         execute(&mut app_state)?;
-                        app_state.ui_state.user_input.clear();
+                        app_state.ui_state.user_input.set(String::new());
                     }
                 }
+                (Drinking, KeyCode::Up) => app_state.ui_state.user_input.prev_input(),
+                (Drinking, KeyCode::Down) => app_state.ui_state.user_input.next_input(),
                 (Drinking, KeyCode::Enter) => {
                     execute(&mut app_state)?;
-                    app_state.ui_state.user_input.clear();
+                    app_state.ui_state.user_input.apply();
                     app_state.ui_state.output_scrolling = false;
                 }
 
