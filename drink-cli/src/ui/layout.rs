@@ -14,9 +14,13 @@ pub(super) fn layout<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
         .direction(Direction::Vertical)
         .constraints(
             [
+                // current env
                 Constraint::Ratio(4, 20),
+                // output / help
                 Constraint::Ratio(12, 20),
-                Constraint::Ratio(2, 20),
+                // user input
+                Constraint::Length(3),
+                // footer
                 Constraint::Ratio(2, 20),
             ]
             .as_ref(),
