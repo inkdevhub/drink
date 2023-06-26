@@ -3,7 +3,7 @@ use std::{env, fs, process::Command};
 use anyhow::Result;
 use clap::Parser;
 use contract_transcode::ContractMessageTranscoder;
-use drink::{chain_api::ChainApi, CallResult};
+use drink::{chain_api::ChainApi, contract_api::ContractApi, CallResult};
 use sp_core::{blake2_256, crypto::AccountId32};
 
 use crate::{
