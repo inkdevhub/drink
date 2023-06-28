@@ -52,13 +52,21 @@ jobs:
         with:
           command: test
 
+      - name: Install cargo-contract
+        shell: bash
+        run: |
+          rustup component add rust-src
+          cargo install cargo-contract --version 3.0.1
+
       - name: Run tests for examples
         shell: bash
         run: |
           pushd examples/flipper
+          cargo contract build --release
           cargo test --release
           popd
           
           pushd examples/counter
+          cargo contract build --release
           cargo test --release
           popd
