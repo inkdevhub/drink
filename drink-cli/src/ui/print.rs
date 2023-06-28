@@ -1,3 +1,5 @@
+use drink::contract_api::decode_debug_buffer;
+use pallet_contracts_primitives::ContractResult;
 use ratatui::{
     style::{Color, Modifier, Style},
     text::Span,
@@ -34,6 +36,19 @@ impl AppState {
             err.split('\n'),
             Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
         );
+    }
+
+    pub fn print_contract_action<R>(&mut self, result: &ContractResult<R, u128>) {
+        let mut output = format!(
+            "Gas consumed: {:?}\nGas required: {:?}\nDebug buffer:\n",
+            result.gas_consumed, result.gas_required
+        );
+
+        for line in &decode_debug_buffer(&result.debug_message) {
+            output.push_str(&format!("  {line}\n"));
+        }
+
+        self.print(&output)
     }
 
     fn print_sequence<'a, I: Iterator<Item = &'a str>>(&mut self, seq: I, style: Style) {

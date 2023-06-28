@@ -781,6 +781,7 @@ dependencies = [
  "pallet-timestamp",
  "parity-scale-codec",
  "scale-info",
+ "thiserror",
 ]
 
 [[package]]
@@ -792,6 +793,7 @@ dependencies = [
  "contract-transcode",
  "crossterm",
  "drink",
+ "pallet-contracts-primitives",
  "ratatui",
  "sp-core",
 ]

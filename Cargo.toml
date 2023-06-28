@@ -27,6 +27,7 @@ contract-transcode = { version = "3.0.1" }
 parity-scale-codec = { version = "3.6.0" }
 ratatui = { version = "0.21.0" }
 scale-info = { version = "2.5.0" }
+thiserror = { version = "1.0.40" }
 
 # Substrate dependencies
 

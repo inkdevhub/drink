@@ -39,7 +39,7 @@ You can use DRink in two ways.
 ### Directly as a library from your e2e tests
 
 ```rust
-let mut sandbox = Sandbox::new();
+let mut sandbox = Sandbox::new().unwrap();
 
 let contract_bytes = fs::read("path/to/contract.wasm").unwrap();
 let address = sandbox.deploy_contract(contract_bytes, compute_selector("new"), Default::default());
