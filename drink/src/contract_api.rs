@@ -2,7 +2,7 @@ use frame_support::{sp_runtime::AccountId32, weights::Weight};
 use pallet_contracts::Determinism;
 use pallet_contracts_primitives::{ContractExecResult, ContractInstantiateResult};
 
-use crate::{runtime::Contracts, Sandbox, ALICE};
+use crate::{runtime::Contracts, Sandbox};
 
 pub trait ContractApi {
     fn deploy_contract(
@@ -10,9 +10,17 @@ pub trait ContractApi {
         contract_bytes: Vec<u8>,
         data: Vec<u8>,
         salt: Vec<u8>,
+        origin: AccountId32,
+        gas_limit: Weight,
     ) -> ContractInstantiateResult<AccountId32, u128>;
 
-    fn call_contract(&mut self, address: AccountId32, data: Vec<u8>) -> ContractExecResult<u128>;
+    fn call_contract(
+        &mut self,
+        address: AccountId32,
+        data: Vec<u8>,
+        origin: AccountId32,
+        gas_limit: Weight,
+    ) -> ContractExecResult<u128>;
 }
 
 pub const GAS_LIMIT: Weight = Weight::from_parts(100_000_000_000, 3 * 1024 * 1024);
@@ -23,12 +31,14 @@ impl ContractApi for Sandbox {
         contract_bytes: Vec<u8>,
         data: Vec<u8>,
         salt: Vec<u8>,
+        origin: AccountId32,
+        gas_limit: Weight,
     ) -> ContractInstantiateResult<AccountId32, u128> {
         self.externalities.execute_with(|| {
             Contracts::bare_instantiate(
-                ALICE,
+                origin,
                 0,
-                GAS_LIMIT,
+                gas_limit,
                 None,
                 contract_bytes.into(),
                 data,
@@ -38,13 +48,19 @@ impl ContractApi for Sandbox {
         })
     }
 
-    fn call_contract(&mut self, address: AccountId32, data: Vec<u8>) -> ContractExecResult<u128> {
+    fn call_contract(
+        &mut self,
+        address: AccountId32,
+        data: Vec<u8>,
+        origin: AccountId32,
+        gas_limit: Weight,
+    ) -> ContractExecResult<u128> {
         self.externalities.execute_with(|| {
             Contracts::bare_call(
-                ALICE,
+                origin,
                 address,
                 0,
-                GAS_LIMIT,
+                gas_limit,
                 None,
                 data,
                 true,

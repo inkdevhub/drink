@@ -83,7 +83,13 @@ impl Session {
             .encode(constructor, args)
             .map_err(|err| SessionError::Encoding(err.to_string()))?;
 
-        let result = self.sandbox.deploy_contract(contract_bytes, data, salt);
+        let result = self.sandbox.deploy_contract(
+            contract_bytes,
+            data,
+            salt,
+            self.actor.clone(),
+            self.gas_limit,
+        );
 
         match &result.result {
             Ok(exec_result) if exec_result.result.did_revert() => {
@@ -105,7 +111,9 @@ impl Session {
             .map_err(|err| SessionError::Encoding(err.to_string()))?;
 
         let address = self.last_deploy_return().ok_or(SessionError::NoContract)?;
-        let result = self.sandbox.call_contract(address.clone(), data);
+        let result = self
+            .sandbox
+            .call_contract(address, data, self.actor.clone(), self.gas_limit);
 
         match &result.result {
             Ok(exec_result) if exec_result.did_revert() => Err(SessionError::CallReverted),

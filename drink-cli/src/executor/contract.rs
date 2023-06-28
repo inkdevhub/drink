@@ -1,7 +1,10 @@
 use std::{env, fs, path::PathBuf};
 
 use contract_transcode::ContractMessageTranscoder;
-use drink::contract_api::ContractApi;
+use drink::{
+    contract_api::{ContractApi, GAS_LIMIT},
+    ALICE,
+};
 
 use crate::app_state::{AppState, Contract};
 
@@ -58,7 +61,7 @@ pub fn deploy(app_state: &mut AppState, constructor: String, args: Vec<String>, 
     };
     let result = app_state
         .sandbox
-        .deploy_contract(contract_bytes, data, salt);
+        .deploy_contract(contract_bytes, data, salt, ALICE, GAS_LIMIT);
     app_state.print_contract_action(&result);
 
     // Check if call has been executed successfully
@@ -101,7 +104,9 @@ pub fn call(app_state: &mut AppState, message: String, args: Vec<String>) {
         return;
     };
 
-    let result = app_state.sandbox.call_contract(account_id, data);
+    let result = app_state
+        .sandbox
+        .call_contract(account_id, data, ALICE, GAS_LIMIT);
     app_state.print_contract_action(&result);
 
     match result.result {
