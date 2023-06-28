@@ -4,8 +4,9 @@ use contract_transcode::ContractMessageTranscoder;
 use drink::Sandbox;
 use ratatui::text::Line;
 use sp_core::crypto::AccountId32;
+pub use user_input::UserInput;
 
-use crate::user_input::UserInput;
+mod user_input;
 
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
 pub struct ChainInfo {
