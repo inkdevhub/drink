@@ -36,11 +36,6 @@ pub(super) fn layout<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
         )
         .split(f.size());
 
-    if !app_state.ui_state.output_scrolling {
-        app_state.ui_state.output_offset =
-            (app_state.ui_state.output.len() as u16).saturating_sub(chunks[1].height - 2);
-    }
-
     let subchunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Percentage(70), Constraint::Percentage(30)].as_ref())
@@ -54,6 +49,10 @@ pub(super) fn layout<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
     if app_state.ui_state.show_help {
         f.render_widget(help::build(app_state), chunks[1]);
     } else {
+        app_state
+            .ui_state
+            .output
+            .note_display_height(chunks[1].height - 2);
         f.render_widget(output::build(app_state), chunks[1]);
     }
 

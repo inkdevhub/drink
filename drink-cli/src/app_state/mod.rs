@@ -2,10 +2,12 @@ use std::{env, path::PathBuf};
 
 pub use contracts::{Contract, ContractIndex, ContractRegistry};
 use drink::Sandbox;
-use ratatui::text::Line;
 pub use user_input::UserInput;
 
+use crate::app_state::output::Output;
+
 mod contracts;
+mod output;
 mod user_input;
 
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
@@ -27,11 +29,9 @@ pub struct UiState {
     pub mode: Mode,
 
     pub user_input: UserInput,
+    pub output: Output,
 
     pub show_help: bool,
-    pub output: Vec<Line<'static>>,
-    pub output_offset: u16,
-    pub output_scrolling: bool,
 }
 
 impl Default for UiState {
@@ -40,10 +40,8 @@ impl Default for UiState {
             pwd: env::current_dir().expect("Failed to get current directory"),
             mode: Default::default(),
             user_input: Default::default(),
-            show_help: false,
             output: Default::default(),
-            output_offset: 0,
-            output_scrolling: false,
+            show_help: false,
         }
     }
 }
