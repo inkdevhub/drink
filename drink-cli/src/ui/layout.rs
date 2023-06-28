@@ -1,6 +1,7 @@
 use ratatui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout, Margin},
+    widgets::{Block, BorderType, Borders, Padding},
     Frame,
 };
 
@@ -8,6 +9,14 @@ use crate::{
     app_state::AppState,
     ui::{contracts, current_env, footer, help, output, user_input},
 };
+
+pub(super) fn section(title: &str) -> Block {
+    Block::default()
+        .title(title)
+        .borders(Borders::ALL)
+        .border_type(BorderType::Rounded)
+        .padding(Padding::horizontal(1))
+}
 
 pub(super) fn layout<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
     let chunks = Layout::default()

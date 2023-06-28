@@ -1,17 +1,11 @@
 use ratatui::{
     layout::Alignment,
-    widgets::{Block, BorderType, Borders, Padding, Paragraph, Widget, Wrap},
+    widgets::{Paragraph, Widget, Wrap},
 };
 
-use crate::app_state::AppState;
+use crate::{app_state::AppState, ui::layout::section};
 
 pub(super) fn build(app_state: &mut AppState) -> impl Widget {
-    let block = Block::default()
-        .title("Current environment")
-        .borders(Borders::ALL)
-        .border_type(BorderType::Rounded)
-        .padding(Padding::horizontal(1));
-
     let current_contract_info = match app_state.contracts.current_contract() {
         Some(contract) => format!("name: {} | address: {}", contract.name, contract.address),
         None => "No deployed contract".to_string(),
@@ -29,5 +23,5 @@ Current contract: {{ {} }}"#,
     ))
     .alignment(Alignment::Left)
     .wrap(Wrap { trim: false })
-    .block(block)
+    .block(section("Current environment"))
 }

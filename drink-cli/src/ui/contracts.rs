@@ -1,22 +1,19 @@
 use ratatui::{
     style::{Color, Style},
     text::{Line, Span},
-    widgets::{Block, BorderType, Borders, List, ListItem, Padding, Widget},
+    widgets::{List, ListItem, Widget},
 };
 
-use crate::app_state::{AppState, ContractIndex};
+use crate::{
+    app_state::{AppState, ContractIndex},
+    ui::layout::section,
+};
 
 pub(super) fn build(app_state: &mut AppState) -> impl Widget {
-    let block = Block::default()
-        .title("Deployed contracts")
-        .borders(Borders::ALL)
-        .border_type(BorderType::Rounded)
-        .padding(Padding::horizontal(1));
-
     let items = app_state
         .contracts
         .get_all()
-        .into_iter()
+        .iter()
         .enumerate()
         .map(|(idx, contract)| {
             let style = match app_state.contracts.current_index() {
@@ -33,5 +30,5 @@ pub(super) fn build(app_state: &mut AppState) -> impl Widget {
         })
         .collect::<Vec<_>>();
 
-    List::new(items).block(block)
+    List::new(items).block(section("Deployed contracts"))
 }

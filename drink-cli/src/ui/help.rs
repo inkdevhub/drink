@@ -1,18 +1,12 @@
 use ratatui::{
     style::{Color, Style},
     text::{Line, Span},
-    widgets::{Block, BorderType, Borders, Padding, Paragraph, Widget},
+    widgets::{Paragraph, Widget},
 };
 
-use crate::app_state::AppState;
+use crate::{app_state::AppState, ui::layout::section};
 
 pub(super) fn build(_app_state: &AppState) -> impl Widget {
-    let block = Block::default()
-        .title("Help")
-        .borders(Borders::ALL)
-        .border_type(BorderType::Rounded)
-        .padding(Padding::horizontal(1));
-
     Paragraph::new(vec![
         command("cd <dir>", "change directory do <dir>"),
         command("clear / c", "clear output tab"),
@@ -34,7 +28,7 @@ pub(super) fn build(_app_state: &AppState) -> impl Widget {
             "add <value> tokens to <recipient>",
         ),
     ])
-    .block(block)
+    .block(section("Help"))
 }
 
 fn command(command: &'static str, description: &'static str) -> Line<'static> {
