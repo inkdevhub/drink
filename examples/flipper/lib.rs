@@ -11,15 +11,15 @@ mod flipper {
 
     impl Flipper {
         #[ink(constructor)]
-        pub fn new() -> Self {
-            Self { value: false }
+        pub fn new(init: bool) -> Self {
+            Self { value: init }
         }
 
         #[ink(message)]
         pub fn flip(&mut self) {
             debug_println!("Previous value: `{}`", self.value);
             self.value = !self.value;
-            debug_println!("Flipped to: `{}`", self.value);
+            debug_println!("Flipped to:     `{}`", self.value);
         }
 
         #[ink(message)]

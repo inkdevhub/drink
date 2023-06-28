@@ -16,10 +16,10 @@ mod counter {
         }
 
         #[ink(message)]
-        pub fn bump(&mut self) {
+        pub fn bump(&mut self, by: u32) {
             debug_println!("Previous value: `{}`", self.value);
-            self.value += 1;
-            debug_println!("Bumped to: `{}`", self.value);
+            self.value += by;
+            debug_println!("Bumped to:      `{}`", self.value);
         }
 
         #[ink(message)]

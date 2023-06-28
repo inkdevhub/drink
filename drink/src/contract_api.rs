@@ -8,15 +8,11 @@ pub trait ContractApi {
     fn deploy_contract(
         &mut self,
         contract_bytes: Vec<u8>,
-        selector: Vec<u8>,
+        data: Vec<u8>,
         salt: Vec<u8>,
     ) -> ContractInstantiateResult<AccountId32, u128>;
 
-    fn call_contract(
-        &mut self,
-        address: AccountId32,
-        selector: Vec<u8>,
-    ) -> ContractExecResult<u128>;
+    fn call_contract(&mut self, address: AccountId32, data: Vec<u8>) -> ContractExecResult<u128>;
 }
 
 pub const GAS_LIMIT: Weight = Weight::from_parts(100_000_000_000, 3 * 1024 * 1024);
@@ -25,11 +21,9 @@ impl ContractApi for Sandbox {
     fn deploy_contract(
         &mut self,
         contract_bytes: Vec<u8>,
-        selector: Vec<u8>,
+        data: Vec<u8>,
         salt: Vec<u8>,
     ) -> ContractInstantiateResult<AccountId32, u128> {
-        let mut data = selector;
-        data.extend_from_slice(&[1; 32]);
         self.externalities.execute_with(|| {
             Contracts::bare_instantiate(
                 ALICE,
@@ -44,11 +38,7 @@ impl ContractApi for Sandbox {
         })
     }
 
-    fn call_contract(
-        &mut self,
-        address: AccountId32,
-        selector: Vec<u8>,
-    ) -> ContractExecResult<u128> {
+    fn call_contract(&mut self, address: AccountId32, data: Vec<u8>) -> ContractExecResult<u128> {
         self.externalities.execute_with(|| {
             Contracts::bare_call(
                 ALICE,
@@ -56,7 +46,7 @@ impl ContractApi for Sandbox {
                 0,
                 GAS_LIMIT,
                 None,
-                selector,
+                data,
                 true,
                 Determinism::Enforced,
             )

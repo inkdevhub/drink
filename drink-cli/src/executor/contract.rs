@@ -2,7 +2,6 @@ use std::{env, fs, path::PathBuf};
 
 use contract_transcode::ContractMessageTranscoder;
 use drink::contract_api::ContractApi;
-use sp_core::blake2_256;
 
 use crate::app_state::{AppState, Contract};
 
@@ -26,7 +25,7 @@ pub fn build(app_state: &mut AppState) {
     }
 }
 
-pub fn deploy(app_state: &mut AppState, constructor: String, salt: Vec<u8>) {
+pub fn deploy(app_state: &mut AppState, constructor: String, args: Vec<String>, salt: Vec<u8>) {
     // Get raw contract bytes
     let Some((contract_name, contract_file)) = find_wasm_blob() else {
         app_state.print_error("Failed to find contract file");
@@ -53,10 +52,13 @@ pub fn deploy(app_state: &mut AppState, constructor: String, salt: Vec<u8>) {
     };
 
     // Try deploying
-    let result =
-        app_state
-            .sandbox
-            .deploy_contract(contract_bytes, compute_selector(&constructor), salt);
+    let Ok(data) = transcode.encode(&constructor, args) else {
+        app_state.print_error("Failed to encode call data.");
+        return;
+    };
+    let result = app_state
+        .sandbox
+        .deploy_contract(contract_bytes, data, salt);
     app_state.print_contract_action(&result);
 
     // Check if call has been executed successfully
@@ -87,16 +89,19 @@ pub fn deploy(app_state: &mut AppState, constructor: String, salt: Vec<u8>) {
     app_state.print("Contract deployed successfully");
 }
 
-pub fn call(app_state: &mut AppState, message: String) {
-    let Some(account_id) = app_state.contracts.current_contract()
-        .map(|c| c.address.clone()) else {
+pub fn call(app_state: &mut AppState, message: String, args: Vec<String>) {
+    let Some(contract) = app_state.contracts.current_contract() else {
         app_state.print_error("No deployed contract");
         return;
     };
 
-    let result = app_state
-        .sandbox
-        .call_contract(account_id, compute_selector(&message));
+    let account_id = contract.address.clone();
+    let Ok(data) = contract.transcode.encode(&message, args) else {
+        app_state.print_error("Failed to encode call data");
+        return;
+    };
+
+    let result = app_state.sandbox.call_contract(account_id, data);
     app_state.print_contract_action(&result);
 
     match result.result {
@@ -149,9 +154,4 @@ fn find_wasm_blob() -> Option<(String, PathBuf)> {
         .to_string();
 
     Some((raw_name, file.path()))
-}
-
-fn compute_selector(name: &str) -> Vec<u8> {
-    let name = name.as_bytes();
-    blake2_256(name)[..4].to_vec()
 }

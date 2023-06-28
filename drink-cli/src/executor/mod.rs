@@ -43,8 +43,12 @@ pub fn execute(app_state: &mut AppState) -> Result<()> {
         CliCommand::AddTokens { recipient, value } => add_tokens(app_state, recipient, value),
 
         CliCommand::Build => contract::build(app_state),
-        CliCommand::Deploy { constructor, salt } => contract::deploy(app_state, constructor, salt),
-        CliCommand::Call { message } => contract::call(app_state, message),
+        CliCommand::Deploy {
+            constructor,
+            args,
+            salt,
+        } => contract::deploy(app_state, constructor, args, salt),
+        CliCommand::Call { message, args } => contract::call(app_state, message, args),
     }
 
     Ok(())
