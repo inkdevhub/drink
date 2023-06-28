@@ -32,7 +32,6 @@ pub fn deploy(app_state: &mut AppState, constructor: String, salt: Vec<u8>) {
         app_state.print_error("Failed to find contract file");
         return;
     };
-    app_state.ui_state.contract_project_name = contract_name.clone();
 
     let contract_bytes = match fs::read(contract_file) {
         Ok(bytes) => bytes,

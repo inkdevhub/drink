@@ -23,7 +23,6 @@ pub enum Mode {
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct UiState {
     pub pwd: PathBuf,
-    pub contract_project_name: String,
     pub mode: Mode,
 
     pub user_input: UserInput,
@@ -39,7 +38,6 @@ impl Default for UiState {
     fn default() -> Self {
         UiState {
             pwd: env::current_dir().expect("Failed to get current directory"),
-            contract_project_name: Default::default(),
             mode: Default::default(),
             user_input: Default::default(),
             current_contract: 0,
