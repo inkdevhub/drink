@@ -4,7 +4,7 @@ use ratatui::{
     widgets::{Block, BorderType, Borders, List, ListItem, Padding, Widget},
 };
 
-use crate::app_state::AppState;
+use crate::app_state::{AppState, ContractIndex};
 
 pub(super) fn build(app_state: &mut AppState) -> impl Widget {
     let block = Block::default()
@@ -15,13 +15,15 @@ pub(super) fn build(app_state: &mut AppState) -> impl Widget {
 
     let items = app_state
         .contracts
-        .iter()
+        .get_all()
+        .into_iter()
         .enumerate()
         .map(|(idx, contract)| {
-            let style = if idx == app_state.ui_state.current_contract {
-                Style::default().bg(Color::White).fg(Color::Black)
-            } else {
-                Style::default()
+            let style = match app_state.contracts.current_index() {
+                ContractIndex::CurrentContract(cc) if cc == idx => {
+                    Style::default().bg(Color::White).fg(Color::Black)
+                }
+                _ => Style::default(),
             };
 
             ListItem::new(Line::from(Span::styled(

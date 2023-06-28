@@ -86,16 +86,20 @@ fn run_ui_app(terminal: &mut Terminal) -> Result<()> {
                 (Drinking, KeyCode::Backspace) => {
                     app_state.ui_state.user_input.pop();
                 }
-                (Drinking, KeyCode::Tab) if app_state.contracts.len() > 1 => {
-                    let prev_base_path =
-                        &app_state.contracts[app_state.ui_state.current_contract].base_path;
+                (Drinking, KeyCode::Tab) => {
+                    let prev_path = match app_state.contracts.current_contract() {
+                        Some(c) => c.base_path.clone(),
+                        None => continue,
+                    };
 
-                    app_state.ui_state.current_contract =
-                        (app_state.ui_state.current_contract + 1) % app_state.contracts.len();
-                    let current = &app_state.contracts[app_state.ui_state.current_contract];
+                    let new_path = &app_state
+                        .contracts
+                        .next()
+                        .expect("There is at least one contract - just checked")
+                        .base_path;
 
-                    if current.base_path != *prev_base_path {
-                        let base_path = current.base_path.to_str().unwrap();
+                    if *new_path != prev_path {
+                        let base_path = new_path.to_str().unwrap();
                         app_state.ui_state.user_input.set(format!("cd {base_path}"));
                         execute(&mut app_state)?;
                         app_state.ui_state.user_input.set(String::new());

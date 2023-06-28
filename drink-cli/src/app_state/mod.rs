@@ -1,11 +1,11 @@
 use std::{env, path::PathBuf};
 
-use contract_transcode::ContractMessageTranscoder;
+pub use contracts::{Contract, ContractIndex, ContractRegistry};
 use drink::Sandbox;
 use ratatui::text::Line;
-use sp_core::crypto::AccountId32;
 pub use user_input::UserInput;
 
+mod contracts;
 mod user_input;
 
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
@@ -27,7 +27,6 @@ pub struct UiState {
     pub mode: Mode,
 
     pub user_input: UserInput,
-    pub current_contract: usize,
 
     pub show_help: bool,
     pub output: Vec<Line<'static>>,
@@ -41,7 +40,6 @@ impl Default for UiState {
             pwd: env::current_dir().expect("Failed to get current directory"),
             mode: Default::default(),
             user_input: Default::default(),
-            current_contract: 0,
             show_help: false,
             output: Default::default(),
             output_offset: 0,
@@ -50,18 +48,11 @@ impl Default for UiState {
     }
 }
 
-pub struct Contract {
-    pub name: String,
-    pub address: AccountId32,
-    pub base_path: PathBuf,
-    pub transcode: ContractMessageTranscoder,
-}
-
 pub struct AppState {
     pub sandbox: Sandbox,
     pub chain_info: ChainInfo,
     pub ui_state: UiState,
-    pub contracts: Vec<Contract>,
+    pub contracts: ContractRegistry,
 }
 
 impl Default for AppState {
@@ -70,7 +61,7 @@ impl Default for AppState {
             sandbox: Sandbox::new().expect("Failed to create sandbox"),
             chain_info: Default::default(),
             ui_state: Default::default(),
-            contracts: vec![],
+            contracts: Default::default(),
         }
     }
 }

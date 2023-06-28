@@ -77,19 +77,18 @@ pub fn deploy(app_state: &mut AppState, constructor: String, salt: Vec<u8>) {
 
     // Everything went well
     app_state.chain_info.deployed_contracts += 1;
-    app_state.contracts.push(Contract {
+    app_state.contracts.add(Contract {
         name: contract_name,
         address: result.account_id,
         base_path: app_state.ui_state.pwd.clone(),
         transcode,
     });
-    app_state.ui_state.current_contract = app_state.contracts.len() - 1;
 
     app_state.print("Contract deployed successfully");
 }
 
 pub fn call(app_state: &mut AppState, message: String) {
-    let Some(account_id) = app_state.contracts.get(app_state.ui_state.current_contract)
+    let Some(account_id) = app_state.contracts.current_contract()
         .map(|c| c.address.clone()) else {
         app_state.print_error("No deployed contract");
         return;
@@ -110,7 +109,7 @@ pub fn call(app_state: &mut AppState, message: String) {
         Ok(result) => {
             let result_decoded = match app_state
                 .contracts
-                .get(app_state.ui_state.current_contract)
+                .current_contract()
                 .unwrap()
                 .transcode
                 .decode_return(&message, &mut result.data.as_slice())
