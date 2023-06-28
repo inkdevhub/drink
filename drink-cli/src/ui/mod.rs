@@ -77,7 +77,7 @@ fn run_ui_app(terminal: &mut Terminal) -> Result<()> {
                     app_state.ui_state.output_scrolling = true;
                     app_state.ui_state.output_offset += 1
                 }
-                (Managing, KeyCode::Up) => {
+                (Managing, KeyCode::Up) if app_state.ui_state.output_offset > 0 => {
                     app_state.ui_state.output_scrolling = true;
                     app_state.ui_state.output_offset -= 1
                 }

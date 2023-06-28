@@ -30,7 +30,7 @@ pub struct UiState {
 
     pub show_help: bool,
     pub output: Vec<Line<'static>>,
-    pub output_offset: i16,
+    pub output_offset: u16,
     pub output_scrolling: bool,
 }
 

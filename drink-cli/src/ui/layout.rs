@@ -38,7 +38,7 @@ pub(super) fn layout<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
 
     if !app_state.ui_state.output_scrolling {
         app_state.ui_state.output_offset =
-            (app_state.ui_state.output.len() as u16).saturating_sub(chunks[1].height - 2) as i16;
+            (app_state.ui_state.output.len() as u16).saturating_sub(chunks[1].height - 2);
     }
 
     let subchunks = Layout::default()
