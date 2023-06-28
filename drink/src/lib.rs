@@ -2,6 +2,8 @@ pub mod chain_api;
 pub mod contract_api;
 mod error;
 mod runtime;
+#[cfg(feature = "session")]
+pub mod session;
 
 use std::time::SystemTime;
 

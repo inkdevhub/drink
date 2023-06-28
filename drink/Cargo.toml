@@ -8,6 +8,7 @@ repository.workspace = true
 version.workspace = true
 
 [dependencies]
+contract-transcode = { workspace = true, optional = true }
 frame-support = { workspace = true }
 frame-system = { workspace = true }
 pallet-balances = { workspace = true }
@@ -17,3 +18,6 @@ pallet-timestamp = { workspace = true }
 parity-scale-codec = { workspace = true }
 scale-info = { workspace = true }
 thiserror = { workspace = true }
+
+[features]
+session = ["contract-transcode"]
