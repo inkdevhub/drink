@@ -27,6 +27,14 @@ pub(super) fn build(_app_state: &AppState) -> impl Widget {
             "add-tokens <recipient> <value>",
             "add <value> tokens to <recipient>",
         ),
+        command(
+            "set-actor <account>",
+            "set <account> as the current actor (transaction sender)",
+        ),
+        command(
+            "set-gas-limit <ref_time> <proof_size>",
+            "set gas limits to <ref_time> and <proof_size>",
+        ),
     ])
     .block(section("Help"))
 }
