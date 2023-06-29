@@ -99,9 +99,15 @@ pub fn call(app_state: &mut AppState, message: String, args: Vec<String>) {
     };
 
     let account_id = contract.address.clone();
-    let Ok(data) = contract.transcode.encode(&message, args) else {
-        app_state.print_error("Failed to encode call data");
-        return;
+    let data = match contract.transcode.encode(&message, args) {
+        Ok(data) => data,
+        Err(error_msg) => {
+            app_state.print_error(&format!(
+                "Failed to encode call data. Error:\n    {}",
+                error_msg,
+            ));
+            return;
+        }
     };
 
     let result = app_state.sandbox.call_contract(
