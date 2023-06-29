@@ -99,7 +99,7 @@ pub fn call(app_state: &mut AppState, message: String, args: Vec<String>) {
     };
 
     let account_id = contract.address.clone();
-    let data = match contract.transcode.encode(&message, args)  {
+    let data = match contract.transcode.encode(&message, args) {
         Ok(data) => data,
         Err(error_msg) => {
             app_state.print_error(&format!(
@@ -107,7 +107,7 @@ pub fn call(app_state: &mut AppState, message: String, args: Vec<String>) {
                 error_msg,
             ));
             return;
-        },
+        }
     };
 
     let result = app_state.sandbox.call_contract(
