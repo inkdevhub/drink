@@ -38,19 +38,6 @@ impl AppState {
         );
     }
 
-    pub fn print_contract_action<R>(&mut self, result: &ContractResult<R, u128>) {
-        let mut output = format!(
-            "Gas consumed: {:?}\nGas required: {:?}\nDebug buffer:\n",
-            result.gas_consumed, result.gas_required
-        );
-
-        for line in &decode_debug_buffer(&result.debug_message) {
-            output.push_str(&format!("  {line}\n"));
-        }
-
-        self.print(&output)
-    }
-
     fn print_sequence<'a, I: Iterator<Item = &'a str>>(&mut self, seq: I, style: Style) {
         for line in seq {
             self.ui_state
@@ -58,4 +45,17 @@ impl AppState {
                 .push(Span::styled(line.to_string(), style).into());
         }
     }
+}
+
+pub fn format_contract_action<R>(result: &ContractResult<R, u128>) -> String {
+    let mut output = format!(
+        "Gas consumed: {:?}\nGas required: {:?}\nDebug buffer:\n",
+        result.gas_consumed, result.gas_required
+    );
+
+    for line in &decode_debug_buffer(&result.debug_message) {
+        output.push_str(&format!("  {line}\n"));
+    }
+
+    output
 }

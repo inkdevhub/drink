@@ -4,7 +4,6 @@ mod footer;
 mod help;
 mod layout;
 mod output;
-mod print;
 mod user_input;
 
 use std::{io, io::Stdout};

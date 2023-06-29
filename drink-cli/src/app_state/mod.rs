@@ -1,7 +1,7 @@
 use std::{env, path::PathBuf};
 
 pub use contracts::{Contract, ContractIndex, ContractRegistry};
-use drink::{Sandbox, Weight, DEFAULT_ACTOR, DEFAULT_GAS_LIMIT};
+use drink::{session::Session, Weight, DEFAULT_ACTOR, DEFAULT_GAS_LIMIT};
 use sp_core::crypto::AccountId32;
 pub use user_input::UserInput;
 
@@ -9,6 +9,7 @@ use crate::app_state::output::Output;
 
 mod contracts;
 mod output;
+pub mod print;
 mod user_input;
 
 #[derive(Clone, Eq, PartialEq, Debug)]
@@ -59,7 +60,7 @@ impl Default for UiState {
 }
 
 pub struct AppState {
-    pub sandbox: Sandbox,
+    pub session: Session,
     pub chain_info: ChainInfo,
     pub ui_state: UiState,
     pub contracts: ContractRegistry,
@@ -68,7 +69,7 @@ pub struct AppState {
 impl Default for AppState {
     fn default() -> Self {
         Self {
-            sandbox: Sandbox::new().expect("Failed to create sandbox"),
+            session: Session::new(None).expect("Failed to create drinking session"),
             chain_info: Default::default(),
             ui_state: Default::default(),
             contracts: Default::default(),

@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, rc::Rc};
 
 use contract_transcode::ContractMessageTranscoder;
 use sp_core::crypto::AccountId32;
@@ -10,7 +10,7 @@ pub struct Contract {
     pub name: String,
     pub address: AccountId32,
     pub base_path: PathBuf,
-    pub transcode: ContractMessageTranscoder,
+    pub transcoder: Rc<ContractMessageTranscoder>,
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug, Default)]
