@@ -24,17 +24,17 @@ pub enum SessionError {
     CallFailed(DispatchError),
     #[error("No deployed contract")]
     NoContract,
+    #[error("Missing transcoder")]
+    NoTranscoder,
 }
 
 pub struct Session {
     sandbox: Sandbox,
 
-    #[allow(unused)]
     actor: AccountId32,
-    #[allow(unused)]
     gas_limit: Weight,
 
-    transcoder: ContractMessageTranscoder,
+    transcoder: Option<ContractMessageTranscoder>,
 
     deploy_results: Vec<ContractInstantiateResult<AccountId32, u128>>,
     deploy_returns: Vec<AccountId32>,
@@ -43,7 +43,7 @@ pub struct Session {
 }
 
 impl Session {
-    pub fn new(transcoder: ContractMessageTranscoder) -> Result<Self, SessionError> {
+    pub fn new(transcoder: Option<ContractMessageTranscoder>) -> Result<Self, SessionError> {
         Ok(Self {
             sandbox: Sandbox::new().map_err(SessionError::Drink)?,
             actor: DEFAULT_ACTOR,
@@ -77,6 +77,7 @@ impl Session {
     ) -> Result<Self, SessionError> {
         let data = self
             .transcoder
+            .ok_or(SessionError::NoTranscoder)?
             .encode(constructor, args)
             .map_err(|err| SessionError::Encoding(err.to_string()))?;
 
@@ -104,6 +105,7 @@ impl Session {
     pub fn call(mut self, message: &str, args: &[&str]) -> Result<Self, SessionError> {
         let data = self
             .transcoder
+            .ok_or(SessionError::NoTranscoder)?
             .encode(message, args)
             .map_err(|err| SessionError::Encoding(err.to_string()))?;
 
@@ -117,6 +119,7 @@ impl Session {
             Ok(exec_result) => {
                 let decoded = self
                     .transcoder
+                    .ok_or(SessionError::NoTranscoder)?
                     .decode_return(message, &mut exec_result.data.as_slice())
                     .map_err(|err| SessionError::Decoding(err.to_string()))?;
 

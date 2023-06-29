@@ -54,7 +54,7 @@ mod tests {
 
     #[test]
     fn initialization() -> Result<(), Box<dyn Error>> {
-        let init_value = Session::new(transcoder())?
+        let init_value = Session::new(Some(transcoder()))?
             .deploy(bytes(), "new", &["true"], vec![])?
             .call("get", &[])?
             .last_call_return()
@@ -67,7 +67,7 @@ mod tests {
 
     #[test]
     fn flipping() -> Result<(), Box<dyn Error>> {
-        let init_value = Session::new(transcoder())?
+        let init_value = Session::new(Some(transcoder()))?
             .deploy(bytes(), "new", &["true"], vec![])?
             .call("flip", &[])?
             .call("flip", &[])?

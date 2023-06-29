@@ -17,4 +17,4 @@ ratatui = { workspace = true, features = ["all-widgets"]  }
 pallet-contracts-primitives = { workspace = true }
 sp-core = { workspace = true, features = ["serde"] }
 
-drink = { workspace = true }
+drink = { workspace = true, features = ["session"] }
