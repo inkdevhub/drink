@@ -80,6 +80,7 @@ impl Session {
     ) -> Result<Self, SessionError> {
         let data = self
             .transcoder
+            .as_ref()
             .ok_or(SessionError::NoTranscoder)?
             .encode(constructor, args)
             .map_err(|err| SessionError::Encoding(err.to_string()))?;
@@ -108,6 +109,7 @@ impl Session {
     pub fn call(mut self, message: &str, args: &[&str]) -> Result<Self, SessionError> {
         let data = self
             .transcoder
+            .as_ref()
             .ok_or(SessionError::NoTranscoder)?
             .encode(message, args)
             .map_err(|err| SessionError::Encoding(err.to_string()))?;
@@ -122,6 +124,7 @@ impl Session {
             Ok(exec_result) => {
                 let decoded = self
                     .transcoder
+                    .as_ref()
                     .ok_or(SessionError::NoTranscoder)?
                     .decode_return(message, &mut exec_result.data.as_slice())
                     .map_err(|err| SessionError::Decoding(err.to_string()))?;
