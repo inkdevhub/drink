@@ -55,8 +55,8 @@ mod tests {
     #[test]
     fn initialization() -> Result<(), Box<dyn Error>> {
         let init_value = Session::new(Some(transcoder()))?
-            .deploy(bytes(), "new", &["true"], vec![])?
-            .call("get", &[])?
+            .deploy_and(bytes(), "new", &["true"], vec![])?
+            .call_and("get", &[])?
             .last_call_return()
             .expect("Call was successful");
 
@@ -68,11 +68,11 @@ mod tests {
     #[test]
     fn flipping() -> Result<(), Box<dyn Error>> {
         let init_value = Session::new(Some(transcoder()))?
-            .deploy(bytes(), "new", &["true"], vec![])?
-            .call("flip", &[])?
-            .call("flip", &[])?
-            .call("flip", &[])?
-            .call("get", &[])?
+            .deploy_and(bytes(), "new", &["true"], vec![])?
+            .call_and("flip", &[])?
+            .call_and("flip", &[])?
+            .call_and("flip", &[])?
+            .call_and("get", &[])?
             .last_call_return()
             .expect("Call was successful");
 
