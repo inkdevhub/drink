@@ -1,3 +1,5 @@
+use std::{mem, rc::Rc};
+
 pub use contract_transcode;
 use contract_transcode::{ContractMessageTranscoder, Value};
 use frame_support::{dispatch::DispatchError, sp_runtime::AccountId32, weights::Weight};
@@ -36,7 +38,7 @@ pub struct Session {
     actor: AccountId32,
     gas_limit: Weight,
 
-    transcoder: Option<ContractMessageTranscoder>,
+    transcoder: Option<Rc<ContractMessageTranscoder>>,
 
     deploy_results: Vec<ContractInstantiateResult<AccountId32, u128>>,
     deploy_returns: Vec<AccountId32>,
@@ -45,7 +47,7 @@ pub struct Session {
 }
 
 impl Session {
-    pub fn new(transcoder: Option<ContractMessageTranscoder>) -> Result<Self, SessionError> {
+    pub fn new(transcoder: Option<Rc<ContractMessageTranscoder>>) -> Result<Self, SessionError> {
         Ok(Self {
             sandbox: Sandbox::new().map_err(SessionError::Drink)?,
             actor: DEFAULT_ACTOR,
@@ -62,27 +64,27 @@ impl Session {
         Self { actor, ..self }
     }
 
-    pub fn set_actor(&mut self, actor: AccountId32) {
-        self.actor = actor;
+    pub fn set_actor(&mut self, actor: AccountId32) -> AccountId32 {
+        mem::replace(&mut self.actor, actor)
     }
 
     pub fn with_gas_limit(self, gas_limit: Weight) -> Self {
         Self { gas_limit, ..self }
     }
 
-    pub fn set_gas_limit(&mut self, gas_limit: Weight) {
-        self.gas_limit = gas_limit;
+    pub fn set_gas_limit(&mut self, gas_limit: Weight) -> Weight {
+        mem::replace(&mut self.gas_limit, gas_limit)
     }
 
-    pub fn with_transcoder(self, transcoder: ContractMessageTranscoder) -> Self {
-        Self {
-            transcoder: Some(transcoder),
-            ..self
-        }
+    pub fn with_transcoder(self, transcoder: Option<Rc<ContractMessageTranscoder>>) -> Self {
+        Self { transcoder, ..self }
     }
 
-    pub fn set_transcoder(&mut self, transcoder: ContractMessageTranscoder) {
-        self.transcoder = Some(transcoder);
+    pub fn set_transcoder(
+        &mut self,
+        transcoder: Option<Rc<ContractMessageTranscoder>>,
+    ) -> Option<Rc<ContractMessageTranscoder>> {
+        mem::replace(&mut self.transcoder, transcoder)
     }
 
     pub fn chain_api(&mut self) -> &mut impl ChainApi {
@@ -93,7 +95,7 @@ impl Session {
         mut self,
         contract_bytes: Vec<u8>,
         constructor: &str,
-        args: &[&str],
+        args: &[String],
         salt: Vec<u8>,
     ) -> Result<Self, SessionError> {
         self.deploy(contract_bytes, constructor, args, salt)
@@ -104,7 +106,7 @@ impl Session {
         &mut self,
         contract_bytes: Vec<u8>,
         constructor: &str,
-        args: &[&str],
+        args: &[String],
         salt: Vec<u8>,
     ) -> Result<AccountId32, SessionError> {
         let data = self
@@ -138,11 +140,21 @@ impl Session {
         ret
     }
 
-    pub fn call_and(mut self, message: &str, args: &[&str]) -> Result<Self, SessionError> {
-        self.call(message, args).map(|_| self)
+    pub fn call_and(
+        mut self,
+        address: Option<AccountId32>,
+        message: &str,
+        args: &[String],
+    ) -> Result<Self, SessionError> {
+        self.call(address, message, args).map(|_| self)
     }
 
-    pub fn call(&mut self, message: &str, args: &[&str]) -> Result<Value, SessionError> {
+    pub fn call(
+        &mut self,
+        address: Option<AccountId32>,
+        message: &str,
+        args: &[String],
+    ) -> Result<Value, SessionError> {
         let data = self
             .transcoder
             .as_ref()
@@ -150,7 +162,15 @@ impl Session {
             .encode(message, args)
             .map_err(|err| SessionError::Encoding(err.to_string()))?;
 
-        let address = self.last_deploy_return().ok_or(SessionError::NoContract)?;
+        let address = match address {
+            Some(address) => address,
+            None => self
+                .deploy_returns
+                .last()
+                .ok_or(SessionError::NoContract)?
+                .clone(),
+        };
+
         let result = self
             .sandbox
             .call_contract(address, data, self.actor.clone(), self.gas_limit);

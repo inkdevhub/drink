@@ -32,7 +32,7 @@ mod flipper {
 
 #[cfg(test)]
 mod tests {
-    use std::{error::Error, fs, path::PathBuf};
+    use std::{error::Error, fs, path::PathBuf, rc::Rc};
 
     use drink::session::{
         contract_transcode::{ContractMessageTranscoder, Tuple, Value},
@@ -54,9 +54,9 @@ mod tests {
 
     #[test]
     fn initialization() -> Result<(), Box<dyn Error>> {
-        let init_value = Session::new(Some(transcoder()))?
-            .deploy_and(bytes(), "new", &["true"], vec![])?
-            .call_and("get", &[])?
+        let init_value = Session::new(Some(Rc::new(transcoder())))?
+            .deploy_and(bytes(), "new", &["true".to_string()], vec![])?
+            .call_and(None, "get", &[])?
             .last_call_return()
             .expect("Call was successful");
 
@@ -67,12 +67,12 @@ mod tests {
 
     #[test]
     fn flipping() -> Result<(), Box<dyn Error>> {
-        let init_value = Session::new(Some(transcoder()))?
-            .deploy_and(bytes(), "new", &["true"], vec![])?
-            .call_and("flip", &[])?
-            .call_and("flip", &[])?
-            .call_and("flip", &[])?
-            .call_and("get", &[])?
+        let init_value = Session::new(Some(Rc::new(transcoder())))?
+            .deploy_and(bytes(), "new", &["true".to_string()], vec![])?
+            .call_and(None, "flip", &[])?
+            .call_and(None, "flip", &[])?
+            .call_and(None, "flip", &[])?
+            .call_and(None, "get", &[])?
             .last_call_return()
             .expect("Call was successful");
 

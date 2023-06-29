@@ -1,9 +1,8 @@
-use std::{env, fs, path::PathBuf};
+use std::{env, fs, path::PathBuf, rc::Rc};
 
 use contract_transcode::ContractMessageTranscoder;
-use drink::contract_api::ContractApi;
 
-use crate::app_state::{AppState, Contract};
+use crate::app_state::{print::format_contract_action, AppState, Contract};
 
 pub fn build(app_state: &mut AppState) {
     let Ok(output) = std::process::Command::new("cargo")
@@ -46,50 +45,32 @@ pub fn deploy(app_state: &mut AppState, constructor: String, args: Vec<String>, 
         .pwd
         .join(format!("target/ink/{contract_name}.json"));
 
-    let Ok(transcode) = ContractMessageTranscoder::load(metadata_path) else {
+    let Ok(transcoder) = ContractMessageTranscoder::load(metadata_path) else {
         app_state.print_error("Failed to create transcoder from metadata file.");
         return;
     };
+    let transcoder = Rc::new(transcoder);
 
-    // Try deploying
-    let Ok(data) = transcode.encode(&constructor, args) else {
-        app_state.print_error("Failed to encode call data.");
-        return;
-    };
-    let result = app_state.sandbox.deploy_contract(
-        contract_bytes,
-        data,
-        salt,
-        app_state.chain_info.actor.clone(),
-        app_state.chain_info.gas_limit,
-    );
-    app_state.print_contract_action(&result);
-
-    // Check if call has been executed successfully
-    let result = match result.result {
-        Ok(result) if result.result.did_revert() => {
-            app_state.print_error(&format!(
-                "Contract deployment failed with error: {:?}",
-                result.result.data
-            ));
-            return;
+    app_state.session.set_transcoder(Some(transcoder.clone()));
+    match app_state
+        .session
+        .deploy(contract_bytes, &constructor, args.as_slice(), salt)
+    {
+        Ok(address) => {
+            app_state.contracts.add(Contract {
+                name: contract_name,
+                address,
+                base_path: app_state.ui_state.pwd.clone(),
+                transcoder,
+            });
+            app_state.print("Contract deployed successfully");
         }
-        Ok(result) => result,
-        Err(err) => {
-            app_state.print_error(&format!("Failed to deploy contract\n{err:?}"));
-            return;
-        }
-    };
+        Err(err) => app_state.print_error(&format!("Failed to deploy contract\n{err}")),
+    }
 
-    // Everything went well
-    app_state.contracts.add(Contract {
-        name: contract_name,
-        address: result.account_id,
-        base_path: app_state.ui_state.pwd.clone(),
-        transcode,
-    });
-
-    app_state.print("Contract deployed successfully");
+    if let Some(info) = app_state.session.last_deploy_result() {
+        app_state.print(&format_contract_action(info));
+    }
 }
 
 pub fn call(app_state: &mut AppState, message: String, args: Vec<String>) {
@@ -98,46 +79,18 @@ pub fn call(app_state: &mut AppState, message: String, args: Vec<String>) {
         return;
     };
 
-    let account_id = contract.address.clone();
-    let Ok(data) = contract.transcode.encode(&message, args) else {
-        app_state.print_error("Failed to encode call data");
-        return;
+    app_state
+        .session
+        .set_transcoder(Some(contract.transcoder.clone()));
+
+    let address = contract.address.clone();
+    match app_state.session.call(Some(address), &message, &args) {
+        Ok(result) => app_state.print(&format!("Result: {:?}", result)),
+        Err(err) => app_state.print_error(&format!("Failed to call contract\n{err}")),
     };
 
-    let result = app_state.sandbox.call_contract(
-        account_id,
-        data,
-        app_state.chain_info.actor.clone(),
-        app_state.chain_info.gas_limit,
-    );
-    app_state.print_contract_action(&result);
-
-    match result.result {
-        Ok(result) if result.did_revert() => {
-            app_state.print_error(&format!(
-                "Contract call failed with error: {:?}",
-                result.data
-            ));
-        }
-        Ok(result) => {
-            let result_decoded = match app_state
-                .contracts
-                .current_contract()
-                .unwrap()
-                .transcode
-                .decode_return(&message, &mut result.data.as_slice())
-            {
-                Ok(value) => value.to_string(),
-                Err(err) => format!(
-                    "Failed to decode return value: {err}. Raw bytes: {:?}",
-                    result.data
-                ),
-            };
-            app_state.print(&format!("Result: {:?}", result_decoded));
-        }
-        Err(err) => {
-            app_state.print_error(&format!("Failed to deploy contract\n{err:?}"));
-        }
+    if let Some(info) = app_state.session.last_call_result() {
+        app_state.print(&format_contract_action(info))
     }
 }
 
