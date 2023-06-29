@@ -1,10 +1,7 @@
 use std::{env, fs, path::PathBuf};
 
 use contract_transcode::ContractMessageTranscoder;
-use drink::{
-    contract_api::{ContractApi, GAS_LIMIT},
-    ALICE,
-};
+use drink::contract_api::ContractApi;
 
 use crate::app_state::{AppState, Contract};
 
@@ -59,9 +56,13 @@ pub fn deploy(app_state: &mut AppState, constructor: String, args: Vec<String>, 
         app_state.print_error("Failed to encode call data.");
         return;
     };
-    let result = app_state
-        .sandbox
-        .deploy_contract(contract_bytes, data, salt, ALICE, GAS_LIMIT);
+    let result = app_state.sandbox.deploy_contract(
+        contract_bytes,
+        data,
+        salt,
+        app_state.chain_info.actor.clone(),
+        app_state.chain_info.gas_limit,
+    );
     app_state.print_contract_action(&result);
 
     // Check if call has been executed successfully
@@ -81,7 +82,6 @@ pub fn deploy(app_state: &mut AppState, constructor: String, args: Vec<String>, 
     };
 
     // Everything went well
-    app_state.chain_info.deployed_contracts += 1;
     app_state.contracts.add(Contract {
         name: contract_name,
         address: result.account_id,
@@ -104,9 +104,12 @@ pub fn call(app_state: &mut AppState, message: String, args: Vec<String>) {
         return;
     };
 
-    let result = app_state
-        .sandbox
-        .call_contract(account_id, data, ALICE, GAS_LIMIT);
+    let result = app_state.sandbox.call_contract(
+        account_id,
+        data,
+        app_state.chain_info.actor.clone(),
+        app_state.chain_info.gas_limit,
+    );
     app_state.print_contract_action(&result);
 
     match result.result {

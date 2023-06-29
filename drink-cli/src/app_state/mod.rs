@@ -1,7 +1,8 @@
 use std::{env, path::PathBuf};
 
 pub use contracts::{Contract, ContractIndex, ContractRegistry};
-use drink::Sandbox;
+use drink::{Sandbox, Weight, DEFAULT_ACTOR, DEFAULT_GAS_LIMIT};
+use sp_core::crypto::AccountId32;
 pub use user_input::UserInput;
 
 use crate::app_state::output::Output;
@@ -10,10 +11,21 @@ mod contracts;
 mod output;
 mod user_input;
 
-#[derive(Clone, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Debug)]
 pub struct ChainInfo {
     pub block_height: u64,
-    pub deployed_contracts: u16,
+    pub actor: AccountId32,
+    pub gas_limit: Weight,
+}
+
+impl Default for ChainInfo {
+    fn default() -> Self {
+        Self {
+            block_height: 0,
+            actor: DEFAULT_ACTOR,
+            gas_limit: DEFAULT_GAS_LIMIT,
+        }
+    }
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Default)]

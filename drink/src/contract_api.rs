@@ -23,8 +23,6 @@ pub trait ContractApi {
     ) -> ContractExecResult<u128>;
 }
 
-pub const GAS_LIMIT: Weight = Weight::from_parts(100_000_000_000, 3 * 1024 * 1024);
-
 impl ContractApi for Sandbox {
     fn deploy_contract(
         &mut self,

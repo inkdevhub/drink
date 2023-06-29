@@ -4,10 +4,7 @@ use frame_support::{dispatch::DispatchError, sp_runtime::AccountId32, weights::W
 use pallet_contracts_primitives::{ContractExecResult, ContractInstantiateResult};
 use thiserror::Error;
 
-use crate::{
-    contract_api::{ContractApi, GAS_LIMIT},
-    Sandbox, ALICE,
-};
+use crate::{contract_api::ContractApi, Sandbox, DEFAULT_ACTOR, DEFAULT_GAS_LIMIT};
 
 #[derive(Error, Debug)]
 pub enum SessionError {
@@ -49,8 +46,8 @@ impl Session {
     pub fn new(transcoder: ContractMessageTranscoder) -> Result<Self, SessionError> {
         Ok(Self {
             sandbox: Sandbox::new().map_err(SessionError::Drink)?,
-            actor: ALICE,
-            gas_limit: GAS_LIMIT,
+            actor: DEFAULT_ACTOR,
+            gas_limit: DEFAULT_GAS_LIMIT,
             transcoder,
             deploy_results: vec![],
             deploy_returns: vec![],

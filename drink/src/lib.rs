@@ -8,7 +8,8 @@ pub mod session;
 use std::time::SystemTime;
 
 pub use error::Error;
-use frame_support::{sp_io::TestExternalities, sp_runtime::AccountId32, traits::Hooks};
+use frame_support::{sp_io::TestExternalities, traits::Hooks};
+pub use frame_support::{sp_runtime::AccountId32, weights::Weight};
 use frame_system::GenesisConfig;
 
 use crate::runtime::*;
@@ -19,7 +20,8 @@ pub struct Sandbox {
     externalities: TestExternalities,
 }
 
-pub const ALICE: AccountId32 = AccountId32::new([1u8; 32]);
+pub const DEFAULT_ACTOR: AccountId32 = AccountId32::new([1u8; 32]);
+pub const DEFAULT_GAS_LIMIT: Weight = Weight::from_parts(100_000_000_000, 3 * 1024 * 1024);
 
 impl Sandbox {
     pub fn new() -> Result<Self> {
@@ -27,7 +29,7 @@ impl Sandbox {
             .build_storage::<SandboxRuntime>()
             .map_err(Error::StorageBuilding)?;
         pallet_balances::GenesisConfig::<SandboxRuntime> {
-            balances: vec![(ALICE, 1_000_000_000_000_000)],
+            balances: vec![(DEFAULT_ACTOR, 1_000_000_000_000_000)],
         }
         .assimilate_storage(&mut storage)
         .map_err(Error::StorageBuilding)?;
