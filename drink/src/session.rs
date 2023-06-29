@@ -65,7 +65,10 @@ impl Session {
     }
 
     pub fn with_transcoder(self, transcoder: ContractMessageTranscoder) -> Self {
-        Self { transcoder, ..self }
+        Self {
+            transcoder: Some(transcoder),
+            ..self
+        }
     }
 
     pub fn deploy(
