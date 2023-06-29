@@ -39,9 +39,11 @@ mod tests {
         Session,
     };
 
-    fn transcoder() -> ContractMessageTranscoder {
-        ContractMessageTranscoder::load(PathBuf::from("./target/ink/flipper.json"))
-            .expect("Failed to create transcoder")
+    fn transcoder() -> Option<Rc<ContractMessageTranscoder>> {
+        Some(Rc::new(
+            ContractMessageTranscoder::load(PathBuf::from("./target/ink/flipper.json"))
+                .expect("Failed to create transcoder"),
+        ))
     }
 
     fn bytes() -> Vec<u8> {
@@ -54,7 +56,7 @@ mod tests {
 
     #[test]
     fn initialization() -> Result<(), Box<dyn Error>> {
-        let init_value = Session::new(Some(Rc::new(transcoder())))?
+        let init_value = Session::new(transcoder())?
             .deploy_and(bytes(), "new", &["true".to_string()], vec![])?
             .call_and("get", &[])?
             .last_call_return()
@@ -67,7 +69,7 @@ mod tests {
 
     #[test]
     fn flipping() -> Result<(), Box<dyn Error>> {
-        let init_value = Session::new(Some(Rc::new(transcoder())))?
+        let init_value = Session::new(transcoder())?
             .deploy_and(bytes(), "new", &["true".to_string()], vec![])?
             .call_and("flip", &[])?
             .call_and("flip", &[])?
