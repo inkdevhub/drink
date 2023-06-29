@@ -140,16 +140,34 @@ impl Session {
         ret
     }
 
-    pub fn call_and(
+    pub fn call_and(mut self, message: &str, args: &[String]) -> Result<Self, SessionError> {
+        self.call_internal(None, message, args).map(|_| self)
+    }
+
+    pub fn call_with_address_and(
         mut self,
-        address: Option<AccountId32>,
+        address: AccountId32,
         message: &str,
         args: &[String],
     ) -> Result<Self, SessionError> {
-        self.call(address, message, args).map(|_| self)
+        self.call_internal(Some(address), message, args)
+            .map(|_| self)
     }
 
-    pub fn call(
+    pub fn call(&mut self, message: &str, args: &[String]) -> Result<Value, SessionError> {
+        self.call_internal(None, message, args)
+    }
+
+    pub fn call_with_address(
+        &mut self,
+        address: AccountId32,
+        message: &str,
+        args: &[String],
+    ) -> Result<Value, SessionError> {
+        self.call_internal(Some(address), message, args)
+    }
+
+    fn call_internal(
         &mut self,
         address: Option<AccountId32>,
         message: &str,

@@ -84,7 +84,10 @@ pub fn call(app_state: &mut AppState, message: String, args: Vec<String>) {
         .set_transcoder(Some(contract.transcoder.clone()));
 
     let address = contract.address.clone();
-    match app_state.session.call(Some(address), &message, &args) {
+    match app_state
+        .session
+        .call_with_address(address, &message, &args)
+    {
         Ok(result) => app_state.print(&format!("Result: {:?}", result)),
         Err(err) => app_state.print_error(&format!("Failed to call contract\n{err}")),
     };
