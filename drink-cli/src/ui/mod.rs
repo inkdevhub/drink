@@ -73,14 +73,8 @@ fn run_ui_app(terminal: &mut Terminal) -> Result<()> {
                 (Managing, KeyCode::Char('h')) => {
                     app_state.ui_state.show_help = !app_state.ui_state.show_help
                 }
-                (Managing, KeyCode::Down) => {
-                    app_state.ui_state.output_scrolling = true;
-                    app_state.ui_state.output_offset += 1
-                }
-                (Managing, KeyCode::Up) if app_state.ui_state.output_offset > 0 => {
-                    app_state.ui_state.output_scrolling = true;
-                    app_state.ui_state.output_offset -= 1
-                }
+                (Managing, KeyCode::Down) => app_state.ui_state.output.scroll_down(),
+                (Managing, KeyCode::Up) => app_state.ui_state.output.scroll_up(),
 
                 (Drinking, KeyCode::Char(c)) => app_state.ui_state.user_input.push(c),
                 (Drinking, KeyCode::Backspace) => {
@@ -110,7 +104,7 @@ fn run_ui_app(terminal: &mut Terminal) -> Result<()> {
                 (Drinking, KeyCode::Enter) => {
                     execute(&mut app_state)?;
                     app_state.ui_state.user_input.apply();
-                    app_state.ui_state.output_scrolling = false;
+                    app_state.ui_state.output.reset_scrolling();
                 }
 
                 _ => {}

@@ -15,10 +15,12 @@ pub(super) fn build(app_state: &mut AppState) -> impl Widget {
         r#"Current working directory: {}
 Block height: {}
 Deployed contracts: {}
+Current actor: {}
 Current contract: {{ {} }}"#,
         app_state.ui_state.pwd.to_str().unwrap(),
         app_state.chain_info.block_height,
-        app_state.chain_info.deployed_contracts,
+        app_state.contracts.count(),
+        app_state.chain_info.actor,
         current_contract_info
     ))
     .alignment(Alignment::Left)

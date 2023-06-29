@@ -20,6 +20,14 @@ pub enum CliCommand {
         recipient: AccountId32,
         value: u128,
     },
+    SetActor {
+        #[clap(value_parser = AccountId32::from_ss58check)]
+        actor: AccountId32,
+    },
+    SetGasLimit {
+        ref_time: u64,
+        proof_size: u64,
+    },
 
     #[clap(alias = "b")]
     Build,

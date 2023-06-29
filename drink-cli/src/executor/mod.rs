@@ -4,7 +4,7 @@ use std::env;
 
 use anyhow::Result;
 use clap::Parser;
-use drink::chain_api::ChainApi;
+use drink::{chain_api::ChainApi, Weight};
 use sp_core::crypto::AccountId32;
 
 use crate::{app_state::AppState, cli::CliCommand};
@@ -41,6 +41,17 @@ pub fn execute(app_state: &mut AppState) -> Result<()> {
 
         CliCommand::NextBlock { count } => build_blocks(app_state, count),
         CliCommand::AddTokens { recipient, value } => add_tokens(app_state, recipient, value),
+        CliCommand::SetActor { actor } => {
+            app_state.chain_info.actor = actor;
+            app_state.print("Actor was set");
+        }
+        CliCommand::SetGasLimit {
+            ref_time,
+            proof_size,
+        } => {
+            app_state.chain_info.gas_limit = Weight::from_parts(ref_time, proof_size);
+            app_state.print("Gas limit was set");
+        }
 
         CliCommand::Build => contract::build(app_state),
         CliCommand::Deploy {

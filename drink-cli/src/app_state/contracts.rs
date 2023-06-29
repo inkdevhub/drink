@@ -55,4 +55,8 @@ impl ContractRegistry {
         self.index = CurrentContract((old_index + 1) % self.contracts.len());
         self.current_contract()
     }
+
+    pub fn count(&self) -> usize {
+        self.contracts.len()
+    }
 }

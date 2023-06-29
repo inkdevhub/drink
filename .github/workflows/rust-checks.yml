@@ -22,22 +22,22 @@ jobs:
       CARGO_INCREMENTAL: 0
       RUSTC_WRAPPER: sccache
     steps:
-      - name: Checkout Source code
+      - name: Checkout source code
         uses: actions/checkout@v3
 
-      - name: Install Rust Toolchain
+      - name: Install Rust toolchain
         uses: Cardinal-Cryptography/github-actions/install-rust-toolchain@v1
         with:
           targets: wasm32-unknown-unknown
           components: clippy rustfmt
 
-      - name: Run Format Checks
+      - name: Run format checks
         uses: actions-rs/cargo@v1
         with:
           command: fmt
           args: --all
 
-      - name: Run Linter
+      - name: Run linter
         uses: actions-rs/cargo@v1
         env:
           # https://github.com/mozilla/sccache/issues/966
@@ -47,7 +47,26 @@ jobs:
           command: clippy
           args: --all-targets -- --no-deps -D warnings
 
-      - name: Run Unit Test Suite
+      - name: Run unit test suite
         uses: actions-rs/cargo@v1
         with:
           command: test
+
+      - name: Install cargo-contract
+        shell: bash
+        run: |
+          rustup component add rust-src
+          cargo install cargo-contract --version 3.0.1
+
+      - name: Run tests for examples
+        shell: bash
+        run: |
+          pushd examples/flipper
+          cargo contract build --release
+          cargo test --release
+          popd
+          
+          pushd examples/counter
+          cargo contract build --release
+          cargo test --release
+          popd
