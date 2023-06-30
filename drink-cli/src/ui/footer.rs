@@ -1,6 +1,6 @@
 use ratatui::{
     layout::Alignment,
-    style::{Color, Modifier, Style},
+    style::{Color, Style},
     text::{Line, Span},
     widgets::{Paragraph, Widget},
 };
@@ -30,16 +30,9 @@ pub(super) fn build(app_state: &AppState) -> impl Widget {
         ]),
     };
 
-    Paragraph::new(vec![
-        instruction,
-        Span::styled(
-            "Made by Aleph Zero Foundation",
-            Style::default().add_modifier(Modifier::ITALIC),
-        )
-        .into(),
-    ])
-    .alignment(Alignment::Center)
-    .block(section("Help"))
+    Paragraph::new(vec![instruction])
+        .alignment(Alignment::Center)
+        .block(section("Help"))
 }
 
 fn alternate_help<I: IntoIterator<Item = &'static str>>(items: I) -> Line<'static> {
