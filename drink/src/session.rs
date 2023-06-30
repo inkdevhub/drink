@@ -1,3 +1,5 @@
+//! This module provides a context-aware interface for interacting with contracts.
+
 use std::{mem, rc::Rc};
 
 pub use contract_transcode;
@@ -10,28 +12,86 @@ use crate::{
     chain_api::ChainApi, contract_api::ContractApi, Sandbox, DEFAULT_ACTOR, DEFAULT_GAS_LIMIT,
 };
 
+/// Session specific errors.
 #[derive(Error, Debug)]
 pub enum SessionError {
+    /// Encoding data failed.
     #[error("Encoding call data failed: {0}")]
     Encoding(String),
+    /// Decoding data failed.
     #[error("Decoding call data failed: {0}")]
     Decoding(String),
+    /// Crate-specific error.
     #[error("{0:?}")]
     Drink(#[from] crate::Error),
+    /// Deployment has been reverted by the contract.
     #[error("Contract deployment has been reverted")]
     DeploymentReverted,
+    /// Deployment failed (aborted by the pallet).
     #[error("Contract deployment failed before execution: {0:?}")]
     DeploymentFailed(DispatchError),
+    /// Call has been reverted by the contract.
     #[error("Contract call has been reverted")]
     CallReverted,
+    /// Contract call failed (aborted by the pallet).
     #[error("Contract call failed before execution: {0:?}")]
     CallFailed(DispatchError),
+    /// There is no deployed contract to call.
     #[error("No deployed contract")]
     NoContract,
+    /// There is no transcoder to encode/decode contract messages.
     #[error("Missing transcoder")]
     NoTranscoder,
 }
 
+/// Wrapper around `Sandbox` that provides a convenient API for interacting with multiple contracts.
+///
+/// Instead of talking with a low-level `Sandbox`, you can use this struct to keep context,
+/// including: origin, gas_limit, transcoder and history of results.
+///
+/// `Session` has two APIs: chain-ish and for singular actions. The first one can be used like:
+/// ```rust, no_run
+/// # use std::rc::Rc;
+/// # use contract_transcode::ContractMessageTranscoder;
+/// # use drink::session::Session;
+/// # use drink::AccountId32;
+/// #
+/// # fn get_transcoder() -> Rc<ContractMessageTranscoder> {
+/// #   Rc::new(ContractMessageTranscoder::load("").unwrap())
+/// # }
+/// # fn contract_bytes() -> Vec<u8> { vec![] }
+/// # fn bob() -> AccountId32 { AccountId32::new([0; 32]) }
+///
+/// # fn main() -> Result<(), drink::session::SessionError> {
+/// Session::new(Some(get_transcoder()))?
+///     .deploy_and(contract_bytes(), "new", &[], vec![])?
+///     .call_and("foo", &[])?
+///     .with_actor(bob())
+///     .call_and("bar", &[])?;
+/// # Ok(()) }
+/// ```
+///
+/// The second one serves for one-at-a-time actions:
+/// ```rust, no_run
+/// # use std::rc::Rc;
+/// # use contract_transcode::ContractMessageTranscoder;
+/// # use drink::session::Session;
+/// # use drink::AccountId32;
+/// #
+/// # fn get_transcoder() -> Rc<ContractMessageTranscoder> {
+/// #   Rc::new(ContractMessageTranscoder::load("").unwrap())
+/// # }
+/// # fn contract_bytes() -> Vec<u8> { vec![] }
+/// # fn bob() -> AccountId32 { AccountId32::new([0; 32]) }
+///
+/// # fn main() -> Result<(), drink::session::SessionError> {
+/// let mut session = Session::new(Some(get_transcoder()))?;
+/// let _address = session.deploy(contract_bytes(), "new", &[], vec![])?;
+/// session.call("foo", &[])?;
+/// session.set_actor(bob());
+/// session.call("bar", &[])?;
+/// # Ok(()) }
+/// ```
 pub struct Session {
     sandbox: Sandbox,
 
@@ -47,6 +107,7 @@ pub struct Session {
 }
 
 impl Session {
+    /// Creates a new `Session` with optional reference to a transcoder.
     pub fn new(transcoder: Option<Rc<ContractMessageTranscoder>>) -> Result<Self, SessionError> {
         Ok(Self {
             sandbox: Sandbox::new().map_err(SessionError::Drink)?,
@@ -60,26 +121,32 @@ impl Session {
         })
     }
 
+    /// Sets a new actor and returns updated `self`.
     pub fn with_actor(self, actor: AccountId32) -> Self {
         Self { actor, ..self }
     }
 
+    /// Sets a new actor and returns the old one.
     pub fn set_actor(&mut self, actor: AccountId32) -> AccountId32 {
         mem::replace(&mut self.actor, actor)
     }
 
+    /// Sets a new gas limit and returns updated `self`.
     pub fn with_gas_limit(self, gas_limit: Weight) -> Self {
         Self { gas_limit, ..self }
     }
 
+    /// Sets a new gas limit and returns the old one.
     pub fn set_gas_limit(&mut self, gas_limit: Weight) -> Weight {
         mem::replace(&mut self.gas_limit, gas_limit)
     }
 
+    /// Sets a new transcoder and returns updated `self`.
     pub fn with_transcoder(self, transcoder: Option<Rc<ContractMessageTranscoder>>) -> Self {
         Self { transcoder, ..self }
     }
 
+    /// Sets a new transcoder and returns the old one.
     pub fn set_transcoder(
         &mut self,
         transcoder: Option<Rc<ContractMessageTranscoder>>,
@@ -87,10 +154,13 @@ impl Session {
         mem::replace(&mut self.transcoder, transcoder)
     }
 
+    /// Returns a reference for basic chain API.
     pub fn chain_api(&mut self) -> &mut impl ChainApi {
         &mut self.sandbox
     }
 
+    /// Deploys a contract with a given constructor, arguments and salt. In case of a success,
+    /// returns `self`.
     pub fn deploy_and(
         mut self,
         contract_bytes: Vec<u8>,
@@ -102,6 +172,8 @@ impl Session {
             .map(|_| self)
     }
 
+    /// Deploys a contract with a given constructor, arguments and salt. In case of a success,
+    /// returns the address of the deployed contract.
     pub fn deploy(
         &mut self,
         contract_bytes: Vec<u8>,
@@ -140,10 +212,12 @@ impl Session {
         ret
     }
 
+    /// Calls a contract with a given address. In case of a successful call, returns `self`.
     pub fn call_and(mut self, message: &str, args: &[String]) -> Result<Self, SessionError> {
         self.call_internal(None, message, args).map(|_| self)
     }
 
+    /// Calls the last deployed contract. In case of a successful call, returns `self`.
     pub fn call_with_address_and(
         mut self,
         address: AccountId32,
@@ -154,10 +228,13 @@ impl Session {
             .map(|_| self)
     }
 
+    /// Calls the last deployed contract. In case of a successful call, returns the decoded result.
     pub fn call(&mut self, message: &str, args: &[String]) -> Result<Value, SessionError> {
         self.call_internal(None, message, args)
     }
 
+    /// Calls a contract with a given address. In case of a successful call, returns the decoded
+    /// result.
     pub fn call_with_address(
         &mut self,
         address: AccountId32,
@@ -213,18 +290,22 @@ impl Session {
         ret
     }
 
+    /// Returns the last result of deploying a contract.
     pub fn last_deploy_result(&self) -> Option<&ContractInstantiateResult<AccountId32, u128>> {
         self.deploy_results.last()
     }
 
+    /// Returns the address of the last deployed contract.
     pub fn last_deploy_return(&self) -> Option<AccountId32> {
         self.deploy_returns.last().cloned()
     }
 
+    /// Returns the last result of calling a contract.
     pub fn last_call_result(&self) -> Option<&ContractExecResult<u128>> {
         self.call_results.last()
     }
 
+    /// Returns the last value returned from calling a contract.
     pub fn last_call_return(&self) -> Option<Value> {
         self.call_returns.last().cloned()
     }
