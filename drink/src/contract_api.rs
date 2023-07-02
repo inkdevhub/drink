@@ -1,10 +1,14 @@
+//! Contracts API.
+
 use frame_support::{sp_runtime::AccountId32, weights::Weight};
 use pallet_contracts::Determinism;
 use pallet_contracts_primitives::{ContractExecResult, ContractInstantiateResult};
 
 use crate::{runtime::Contracts, Sandbox};
 
+/// Interface for contract-related operations.
 pub trait ContractApi {
+    /// Interface for `bare_instantiate` contract call.
     fn deploy_contract(
         &mut self,
         contract_bytes: Vec<u8>,
@@ -14,6 +18,7 @@ pub trait ContractApi {
         gas_limit: Weight,
     ) -> ContractInstantiateResult<AccountId32, u128>;
 
+    /// Interface for `bare_call` contract call.
     fn call_contract(
         &mut self,
         address: AccountId32,
@@ -68,6 +73,7 @@ impl ContractApi for Sandbox {
     }
 }
 
+/// Converts bytes to a '\n'-split string.
 pub fn decode_debug_buffer(buffer: &[u8]) -> Vec<String> {
     let decoded = buffer.iter().map(|b| *b as char).collect::<String>();
     decoded.split('\n').map(|s| s.to_string()).collect()

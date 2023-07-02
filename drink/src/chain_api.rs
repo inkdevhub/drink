@@ -1,3 +1,5 @@
+//! Basic chain API.
+
 use frame_support::{
     sp_runtime::AccountId32,
     traits::{Currency, Hooks},
@@ -8,15 +10,19 @@ use crate::{
     Sandbox,
 };
 
+/// Interface for basic chain operations.
 pub trait ChainApi {
+    /// Build a new empty block.
     fn build_block(&mut self);
 
+    /// Build `n` empty blocks.
     fn build_blocks(&mut self, n: u32) {
         for _ in 0..n {
             self.build_block();
         }
     }
 
+    /// Add tokens to an account.
     fn add_tokens(&mut self, address: AccountId32, amount: u128);
 }
 
