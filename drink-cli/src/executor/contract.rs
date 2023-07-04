@@ -1,27 +1,54 @@
 use std::{env, fs, path::PathBuf, rc::Rc};
+use std::path::Path;
 
 use contract_transcode::ContractMessageTranscoder;
+use contract_build::{BuildMode, ExecuteArgs, ManifestPath, OptimizationPasses, Verbosity};
 
 use crate::app_state::{print::format_contract_action, AppState, Contract};
 
 pub fn build(app_state: &mut AppState) {
-    let Ok(output) = std::process::Command::new("cargo")
-        .arg("contract")
-        .arg("build")
-        .arg("--release")
-        .output() else {
-        app_state.print_error("Failed to execute build command. Make sure `cargo contract` is installed. (`cargo install cargo-contract`)");
-        return;
+    let path_to_cargo_toml = app_state.ui_state.pwd.join(Path::new("Cargo.toml"));
+    let manifest_path =  match ManifestPath::new(path_to_cargo_toml.clone()) {
+        Ok(mp) => mp,
+        Err(err) => {
+            app_state.print_error(&format!(
+                "Invalid manifest path {}: {}",
+                path_to_cargo_toml.display(),
+                err
+            ));
+            return;
+        },
     };
 
-    if output.status.success() {
-        app_state.print("Contract built successfully");
-    } else {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        app_state.print_error(&format!(
-            "Failed to execute 'cargo contract' command:\n{stderr}"
-        ));
-    }
+    let args = ExecuteArgs {
+        manifest_path,
+        build_mode: BuildMode::Release,
+        optimization_passes: Some(OptimizationPasses::default()),
+        verbosity: Verbosity::Quiet,
+        ..Default::default()
+    };
+
+    match contract_build::execute(args) {
+        Ok(build_result) => {
+            let res: String = build_result
+                .dest_wasm
+                .expect("Wasm code artifact not generated")
+                .canonicalize()
+                .expect("Invalid dest bundle path")
+                .to_string_lossy()
+                .into();
+            app_state.print(&format!("Contract built successfully: {}", res));
+        }
+        Err(err) => {
+            app_state.print_error(&format!(
+                "contract build for {} failed: {}",
+                path_to_cargo_toml.display(),
+                err,
+            ));
+        }
+    };
+
+
 }
 
 pub fn deploy(app_state: &mut AppState, constructor: String, args: Vec<String>, salt: Vec<u8>) {
