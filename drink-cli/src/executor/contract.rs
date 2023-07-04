@@ -31,7 +31,7 @@ impl fmt::Display for BuildError {
 
 fn build_result(app_state: &mut AppState) -> Result<String, BuildError> {
     let path_to_cargo_toml = app_state.ui_state.pwd.join(Path::new("Cargo.toml"));
-    let manifest_path =  ManifestPath::new(path_to_cargo_toml.clone()).map_err(|err| {
+    let manifest_path = ManifestPath::new(path_to_cargo_toml.clone()).map_err(|err| {
         BuildError::InvalidManifest { manifest_path: path_to_cargo_toml, err }
     })?;
 
