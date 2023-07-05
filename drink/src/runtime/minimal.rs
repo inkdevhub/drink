@@ -10,11 +10,11 @@ use frame_support::{
 };
 use pallet_contracts::{DefaultAddressGenerator, Frame, Schedule};
 
-type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<SandboxRuntime>;
-type Block = frame_system::mocking::MockBlock<SandboxRuntime>;
+type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<MinimalRuntime>;
+type Block = frame_system::mocking::MockBlock<MinimalRuntime>;
 
 frame_support::construct_runtime!(
-    pub enum SandboxRuntime where
+    pub enum MinimalRuntime where
         Block = Block,
         NodeBlock = Block,
         UncheckedExtrinsic = UncheckedExtrinsic,
@@ -26,7 +26,7 @@ frame_support::construct_runtime!(
     }
 );
 
-impl frame_system::Config for SandboxRuntime {
+impl frame_system::Config for MinimalRuntime {
     type BaseCallFilter = frame_support::traits::Everything;
     type BlockWeights = ();
     type BlockLength = ();
@@ -53,7 +53,7 @@ impl frame_system::Config for SandboxRuntime {
     type MaxConsumers = ConstU32<16>;
 }
 
-impl pallet_balances::Config for SandboxRuntime {
+impl pallet_balances::Config for MinimalRuntime {
     type RuntimeEvent = RuntimeEvent;
     type WeightInfo = ();
     type Balance = u128;
@@ -69,7 +69,7 @@ impl pallet_balances::Config for SandboxRuntime {
     type MaxFreezes = ();
 }
 
-impl pallet_timestamp::Config for SandboxRuntime {
+impl pallet_timestamp::Config for MinimalRuntime {
     type Moment = u64;
     type OnTimestampSet = ();
     type MinimumPeriod = ConstU64<1>;
@@ -84,20 +84,20 @@ impl Randomness<H256, u64> for SandboxRandomness {
 }
 
 type BalanceOf = <Balances as Currency<AccountId32>>::Balance;
-impl Convert<Weight, BalanceOf> for SandboxRuntime {
+impl Convert<Weight, BalanceOf> for MinimalRuntime {
     fn convert(w: Weight) -> BalanceOf {
         w.ref_time().into()
     }
 }
 
 parameter_types! {
-    pub SandboxSchedule: Schedule<SandboxRuntime> = {
-        <Schedule<SandboxRuntime>>::default()
+    pub SandboxSchedule: Schedule<MinimalRuntime> = {
+        <Schedule<MinimalRuntime>>::default()
     };
     pub DeletionWeightLimit: Weight = Weight::zero();
 }
 
-impl pallet_contracts::Config for SandboxRuntime {
+impl pallet_contracts::Config for MinimalRuntime {
     type Time = Timestamp;
     type Randomness = SandboxRandomness;
     type Currency = Balances;

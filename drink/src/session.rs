@@ -9,7 +9,8 @@ use pallet_contracts_primitives::{ContractExecResult, ContractInstantiateResult}
 use thiserror::Error;
 
 use crate::{
-    chain_api::ChainApi, contract_api::ContractApi, Sandbox, DEFAULT_ACTOR, DEFAULT_GAS_LIMIT,
+    chain_api::ChainApi, contract_api::ContractApi, runtime::Runtime, Sandbox, DEFAULT_ACTOR,
+    DEFAULT_GAS_LIMIT,
 };
 
 /// Session specific errors.
@@ -92,8 +93,8 @@ pub enum SessionError {
 /// session.call("bar", &[])?;
 /// # Ok(()) }
 /// ```
-pub struct Session {
-    sandbox: Sandbox,
+pub struct Session<R: Runtime> {
+    sandbox: Sandbox<R>,
 
     actor: AccountId32,
     gas_limit: Weight,
@@ -106,7 +107,7 @@ pub struct Session {
     call_returns: Vec<Value>,
 }
 
-impl Session {
+impl<R: Runtime> Session<R> {
     /// Creates a new `Session` with optional reference to a transcoder.
     pub fn new(transcoder: Option<Rc<ContractMessageTranscoder>>) -> Result<Self, SessionError> {
         Ok(Self {

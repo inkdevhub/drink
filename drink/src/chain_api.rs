@@ -6,7 +6,7 @@ use frame_support::{
 };
 
 use crate::{
-    runtime::{Balances, Contracts, System, Timestamp},
+    runtime::{Balances, Contracts, Runtime, System, Timestamp},
     Sandbox,
 };
 
@@ -26,32 +26,32 @@ pub trait ChainApi {
     fn add_tokens(&mut self, address: AccountId32, amount: u128);
 }
 
-impl ChainApi for Sandbox {
+impl<R: Runtime> ChainApi for Sandbox<R> {
     fn build_block(&mut self) {
-        let new_block = self.externalities.execute_with(|| {
-            let current_block = System::block_number();
+        // let new_block = self.externalities.execute_with(|| {
+        //     let current_block = System::block_number();
+        //
+        //     Contracts::on_finalize(current_block);
+        //     Timestamp::on_finalize(current_block);
+        //     Balances::on_finalize(current_block);
+        //
+        //     let parent_hash = if current_block > 1 {
+        //         System::finalize().hash()
+        //     } else {
+        //         System::parent_hash()
+        //     };
+        //
+        //     System::initialize(&(current_block + 1), &parent_hash, &Default::default());
+        //
+        //     current_block + 1
+        // });
 
-            Contracts::on_finalize(current_block);
-            Timestamp::on_finalize(current_block);
-            Balances::on_finalize(current_block);
-
-            let parent_hash = if current_block > 1 {
-                System::finalize().hash()
-            } else {
-                System::parent_hash()
-            };
-
-            System::initialize(&(current_block + 1), &parent_hash, &Default::default());
-
-            current_block + 1
-        });
-
-        self.init_block(new_block);
+        // self.init_block(new_block);
     }
 
     fn add_tokens(&mut self, address: AccountId32, amount: u128) {
-        self.externalities.execute_with(|| {
-            let _ = Balances::deposit_creating(&address, amount);
-        });
+        // self.externalities.execute_with(|| {
+        //     let _ = Balances::deposit_creating(&address, amount);
+        // });
     }
 }

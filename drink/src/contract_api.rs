@@ -4,7 +4,10 @@ use frame_support::{sp_runtime::AccountId32, weights::Weight};
 use pallet_contracts::Determinism;
 use pallet_contracts_primitives::{ContractExecResult, ContractInstantiateResult};
 
-use crate::{runtime::Contracts, Sandbox};
+use crate::{
+    runtime::{Contracts, Runtime},
+    Sandbox,
+};
 
 /// Interface for contract-related operations.
 pub trait ContractApi {
@@ -28,7 +31,7 @@ pub trait ContractApi {
     ) -> ContractExecResult<u128>;
 }
 
-impl ContractApi for Sandbox {
+impl<R: Runtime> ContractApi for Sandbox<R> {
     fn deploy_contract(
         &mut self,
         contract_bytes: Vec<u8>,
