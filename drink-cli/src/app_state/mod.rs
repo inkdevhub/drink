@@ -47,6 +47,17 @@ pub struct UiState {
     pub show_help: bool,
 }
 
+impl UiState {
+    pub fn new(pwd_override: Option<PathBuf>) -> Self {
+        let pwd = pwd_override.unwrap_or(
+            env::current_dir().expect("Failed to get current directory"));
+        UiState {
+            pwd,
+            ..Default::default()
+        }
+    }
+}
+
 impl Default for UiState {
     fn default() -> Self {
         UiState {
@@ -64,6 +75,15 @@ pub struct AppState {
     pub chain_info: ChainInfo,
     pub ui_state: UiState,
     pub contracts: ContractRegistry,
+}
+
+impl AppState {
+    pub fn new(pwd_override: Option<PathBuf>) -> Self {
+        AppState {
+            ui_state: UiState::new(pwd_override),
+            ..Default::default()
+        }
+    }
 }
 
 impl Default for AppState {
