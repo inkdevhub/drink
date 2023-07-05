@@ -1,33 +1,11 @@
-use std::{env, fmt, fs, path::PathBuf, rc::Rc};
-use std::fmt::Formatter;
+use std::{env, fs, path::PathBuf, rc::Rc};
 use std::path::Path;
 
 use contract_transcode::ContractMessageTranscoder;
 use contract_build::{BuildMode, ExecuteArgs, ManifestPath, OptimizationPasses, Verbosity};
 
 use crate::app_state::{print::format_contract_action, AppState, Contract};
-
-enum BuildError {
-    InvalidManifest { manifest_path: PathBuf, err: anyhow::Error },
-    BuildFailed { err: anyhow::Error },
-    WasmNotGenerated,
-    InvalidDestPath { err: std::io::Error },
-}
-
-impl fmt::Display for BuildError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        match self {
-            BuildError::InvalidManifest { manifest_path, err } =>
-                write!(f, "Invalid manifest path {}: {}", manifest_path.display(), err),
-            BuildError::BuildFailed { err } =>
-                write!(f, "Contract build failed: {}", err),
-            BuildError::WasmNotGenerated =>
-                write!(f, "Wasm code artifact not generated"),
-            BuildError::InvalidDestPath { err } =>
-                write!(f, "Invalid destination bundle path: {}", err),
-        }
-    }
-}
+use crate::executor::error::BuildError;
 
 fn build_result(app_state: &mut AppState) -> Result<String, BuildError> {
     let path_to_cargo_toml = app_state.ui_state.pwd.join(Path::new("Cargo.toml"));

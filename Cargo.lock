@@ -952,6 +952,7 @@ dependencies = [
  "pallet-contracts-primitives",
  "ratatui",
  "sp-core",
+ "thiserror",
 ]
 
 [[package]]
