@@ -22,8 +22,9 @@ version = "0.1.0"
 [workspace.dependencies]
 anyhow = { version = "1.0.71" }
 clap = { version = "4.3.4" }
-crossterm = { version = "0.26.0" }
+contract-build = { version = "3.0.1" }
 contract-transcode = { version = "3.0.1" }
+crossterm = { version = "0.26.0" }
 parity-scale-codec = { version = "3.6.0" }
 ratatui = { version = "0.21.0" }
 scale-info = { version = "2.5.0" }

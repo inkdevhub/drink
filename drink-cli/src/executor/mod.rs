@@ -1,4 +1,5 @@
 mod contract;
+mod error;
 
 use std::env;
 
@@ -80,5 +81,5 @@ fn add_tokens(app_state: &mut AppState, recipient: AccountId32, value: u128) {
         .session
         .chain_api()
         .add_tokens(recipient.clone(), value);
-    app_state.print(&format!("{value} tokens added to {recipient}",));
+    app_state.print(&format!("{value} tokens added to {recipient}", ));
 }
