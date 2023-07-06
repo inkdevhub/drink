@@ -47,15 +47,24 @@ pub struct UiState {
     pub show_help: bool,
 }
 
-impl Default for UiState {
-    fn default() -> Self {
+impl UiState {
+    pub fn new(pwd_override: Option<PathBuf>) -> Self {
+        let pwd = pwd_override.unwrap_or_else(
+            || env::current_dir().expect("Failed to get current directory"));
+
         UiState {
-            pwd: env::current_dir().expect("Failed to get current directory"),
+            pwd,
             mode: Default::default(),
             user_input: Default::default(),
             output: Default::default(),
             show_help: false,
         }
+    }
+}
+
+impl Default for UiState {
+    fn default() -> Self {
+        UiState::new(None)
     }
 }
 
@@ -66,13 +75,19 @@ pub struct AppState {
     pub contracts: ContractRegistry,
 }
 
-impl Default for AppState {
-    fn default() -> Self {
-        Self {
+impl AppState {
+    pub fn new(pwd_override: Option<PathBuf>) -> Self {
+        AppState {
             session: Session::new(None).expect("Failed to create drinking session"),
             chain_info: Default::default(),
-            ui_state: Default::default(),
+            ui_state: UiState::new(pwd_override),
             contracts: Default::default(),
         }
+    }
+}
+
+impl Default for AppState {
+    fn default() -> Self {
+        Self::new(None)
     }
 }
