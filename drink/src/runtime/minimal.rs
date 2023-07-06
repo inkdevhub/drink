@@ -1,3 +1,5 @@
+#![allow(missing_docs)] // `construct_macro` doesn't allow doc comments for the runtime type.
+
 use frame_support::{
     parameter_types,
     sp_runtime::{

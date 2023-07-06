@@ -1,14 +1,8 @@
 //! Basic chain API.
 
-use frame_support::{
-    sp_runtime::AccountId32,
-    traits::{Currency, Hooks},
-};
+use frame_support::{sp_runtime::AccountId32, traits::tokens::currency::Currency};
 
-use crate::{
-    runtime::{Balances, Contracts, Runtime, System, Timestamp},
-    Sandbox,
-};
+use crate::{Runtime, Sandbox};
 
 /// Interface for basic chain operations.
 pub trait ChainApi {
@@ -50,8 +44,8 @@ impl<R: Runtime> ChainApi for Sandbox<R> {
     }
 
     fn add_tokens(&mut self, address: AccountId32, amount: u128) {
-        // self.externalities.execute_with(|| {
-        //     let _ = Balances::deposit_creating(&address, amount);
-        // });
+        self.externalities.execute_with(|| {
+            let _ = pallet_balances::Pallet::<R>::deposit_creating(&address, amount);
+        });
     }
 }
