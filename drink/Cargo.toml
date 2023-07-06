@@ -4,8 +4,10 @@ authors.workspace = true
 edition.workspace = true
 homepage.workspace = true
 license.workspace = true
+readme.workspace = true
 repository.workspace = true
 version.workspace = true
+description = "Minimal sufficient architecture that allows for a fully functional ink! contract development"
 
 [dependencies]
 contract-transcode = { workspace = true, optional = true }
