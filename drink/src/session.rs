@@ -9,7 +9,8 @@ use pallet_contracts_primitives::{ContractExecResult, ContractInstantiateResult}
 use thiserror::Error;
 
 use crate::{
-    chain_api::ChainApi, contract_api::ContractApi, Sandbox, DEFAULT_ACTOR, DEFAULT_GAS_LIMIT,
+    chain_api::ChainApi, contract_api::ContractApi, runtime::Runtime, Sandbox, DEFAULT_ACTOR,
+    DEFAULT_GAS_LIMIT,
 };
 
 /// Session specific errors.
@@ -63,7 +64,10 @@ pub enum SessionError {
 /// # fn bob() -> AccountId32 { AccountId32::new([0; 32]) }
 ///
 /// # fn main() -> Result<(), drink::session::SessionError> {
-/// Session::new(Some(get_transcoder()))?
+///
+/// use drink::runtime::MinimalRuntime;
+///
+/// Session::<MinimalRuntime>::new(Some(get_transcoder()))?
 ///     .deploy_and(contract_bytes(), "new", &[], vec![])?
 ///     .call_and("foo", &[])?
 ///     .with_actor(bob())
@@ -85,15 +89,17 @@ pub enum SessionError {
 /// # fn bob() -> AccountId32 { AccountId32::new([0; 32]) }
 ///
 /// # fn main() -> Result<(), drink::session::SessionError> {
-/// let mut session = Session::new(Some(get_transcoder()))?;
+/// use drink::runtime::MinimalRuntime;
+///
+/// let mut session = Session::<MinimalRuntime>::new(Some(get_transcoder()))?;
 /// let _address = session.deploy(contract_bytes(), "new", &[], vec![])?;
 /// session.call("foo", &[])?;
 /// session.set_actor(bob());
 /// session.call("bar", &[])?;
 /// # Ok(()) }
 /// ```
-pub struct Session {
-    sandbox: Sandbox,
+pub struct Session<R: Runtime> {
+    sandbox: Sandbox<R>,
 
     actor: AccountId32,
     gas_limit: Weight,
@@ -106,7 +112,7 @@ pub struct Session {
     call_returns: Vec<Value>,
 }
 
-impl Session {
+impl<R: Runtime> Session<R> {
     /// Creates a new `Session` with optional reference to a transcoder.
     pub fn new(transcoder: Option<Rc<ContractMessageTranscoder>>) -> Result<Self, SessionError> {
         Ok(Self {

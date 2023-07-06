@@ -34,9 +34,12 @@ mod flipper {
 mod tests {
     use std::{error::Error, fs, path::PathBuf, rc::Rc};
 
-    use drink::session::{
-        contract_transcode::{ContractMessageTranscoder, Tuple, Value},
-        Session,
+    use drink::{
+        runtime::MinimalRuntime,
+        session::{
+            contract_transcode::{ContractMessageTranscoder, Tuple, Value},
+            Session,
+        },
     };
 
     fn transcoder() -> Option<Rc<ContractMessageTranscoder>> {
@@ -56,7 +59,7 @@ mod tests {
 
     #[test]
     fn initialization() -> Result<(), Box<dyn Error>> {
-        let init_value = Session::new(transcoder())?
+        let init_value = Session::<MinimalRuntime>::new(transcoder())?
             .deploy_and(bytes(), "new", &["true".to_string()], vec![])?
             .call_and("get", &[])?
             .last_call_return()
@@ -69,7 +72,7 @@ mod tests {
 
     #[test]
     fn flipping() -> Result<(), Box<dyn Error>> {
-        let init_value = Session::new(transcoder())?
+        let init_value = Session::<MinimalRuntime>::new(transcoder())?
             .deploy_and(bytes(), "new", &["true".to_string()], vec![])?
             .call_and("flip", &[])?
             .call_and("flip", &[])?

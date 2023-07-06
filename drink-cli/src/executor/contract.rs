@@ -1,16 +1,24 @@
-use std::{env, fs, path::PathBuf, rc::Rc};
-use std::path::Path;
+use std::{
+    fs,
+    path::{Path, PathBuf},
+    rc::Rc,
+};
 
-use contract_transcode::ContractMessageTranscoder;
 use contract_build::{BuildMode, ExecuteArgs, ManifestPath, OptimizationPasses, Verbosity};
+use contract_transcode::ContractMessageTranscoder;
 
-use crate::app_state::{print::format_contract_action, AppState, Contract};
-use crate::executor::error::BuildError;
+use crate::{
+    app_state::{print::format_contract_action, AppState, Contract},
+    executor::error::BuildError,
+};
 
 fn build_result(app_state: &mut AppState) -> Result<String, BuildError> {
     let path_to_cargo_toml = app_state.ui_state.pwd.join(Path::new("Cargo.toml"));
     let manifest_path = ManifestPath::new(path_to_cargo_toml.clone()).map_err(|err| {
-        BuildError::InvalidManifest { manifest_path: path_to_cargo_toml, err }
+        BuildError::InvalidManifest {
+            manifest_path: path_to_cargo_toml,
+            err,
+        }
     })?;
 
     let args = ExecuteArgs {
@@ -23,10 +31,11 @@ fn build_result(app_state: &mut AppState) -> Result<String, BuildError> {
 
     contract_build::execute(args)
         .map_err(|err| BuildError::BuildFailed { err })?
-        .dest_wasm.ok_or(BuildError::WasmNotGenerated)?
+        .dest_wasm
+        .ok_or(BuildError::WasmNotGenerated)?
         .canonicalize()
         .map_err(|err| BuildError::InvalidDestPath { err })
-        .map(|pb| { pb.to_string_lossy().to_string() })
+        .map(|pb| pb.to_string_lossy().to_string())
 }
 
 /// Build the contract in the current directory.
@@ -39,7 +48,7 @@ pub fn build(app_state: &mut AppState) {
 
 pub fn deploy(app_state: &mut AppState, constructor: String, args: Vec<String>, salt: Vec<u8>) {
     // Get raw contract bytes
-    let Some((contract_name, contract_file)) = find_wasm_blob() else {
+    let Some((contract_name, contract_file)) = find_wasm_blob(&app_state.ui_state.pwd) else {
         app_state.print_error("Failed to find contract file");
         return;
     };
@@ -110,8 +119,7 @@ pub fn call(app_state: &mut AppState, message: String, args: Vec<String>) {
     }
 }
 
-fn find_wasm_blob() -> Option<(String, PathBuf)> {
-    let pwd = env::current_dir().expect("Failed to get current directory");
+fn find_wasm_blob(pwd: &Path) -> Option<(String, PathBuf)> {
     let Ok(entries) = fs::read_dir(pwd.join("target/ink")) else {
         return None;
     };
