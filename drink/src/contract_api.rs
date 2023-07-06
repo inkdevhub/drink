@@ -4,7 +4,7 @@ use frame_support::{sp_runtime::AccountId32, weights::Weight};
 use pallet_contracts::Determinism;
 use pallet_contracts_primitives::{ContractExecResult, ContractInstantiateResult};
 
-use crate::{runtime::Contracts, Sandbox};
+use crate::{runtime::Runtime, Sandbox};
 
 /// Interface for contract-related operations.
 pub trait ContractApi {
@@ -28,7 +28,7 @@ pub trait ContractApi {
     ) -> ContractExecResult<u128>;
 }
 
-impl ContractApi for Sandbox {
+impl<R: Runtime> ContractApi for Sandbox<R> {
     fn deploy_contract(
         &mut self,
         contract_bytes: Vec<u8>,
@@ -38,7 +38,7 @@ impl ContractApi for Sandbox {
         gas_limit: Weight,
     ) -> ContractInstantiateResult<AccountId32, u128> {
         self.externalities.execute_with(|| {
-            Contracts::bare_instantiate(
+            pallet_contracts::Pallet::<R>::bare_instantiate(
                 origin,
                 0,
                 gas_limit,
@@ -59,7 +59,7 @@ impl ContractApi for Sandbox {
         gas_limit: Weight,
     ) -> ContractExecResult<u128> {
         self.externalities.execute_with(|| {
-            Contracts::bare_call(
+            pallet_contracts::Pallet::<R>::bare_call(
                 origin,
                 address,
                 0,

@@ -1,3 +1,5 @@
+#![allow(missing_docs)] // `construct_macro` doesn't allow doc comments for the runtime type.
+
 use frame_support::{
     parameter_types,
     sp_runtime::{
@@ -10,11 +12,11 @@ use frame_support::{
 };
 use pallet_contracts::{DefaultAddressGenerator, Frame, Schedule};
 
-type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<SandboxRuntime>;
-type Block = frame_system::mocking::MockBlock<SandboxRuntime>;
+type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<MinimalRuntime>;
+type Block = frame_system::mocking::MockBlock<MinimalRuntime>;
 
 frame_support::construct_runtime!(
-    pub enum SandboxRuntime where
+    pub enum MinimalRuntime where
         Block = Block,
         NodeBlock = Block,
         UncheckedExtrinsic = UncheckedExtrinsic,
@@ -26,7 +28,7 @@ frame_support::construct_runtime!(
     }
 );
 
-impl frame_system::Config for SandboxRuntime {
+impl frame_system::Config for MinimalRuntime {
     type BaseCallFilter = frame_support::traits::Everything;
     type BlockWeights = ();
     type BlockLength = ();
@@ -53,7 +55,7 @@ impl frame_system::Config for SandboxRuntime {
     type MaxConsumers = ConstU32<16>;
 }
 
-impl pallet_balances::Config for SandboxRuntime {
+impl pallet_balances::Config for MinimalRuntime {
     type RuntimeEvent = RuntimeEvent;
     type WeightInfo = ();
     type Balance = u128;
@@ -69,7 +71,7 @@ impl pallet_balances::Config for SandboxRuntime {
     type MaxFreezes = ();
 }
 
-impl pallet_timestamp::Config for SandboxRuntime {
+impl pallet_timestamp::Config for MinimalRuntime {
     type Moment = u64;
     type OnTimestampSet = ();
     type MinimumPeriod = ConstU64<1>;
@@ -84,20 +86,20 @@ impl Randomness<H256, u64> for SandboxRandomness {
 }
 
 type BalanceOf = <Balances as Currency<AccountId32>>::Balance;
-impl Convert<Weight, BalanceOf> for SandboxRuntime {
+impl Convert<Weight, BalanceOf> for MinimalRuntime {
     fn convert(w: Weight) -> BalanceOf {
         w.ref_time().into()
     }
 }
 
 parameter_types! {
-    pub SandboxSchedule: Schedule<SandboxRuntime> = {
-        <Schedule<SandboxRuntime>>::default()
+    pub SandboxSchedule: Schedule<MinimalRuntime> = {
+        <Schedule<MinimalRuntime>>::default()
     };
     pub DeletionWeightLimit: Weight = Weight::zero();
 }
 
-impl pallet_contracts::Config for SandboxRuntime {
+impl pallet_contracts::Config for MinimalRuntime {
     type Time = Timestamp;
     type Randomness = SandboxRandomness;
     type Currency = Balances;
@@ -116,4 +118,50 @@ impl pallet_contracts::Config for SandboxRuntime {
     type MaxStorageKeyLen = ConstU32<128>;
     type UnsafeUnstableInterface = ConstBool<false>;
     type MaxDebugBufferLen = ConstU32<{ 2 * 1024 * 1024 }>;
+}
+
+use std::time::SystemTime;
+
+use frame_support::{sp_runtime::Storage, traits::Hooks};
+
+use crate::{Runtime, DEFAULT_ACTOR};
+
+/// Default initial balance for the default account.
+pub const INITIAL_BALANCE: u128 = 1_000_000_000_000_000;
+
+impl Runtime for MinimalRuntime {
+    fn initialize_storage(storage: &mut Storage) -> Result<(), String> {
+        pallet_balances::GenesisConfig::<Self> {
+            balances: vec![(DEFAULT_ACTOR, INITIAL_BALANCE)],
+        }
+        .assimilate_storage(storage)
+    }
+
+    fn initialize_block(height: u64, parent_hash: H256) -> Result<(), String> {
+        System::reset_events();
+
+        if height > 0 {
+            System::initialize(&height, &parent_hash, &Default::default());
+        }
+
+        Balances::on_initialize(height);
+        Timestamp::set_timestamp(
+            SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .expect("Time went backwards")
+                .as_secs(),
+        );
+        Timestamp::on_initialize(height);
+        Contracts::on_initialize(height);
+
+        Ok(())
+    }
+
+    fn finalize_block(height: u64) -> Result<H256, String> {
+        Contracts::on_finalize(height);
+        Timestamp::on_finalize(height);
+        Balances::on_finalize(height);
+
+        Ok(System::finalize().hash())
+    }
 }

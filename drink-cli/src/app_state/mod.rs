@@ -1,7 +1,7 @@
 use std::{env, path::PathBuf};
 
 pub use contracts::{Contract, ContractIndex, ContractRegistry};
-use drink::{session::Session, Weight, DEFAULT_ACTOR, DEFAULT_GAS_LIMIT};
+use drink::{runtime::MinimalRuntime, session::Session, Weight, DEFAULT_ACTOR, DEFAULT_GAS_LIMIT};
 use sp_core::crypto::AccountId32;
 pub use user_input::UserInput;
 
@@ -71,7 +71,7 @@ impl Default for UiState {
 }
 
 pub struct AppState {
-    pub session: Session,
+    pub session: Session<MinimalRuntime>,
     pub chain_info: ChainInfo,
     pub ui_state: UiState,
     pub contracts: ContractRegistry,

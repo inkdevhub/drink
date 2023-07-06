@@ -6,14 +6,14 @@
 pub mod chain_api;
 pub mod contract_api;
 mod error;
-mod runtime;
+pub mod runtime;
 #[cfg(feature = "session")]
 pub mod session;
 
-use std::time::SystemTime;
+use std::marker::PhantomData;
 
 pub use error::Error;
-use frame_support::{sp_io::TestExternalities, traits::Hooks};
+use frame_support::sp_io::TestExternalities;
 pub use frame_support::{sp_runtime::AccountId32, weights::Weight};
 use frame_system::GenesisConfig;
 
@@ -23,18 +23,17 @@ use crate::runtime::*;
 pub type DrinkResult<T> = std::result::Result<T, Error>;
 
 /// A sandboxed runtime.
-pub struct Sandbox {
+pub struct Sandbox<R: Runtime> {
     externalities: TestExternalities,
+    _phantom: PhantomData<R>,
 }
 
 /// Default extrinsic origin.
 pub const DEFAULT_ACTOR: AccountId32 = AccountId32::new([1u8; 32]);
-/// Default initial balance.
-pub const INITIAL_BALANCE: u128 = 1_000_000_000_000_000;
 /// Default gas limit.
 pub const DEFAULT_GAS_LIMIT: Weight = Weight::from_parts(100_000_000_000, 3 * 1024 * 1024);
 
-impl Sandbox {
+impl<R: Runtime> Sandbox<R> {
     /// Creates a new sandbox.
     ///
     /// Returns an error if the storage could not be initialized.
@@ -43,35 +42,21 @@ impl Sandbox {
     /// `INITIAL_BALANCE`.
     pub fn new() -> DrinkResult<Self> {
         let mut storage = GenesisConfig::default()
-            .build_storage::<SandboxRuntime>()
+            .build_storage::<R>()
             .map_err(Error::StorageBuilding)?;
-        pallet_balances::GenesisConfig::<SandboxRuntime> {
-            balances: vec![(DEFAULT_ACTOR, INITIAL_BALANCE)],
-        }
-        .assimilate_storage(&mut storage)
-        .map_err(Error::StorageBuilding)?;
+
+        R::initialize_storage(&mut storage).map_err(Error::StorageBuilding)?;
 
         let mut sandbox = Self {
             externalities: TestExternalities::new(storage),
+            _phantom: PhantomData,
         };
-        sandbox.init_block(0);
+
+        sandbox
+            .externalities
+            .execute_with(|| R::initialize_block(0, Default::default()))
+            .map_err(Error::BlockInitialize)?;
+
         Ok(sandbox)
-    }
-
-    /// Does the block initialization work.
-    fn init_block(&mut self, height: u64) {
-        self.externalities.execute_with(|| {
-            System::reset_events();
-
-            Balances::on_initialize(height);
-            Timestamp::set_timestamp(
-                SystemTime::now()
-                    .duration_since(SystemTime::UNIX_EPOCH)
-                    .expect("Time went backwards")
-                    .as_secs(),
-            );
-            Timestamp::on_initialize(height);
-            Contracts::on_initialize(height);
-        });
     }
 }
