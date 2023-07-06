@@ -64,7 +64,10 @@ pub enum SessionError {
 /// # fn bob() -> AccountId32 { AccountId32::new([0; 32]) }
 ///
 /// # fn main() -> Result<(), drink::session::SessionError> {
-/// Session::new(Some(get_transcoder()))?
+///
+/// use drink::runtime::MinimalRuntime;
+///
+/// Session::<MinimalRuntime>::new(Some(get_transcoder()))?
 ///     .deploy_and(contract_bytes(), "new", &[], vec![])?
 ///     .call_and("foo", &[])?
 ///     .with_actor(bob())
@@ -86,7 +89,9 @@ pub enum SessionError {
 /// # fn bob() -> AccountId32 { AccountId32::new([0; 32]) }
 ///
 /// # fn main() -> Result<(), drink::session::SessionError> {
-/// let mut session = Session::new(Some(get_transcoder()))?;
+/// use drink::runtime::MinimalRuntime;
+///
+/// let mut session = Session::<MinimalRuntime>::new(Some(get_transcoder()))?;
 /// let _address = session.deploy(contract_bytes(), "new", &[], vec![])?;
 /// session.call("foo", &[])?;
 /// session.set_actor(bob());
