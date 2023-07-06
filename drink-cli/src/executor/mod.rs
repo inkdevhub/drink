@@ -68,10 +68,12 @@ pub fn execute(app_state: &mut AppState) -> Result<()> {
 
 fn build_blocks(app_state: &mut AppState, count: u64) {
     for _ in 0..count {
-        app_state.session.chain_api().build_block();
+        app_state.chain_info.block_height = app_state
+            .session
+            .chain_api()
+            .build_block()
+            .expect("Failed to build block - chain is broken");
     }
-
-    app_state.chain_info.block_height += count;
 
     app_state.print(&format!("{count} blocks built"));
 }
@@ -81,5 +83,5 @@ fn add_tokens(app_state: &mut AppState, recipient: AccountId32, value: u128) {
         .session
         .chain_api()
         .add_tokens(recipient.clone(), value);
-    app_state.print(&format!("{value} tokens added to {recipient}", ));
+    app_state.print(&format!("{value} tokens added to {recipient}",));
 }

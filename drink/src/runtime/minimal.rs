@@ -119,3 +119,49 @@ impl pallet_contracts::Config for MinimalRuntime {
     type UnsafeUnstableInterface = ConstBool<false>;
     type MaxDebugBufferLen = ConstU32<{ 2 * 1024 * 1024 }>;
 }
+
+use std::time::SystemTime;
+
+use frame_support::{sp_runtime::Storage, traits::Hooks};
+
+use crate::{Runtime, DEFAULT_ACTOR};
+
+/// Default initial balance for the default account.
+pub const INITIAL_BALANCE: u128 = 1_000_000_000_000_000;
+
+impl Runtime for MinimalRuntime {
+    fn initialize_storage(storage: &mut Storage) -> Result<(), String> {
+        pallet_balances::GenesisConfig::<Self> {
+            balances: vec![(DEFAULT_ACTOR, INITIAL_BALANCE)],
+        }
+        .assimilate_storage(storage)
+    }
+
+    fn initialize_block(height: u64, parent_hash: H256) -> Result<(), String> {
+        System::reset_events();
+
+        if height > 0 {
+            System::initialize(&height, &parent_hash, &Default::default());
+        }
+
+        Balances::on_initialize(height);
+        Timestamp::set_timestamp(
+            SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .expect("Time went backwards")
+                .as_secs(),
+        );
+        Timestamp::on_initialize(height);
+        Contracts::on_initialize(height);
+
+        Ok(())
+    }
+
+    fn finalize_block(height: u64) -> Result<H256, String> {
+        Contracts::on_finalize(height);
+        Timestamp::on_finalize(height);
+        Balances::on_finalize(height);
+
+        Ok(System::finalize().hash())
+    }
+}

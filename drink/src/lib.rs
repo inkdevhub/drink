@@ -51,14 +51,12 @@ impl<R: Runtime> Sandbox<R> {
             externalities: TestExternalities::new(storage),
             _phantom: PhantomData,
         };
-        sandbox.init_block(0)?;
-        Ok(sandbox)
-    }
 
-    /// Does the block initialization work.
-    fn init_block(&mut self, height: u64) -> DrinkResult<()> {
-        self.externalities
-            .execute_with(|| R::initialize_block(height))
-            .map_err(Error::BlockInitialize)
+        sandbox
+            .externalities
+            .execute_with(|| R::initialize_block(0, Default::default()))
+            .map_err(Error::BlockInitialize)?;
+
+        Ok(sandbox)
     }
 }

@@ -9,4 +9,7 @@ pub enum Error {
     /// Block couldn't have been initialized.
     #[error("Failed to initialize block: {0}")]
     BlockInitialize(String),
+    /// Block couldn't have been finalized.
+    #[error("Failed to finalize block: {0}")]
+    BlockFinalize(String),
 }
