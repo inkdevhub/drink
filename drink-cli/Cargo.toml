@@ -4,8 +4,10 @@ authors.workspace = true
 edition.workspace = true
 homepage.workspace = true
 license.workspace = true
+readme.workspace = true
 repository.workspace = true
 version.workspace = true
+description = "A CLI for interacting with the `drink` environment"
 
 [dependencies]
 anyhow = { workspace = true }
