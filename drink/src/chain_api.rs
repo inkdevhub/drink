@@ -13,7 +13,7 @@ pub trait ChainApi {
     fn build_block(&mut self) -> DrinkResult<u64>;
 
     /// Build `n` empty blocks and return the new height.
-    fn build_blocks(&mut self, n: u32) -> DrinkResult<u64> {
+    fn build_blocks(&mut self, n: u64) -> DrinkResult<u64> {
         let mut last_block = None;
         for _ in 0..n {
             last_block = Some(self.build_block()?);
