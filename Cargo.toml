@@ -36,9 +36,9 @@ frame-support = { version = "21.0.0" }
 frame-system = { version = "21.0.0" }
 pallet-balances = { version = "21.0.0" }
 pallet-contracts = { version = "20.0.0" }
-pallet-contracts-primitives = { version = "23.0.0" }
+pallet-contracts-primitives = { version = "24.0.0" }
 pallet-timestamp = { version = "20.0.0" }
-sp-core = { version = "20.0.0" }
+sp-core = { version = "21.0.0" }
 
 # Local dependencies
 
