@@ -47,7 +47,7 @@ impl AppState {
     }
 }
 
-pub fn format_contract_action<R>(result: &ContractResult<R, u128>) -> String {
+pub fn format_contract_action<R, E>(result: &ContractResult<R, u128, E>) -> String {
     let mut output = format!(
         "Gas consumed: {:?}\nGas required: {:?}\nDebug buffer:\n",
         result.gas_consumed, result.gas_required

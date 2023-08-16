@@ -9,18 +9,21 @@ mod error;
 pub mod runtime;
 #[cfg(feature = "session")]
 pub mod session;
-
 use std::marker::PhantomData;
 
 pub use error::Error;
-use frame_support::sp_io::TestExternalities;
+use frame_support::{sp_io::TestExternalities, sp_runtime::BuildStorage};
 pub use frame_support::{sp_runtime::AccountId32, weights::Weight};
-use frame_system::GenesisConfig;
+use frame_system::{EventRecord, GenesisConfig};
 
 use crate::runtime::*;
 
 /// Main result type for the drink crate.
 pub type DrinkResult<T> = std::result::Result<T, Error>;
+
+/// Copied from pallet-contracts.
+pub type EventRecordOf<T> =
+    EventRecord<<T as frame_system::Config>::RuntimeEvent, <T as frame_system::Config>::Hash>;
 
 /// A sandboxed runtime.
 pub struct Sandbox<R: Runtime> {
@@ -41,8 +44,8 @@ impl<R: Runtime> Sandbox<R> {
     /// The storage is initialized with a genesis block with a single account `DEFAULT_ACTOR` with
     /// `INITIAL_BALANCE`.
     pub fn new() -> DrinkResult<Self> {
-        let mut storage = GenesisConfig::default()
-            .build_storage::<R>()
+        let mut storage = GenesisConfig::<R>::default()
+            .build_storage()
             .map_err(Error::StorageBuilding)?;
 
         R::initialize_storage(&mut storage).map_err(Error::StorageBuilding)?;

@@ -1,4 +1,5 @@
 [workspace]
+resolver = "2"
 
 members = [
     "drink",
@@ -32,13 +33,13 @@ thiserror = { version = "1.0.40" }
 
 # Substrate dependencies
 
-frame-support = { version = "21.0.0" }
-frame-system = { version = "21.0.0" }
-pallet-balances = { version = "21.0.0" }
-pallet-contracts = { version = "20.0.0" }
-pallet-contracts-primitives = { version = "24.0.0" }
-pallet-timestamp = { version = "20.0.0" }
-sp-core = { version = "21.0.0" }
+frame-support = { version = "22.0.0" }
+frame-system = { version = "22.0.0" }
+pallet-balances = { version = "22.0.0" }
+pallet-contracts = { version = "21.0.0" }
+pallet-contracts-primitives = { version = "25.0.0" }
+pallet-timestamp = { version = "21.0.0" }
+sp-core = { version = "22.0.0" }
 
 # Local dependencies
 
