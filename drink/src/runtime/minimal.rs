@@ -3,28 +3,23 @@
 use frame_support::{
     parameter_types,
     sp_runtime::{
-        testing::{Header, H256},
+        testing::H256,
         traits::{BlakeTwo256, Convert, IdentityLookup},
-        AccountId32,
+        AccountId32, BuildStorage,
     },
     traits::{ConstBool, ConstU128, ConstU32, ConstU64, Currency, Randomness},
     weights::Weight,
 };
 use pallet_contracts::{DefaultAddressGenerator, Frame, Schedule};
 
-type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<MinimalRuntime>;
 type Block = frame_system::mocking::MockBlock<MinimalRuntime>;
 
 frame_support::construct_runtime!(
-    pub enum MinimalRuntime where
-        Block = Block,
-        NodeBlock = Block,
-        UncheckedExtrinsic = UncheckedExtrinsic,
-    {
-        System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
-        Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
-        Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent},
-        Contracts: pallet_contracts::{Pallet, Call, Storage, Event<T>},
+    pub enum MinimalRuntime {
+        System: frame_system,
+        Balances: pallet_balances,
+        Timestamp: pallet_timestamp,
+        Contracts: pallet_contracts,
     }
 );
 
@@ -32,15 +27,14 @@ impl frame_system::Config for MinimalRuntime {
     type BaseCallFilter = frame_support::traits::Everything;
     type BlockWeights = ();
     type BlockLength = ();
+    type Block = Block;
     type RuntimeOrigin = RuntimeOrigin;
     type RuntimeCall = RuntimeCall;
-    type Index = u64;
-    type BlockNumber = u64;
+    type Nonce = u64;
     type Hash = H256;
     type Hashing = BlakeTwo256;
     type AccountId = AccountId32;
     type Lookup = IdentityLookup<Self::AccountId>;
-    type Header = Header;
     type RuntimeEvent = RuntimeEvent;
     type BlockHashCount = ConstU64<250>;
     type DbWeight = ();
@@ -63,12 +57,12 @@ impl pallet_balances::Config for MinimalRuntime {
     type ExistentialDeposit = ConstU128<1>;
     type AccountStore = System;
     type ReserveIdentifier = [u8; 8];
-    type HoldIdentifier = ();
     type FreezeIdentifier = ();
     type MaxLocks = ();
     type MaxReserves = ();
     type MaxHolds = ();
     type MaxFreezes = ();
+    type RuntimeHoldReason = ();
 }
 
 impl pallet_timestamp::Config for MinimalRuntime {
@@ -97,6 +91,7 @@ parameter_types! {
         <Schedule<MinimalRuntime>>::default()
     };
     pub DeletionWeightLimit: Weight = Weight::zero();
+    pub DefaultDepositLimit: BalanceOf = 10_000_000;
 }
 
 impl pallet_contracts::Config for MinimalRuntime {
@@ -118,6 +113,8 @@ impl pallet_contracts::Config for MinimalRuntime {
     type MaxStorageKeyLen = ConstU32<128>;
     type UnsafeUnstableInterface = ConstBool<false>;
     type MaxDebugBufferLen = ConstU32<{ 2 * 1024 * 1024 }>;
+    type Migrations = ();
+    type DefaultDepositLimit = DefaultDepositLimit;
 }
 
 use std::time::SystemTime;

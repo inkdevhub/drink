@@ -10,8 +10,10 @@ pub use minimal::MinimalRuntime;
 ///
 /// Must contain at least system, balances and contracts pallets.
 pub trait Runtime:
-    frame_system::Config<AccountId = AccountId32, BlockNumber = u64>
-    + pallet_balances::Config<Balance = u128>
+    frame_system::Config<
+        AccountId = AccountId32,
+        Block = frame_system::mocking::MockBlock<MinimalRuntime>,
+    > + pallet_balances::Config<Balance = u128>
     + pallet_contracts::Config<Currency = pallet_balances::Pallet<Self>>
 {
     /// Initialize the storage at the genesis block.

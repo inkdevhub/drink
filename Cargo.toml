@@ -1,4 +1,5 @@
 [workspace]
+resolver = "2"
 
 members = [
     "drink",
@@ -17,7 +18,7 @@ homepage = "https://github.com/Cardinal-Cryptography/drink"
 license = "Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/Cardinal-Cryptography/drink"
-version = "0.1.0"
+version = "0.1.1"
 
 [workspace.dependencies]
 anyhow = { version = "1.0.71" }
@@ -32,13 +33,13 @@ thiserror = { version = "1.0.40" }
 
 # Substrate dependencies
 
-frame-support = { version = "21.0.0" }
-frame-system = { version = "21.0.0" }
-pallet-balances = { version = "21.0.0" }
-pallet-contracts = { version = "20.0.0" }
-pallet-contracts-primitives = { version = "23.0.0" }
-pallet-timestamp = { version = "20.0.0" }
-sp-core = { version = "20.0.0" }
+frame-support = { version = "22.0.0" }
+frame-system = { version = "22.0.0" }
+pallet-balances = { version = "22.0.0" }
+pallet-contracts = { version = "21.0.0" }
+pallet-contracts-primitives = { version = "25.0.0" }
+pallet-timestamp = { version = "21.0.0" }
+sp-core = { version = "22.0.0" }
 
 # Local dependencies
 

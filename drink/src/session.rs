@@ -4,13 +4,13 @@ use std::{mem, rc::Rc};
 
 pub use contract_transcode;
 use contract_transcode::{ContractMessageTranscoder, Value};
-use frame_support::{dispatch::DispatchError, sp_runtime::AccountId32, weights::Weight};
+use frame_support::{sp_runtime::DispatchError, weights::Weight};
 use pallet_contracts_primitives::{ContractExecResult, ContractInstantiateResult};
 use thiserror::Error;
 
 use crate::{
-    chain_api::ChainApi, contract_api::ContractApi, runtime::Runtime, Sandbox, DEFAULT_ACTOR,
-    DEFAULT_GAS_LIMIT,
+    chain_api::ChainApi, contract_api::ContractApi, runtime::Runtime, AccountId32, EventRecordOf,
+    Sandbox, DEFAULT_ACTOR, DEFAULT_GAS_LIMIT,
 };
 
 /// Session specific errors.
@@ -106,9 +106,9 @@ pub struct Session<R: Runtime> {
 
     transcoder: Option<Rc<ContractMessageTranscoder>>,
 
-    deploy_results: Vec<ContractInstantiateResult<AccountId32, u128>>,
+    deploy_results: Vec<ContractInstantiateResult<AccountId32, u128, EventRecordOf<R>>>,
     deploy_returns: Vec<AccountId32>,
-    call_results: Vec<ContractExecResult<u128>>,
+    call_results: Vec<ContractExecResult<u128, EventRecordOf<R>>>,
     call_returns: Vec<Value>,
 }
 
@@ -297,7 +297,9 @@ impl<R: Runtime> Session<R> {
     }
 
     /// Returns the last result of deploying a contract.
-    pub fn last_deploy_result(&self) -> Option<&ContractInstantiateResult<AccountId32, u128>> {
+    pub fn last_deploy_result(
+        &self,
+    ) -> Option<&ContractInstantiateResult<AccountId32, u128, EventRecordOf<R>>> {
         self.deploy_results.last()
     }
 
@@ -307,7 +309,7 @@ impl<R: Runtime> Session<R> {
     }
 
     /// Returns the last result of calling a contract.
-    pub fn last_call_result(&self) -> Option<&ContractExecResult<u128>> {
+    pub fn last_call_result(&self) -> Option<&ContractExecResult<u128, EventRecordOf<R>>> {
         self.call_results.last()
     }
 

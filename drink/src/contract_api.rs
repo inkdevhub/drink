@@ -1,13 +1,13 @@
 //! Contracts API.
 
 use frame_support::{sp_runtime::AccountId32, weights::Weight};
-use pallet_contracts::Determinism;
-use pallet_contracts_primitives::{ContractExecResult, ContractInstantiateResult};
+use pallet_contracts::{CollectEvents, DebugInfo, Determinism};
+use pallet_contracts_primitives::{Code, ContractExecResult, ContractInstantiateResult};
 
-use crate::{runtime::Runtime, Sandbox};
+use crate::{runtime::Runtime, EventRecordOf, Sandbox};
 
 /// Interface for contract-related operations.
-pub trait ContractApi {
+pub trait ContractApi<R: Runtime> {
     /// Interface for `bare_instantiate` contract call.
     fn deploy_contract(
         &mut self,
@@ -16,7 +16,7 @@ pub trait ContractApi {
         salt: Vec<u8>,
         origin: AccountId32,
         gas_limit: Weight,
-    ) -> ContractInstantiateResult<AccountId32, u128>;
+    ) -> ContractInstantiateResult<AccountId32, u128, EventRecordOf<R>>;
 
     /// Interface for `bare_call` contract call.
     fn call_contract(
@@ -25,10 +25,10 @@ pub trait ContractApi {
         data: Vec<u8>,
         origin: AccountId32,
         gas_limit: Weight,
-    ) -> ContractExecResult<u128>;
+    ) -> ContractExecResult<u128, EventRecordOf<R>>;
 }
 
-impl<R: Runtime> ContractApi for Sandbox<R> {
+impl<R: Runtime> ContractApi<R> for Sandbox<R> {
     fn deploy_contract(
         &mut self,
         contract_bytes: Vec<u8>,
@@ -36,17 +36,18 @@ impl<R: Runtime> ContractApi for Sandbox<R> {
         salt: Vec<u8>,
         origin: AccountId32,
         gas_limit: Weight,
-    ) -> ContractInstantiateResult<AccountId32, u128> {
+    ) -> ContractInstantiateResult<AccountId32, u128, EventRecordOf<R>> {
         self.externalities.execute_with(|| {
             pallet_contracts::Pallet::<R>::bare_instantiate(
                 origin,
                 0,
                 gas_limit,
                 None,
-                contract_bytes.into(),
+                Code::Upload(contract_bytes),
                 data,
                 salt,
-                true,
+                DebugInfo::UnsafeDebug,
+                CollectEvents::UnsafeCollect,
             )
         })
     }
@@ -57,7 +58,7 @@ impl<R: Runtime> ContractApi for Sandbox<R> {
         data: Vec<u8>,
         origin: AccountId32,
         gas_limit: Weight,
-    ) -> ContractExecResult<u128> {
+    ) -> ContractExecResult<u128, EventRecordOf<R>> {
         self.externalities.execute_with(|| {
             pallet_contracts::Pallet::<R>::bare_call(
                 origin,
@@ -66,7 +67,8 @@ impl<R: Runtime> ContractApi for Sandbox<R> {
                 gas_limit,
                 None,
                 data,
-                true,
+                DebugInfo::UnsafeDebug,
+                CollectEvents::UnsafeCollect,
                 Determinism::Enforced,
             )
         })
