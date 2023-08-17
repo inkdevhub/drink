@@ -43,4 +43,4 @@ sp-core = { version = "22.0.0" }
 
 # Local dependencies
 
-drink = { version = "0.1.0", path = "drink" }
+drink = { version = "0.1.1", path = "drink" }
