@@ -46,8 +46,8 @@ impl<R: Runtime> ContractApi<R> for Sandbox<R> {
                 Code::Upload(contract_bytes),
                 data,
                 salt,
-                DebugInfo::Skip,
-                CollectEvents::Skip,
+                DebugInfo::UnsafeDebug,
+                CollectEvents::UnsafeCollect,
             )
         })
     }
@@ -67,8 +67,8 @@ impl<R: Runtime> ContractApi<R> for Sandbox<R> {
                 gas_limit,
                 None,
                 data,
-                DebugInfo::Skip,
-                CollectEvents::Skip,
+                DebugInfo::UnsafeDebug,
+                CollectEvents::UnsafeCollect,
                 Determinism::Enforced,
             )
         })
