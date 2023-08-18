@@ -23,6 +23,9 @@ pub trait ChainApi {
 
     /// Add tokens to an account.
     fn add_tokens(&mut self, address: AccountId32, amount: u128);
+
+    /// Return the balance of an account.
+    fn balance(&mut self, address: &AccountId32) -> u128;
 }
 
 impl<R: Runtime> ChainApi for Sandbox<R> {
@@ -44,5 +47,10 @@ impl<R: Runtime> ChainApi for Sandbox<R> {
         self.externalities.execute_with(|| {
             let _ = pallet_balances::Pallet::<R>::deposit_creating(&address, amount);
         });
+    }
+
+    fn balance(&mut self, address: &AccountId32) -> u128 {
+        self.externalities
+            .execute_with(|| pallet_balances::Pallet::<R>::free_balance(address))
     }
 }
