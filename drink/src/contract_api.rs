@@ -11,13 +11,16 @@ use crate::{runtime::Runtime, EventRecordOf, Sandbox};
 /// Interface for contract-related operations.
 pub trait ContractApi<R: Runtime> {
     /// Interface for `bare_instantiate` contract call.
+    #[allow(clippy::too_many_arguments)]
     fn deploy_contract(
         &mut self,
         contract_bytes: Vec<u8>,
+        value: u128,
         data: Vec<u8>,
         salt: Vec<u8>,
         origin: AccountId32,
         gas_limit: Weight,
+        storage_deposit_limit: Option<u128>,
     ) -> ContractInstantiateResult<AccountId32, u128, EventRecordOf<R>>;
 
     /// Interface for `bare_upload_code` contract call.
@@ -25,15 +28,18 @@ pub trait ContractApi<R: Runtime> {
         &mut self,
         contract_bytes: Vec<u8>,
         origin: AccountId32,
+        storage_deposit_limit: Option<u128>,
     ) -> CodeUploadResult<<R as frame_system::Config>::Hash, u128>;
 
     /// Interface for `bare_call` contract call.
     fn call_contract(
         &mut self,
         address: AccountId32,
+        value: u128,
         data: Vec<u8>,
         origin: AccountId32,
         gas_limit: Weight,
+        storage_deposit_limit: Option<u128>,
     ) -> ContractExecResult<u128, EventRecordOf<R>>;
 }
 
@@ -41,17 +47,19 @@ impl<R: Runtime> ContractApi<R> for Sandbox<R> {
     fn deploy_contract(
         &mut self,
         contract_bytes: Vec<u8>,
+        value: u128,
         data: Vec<u8>,
         salt: Vec<u8>,
         origin: AccountId32,
         gas_limit: Weight,
+        storage_deposit_limit: Option<u128>,
     ) -> ContractInstantiateResult<AccountId32, u128, EventRecordOf<R>> {
         self.externalities.execute_with(|| {
             pallet_contracts::Pallet::<R>::bare_instantiate(
                 origin,
-                0,
+                value,
                 gas_limit,
-                None,
+                storage_deposit_limit,
                 Code::Upload(contract_bytes),
                 data,
                 salt,
@@ -65,12 +73,13 @@ impl<R: Runtime> ContractApi<R> for Sandbox<R> {
         &mut self,
         contract_bytes: Vec<u8>,
         origin: AccountId32,
+        storage_deposit_limit: Option<u128>,
     ) -> CodeUploadResult<<R as frame_system::Config>::Hash, u128> {
         self.externalities.execute_with(|| {
             pallet_contracts::Pallet::<R>::bare_upload_code(
                 origin,
                 contract_bytes,
-                None,
+                storage_deposit_limit,
                 Determinism::Enforced,
             )
         })
@@ -79,17 +88,19 @@ impl<R: Runtime> ContractApi<R> for Sandbox<R> {
     fn call_contract(
         &mut self,
         address: AccountId32,
+        value: u128,
         data: Vec<u8>,
         origin: AccountId32,
         gas_limit: Weight,
+        storage_deposit_limit: Option<u128>,
     ) -> ContractExecResult<u128, EventRecordOf<R>> {
         self.externalities.execute_with(|| {
             pallet_contracts::Pallet::<R>::bare_call(
                 origin,
                 address,
-                0,
+                value,
                 gas_limit,
-                None,
+                storage_deposit_limit,
                 data,
                 DebugInfo::UnsafeDebug,
                 CollectEvents::UnsafeCollect,
