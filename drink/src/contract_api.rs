@@ -2,7 +2,9 @@
 
 use frame_support::{sp_runtime::AccountId32, weights::Weight};
 use pallet_contracts::{CollectEvents, DebugInfo, Determinism};
-use pallet_contracts_primitives::{Code, ContractExecResult, ContractInstantiateResult};
+use pallet_contracts_primitives::{
+    Code, CodeUploadResult, ContractExecResult, ContractInstantiateResult,
+};
 
 use crate::{runtime::Runtime, EventRecordOf, Sandbox};
 
@@ -17,6 +19,13 @@ pub trait ContractApi<R: Runtime> {
         origin: AccountId32,
         gas_limit: Weight,
     ) -> ContractInstantiateResult<AccountId32, u128, EventRecordOf<R>>;
+
+    /// Interface for `bare_upload_code` contract call.
+    fn upload_contract(
+        &mut self,
+        contract_bytes: Vec<u8>,
+        origin: AccountId32,
+    ) -> CodeUploadResult<<R as frame_system::Config>::Hash, u128>;
 
     /// Interface for `bare_call` contract call.
     fn call_contract(
@@ -48,6 +57,21 @@ impl<R: Runtime> ContractApi<R> for Sandbox<R> {
                 salt,
                 DebugInfo::UnsafeDebug,
                 CollectEvents::UnsafeCollect,
+            )
+        })
+    }
+
+    fn upload_contract(
+        &mut self,
+        contract_bytes: Vec<u8>,
+        origin: AccountId32,
+    ) -> CodeUploadResult<<R as frame_system::Config>::Hash, u128> {
+        self.externalities.execute_with(|| {
+            pallet_contracts::Pallet::<R>::bare_upload_code(
+                origin,
+                contract_bytes,
+                None,
+                Determinism::Enforced,
             )
         })
     }
