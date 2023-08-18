@@ -165,6 +165,11 @@ impl<R: Runtime> Session<R> {
         &mut self.sandbox
     }
 
+    /// Returns a reference for basic contracts API.
+    pub fn contracts_api(&mut self) -> &mut impl ContractApi<R> {
+        &mut self.sandbox
+    }
+
     /// Deploys a contract with a given constructor, arguments and salt. In case of a success,
     /// returns `self`.
     pub fn deploy_and(
