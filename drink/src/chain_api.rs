@@ -13,6 +13,10 @@ pub trait ChainApi {
     fn build_block(&mut self) -> DrinkResult<u64>;
 
     /// Build `n` empty blocks and return the new height.
+    ///
+    /// # Arguments
+    ///
+    /// * `n` - The number of blocks to build.
     fn build_blocks(&mut self, n: u64) -> DrinkResult<u64> {
         let mut last_block = None;
         for _ in 0..n {
@@ -22,9 +26,18 @@ pub trait ChainApi {
     }
 
     /// Add tokens to an account.
+    ///
+    /// # Arguments
+    ///
+    /// * `address` - The address of the account to add tokens to.
+    /// * `amount` - The number of tokens to add.
     fn add_tokens(&mut self, address: AccountId32, amount: u128);
 
     /// Return the balance of an account.
+    ///
+    /// # Arguments
+    ///
+    /// * `address` - The address of the account to query.
     fn balance(&mut self, address: &AccountId32) -> u128;
 }
 

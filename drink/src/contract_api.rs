@@ -11,6 +11,16 @@ use crate::{runtime::Runtime, EventRecordOf, Sandbox};
 /// Interface for contract-related operations.
 pub trait ContractApi<R: Runtime> {
     /// Interface for `bare_instantiate` contract call.
+    ///
+    /// # Arguments
+    ///
+    /// * `contract_bytes` - The contract code.
+    /// * `value` - The number of tokens to be transferred to the contract.
+    /// * `data` - The input data to be passed to the contract (including constructor name).
+    /// * `salt` - The salt to be used for contract address derivation.
+    /// * `origin` - The sender of the contract call.
+    /// * `gas_limit` - The gas limit for the contract call.
+    /// * `storage_deposit_limit` - The storage deposit limit for the contract call.
     #[allow(clippy::too_many_arguments)]
     fn deploy_contract(
         &mut self,
@@ -24,6 +34,12 @@ pub trait ContractApi<R: Runtime> {
     ) -> ContractInstantiateResult<AccountId32, u128, EventRecordOf<R>>;
 
     /// Interface for `bare_upload_code` contract call.
+    ///
+    /// # Arguments
+    ///
+    /// * `contract_bytes` - The contract code.
+    /// * `origin` - The sender of the contract call.
+    /// * `storage_deposit_limit` - The storage deposit limit for the contract call.
     fn upload_contract(
         &mut self,
         contract_bytes: Vec<u8>,
@@ -32,6 +48,15 @@ pub trait ContractApi<R: Runtime> {
     ) -> CodeUploadResult<<R as frame_system::Config>::Hash, u128>;
 
     /// Interface for `bare_call` contract call.
+    ///
+    /// # Arguments
+    ///
+    /// * `address` - The address of the contract to be called.
+    /// * `value` - The number of tokens to be transferred to the contract.
+    /// * `data` - The input data to be passed to the contract (including message name).
+    /// * `origin` - The sender of the contract call.
+    /// * `gas_limit` - The gas limit for the contract call.
+    /// * `storage_deposit_limit` - The storage deposit limit for the contract call.
     fn call_contract(
         &mut self,
         address: AccountId32,
