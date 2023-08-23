@@ -13,6 +13,9 @@ use crate::{
     Sandbox, DEFAULT_ACTOR, DEFAULT_GAS_LIMIT,
 };
 
+const ZERO_TRANSFER: u128 = 0;
+const DEFAULT_STORAGE_DEPOSIT_LIMIT: Option<u128> = None;
+
 /// Session specific errors.
 #[derive(Error, Debug)]
 pub enum SessionError {
@@ -165,6 +168,11 @@ impl<R: Runtime> Session<R> {
         &mut self.sandbox
     }
 
+    /// Returns a reference for basic contracts API.
+    pub fn contracts_api(&mut self) -> &mut impl ContractApi<R> {
+        &mut self.sandbox
+    }
+
     /// Deploys a contract with a given constructor, arguments and salt. In case of a success,
     /// returns `self`.
     pub fn deploy_and(
@@ -196,10 +204,12 @@ impl<R: Runtime> Session<R> {
 
         let result = self.sandbox.deploy_contract(
             contract_bytes,
+            ZERO_TRANSFER,
             data,
             salt,
             self.actor.clone(),
             self.gas_limit,
+            DEFAULT_STORAGE_DEPOSIT_LIMIT,
         );
 
         let ret = match &result.result {
@@ -272,9 +282,14 @@ impl<R: Runtime> Session<R> {
                 .clone(),
         };
 
-        let result = self
-            .sandbox
-            .call_contract(address, data, self.actor.clone(), self.gas_limit);
+        let result = self.sandbox.call_contract(
+            address,
+            ZERO_TRANSFER,
+            data,
+            self.actor.clone(),
+            self.gas_limit,
+            DEFAULT_STORAGE_DEPOSIT_LIMIT,
+        );
 
         let ret = match &result.result {
             Ok(exec_result) if exec_result.did_revert() => Err(SessionError::CallReverted),
