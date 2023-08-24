@@ -39,6 +39,13 @@ pub trait ChainApi {
     ///
     /// * `address` - The address of the account to query.
     fn balance(&mut self, address: &AccountId32) -> u128;
+
+    /// Run an action without modifying the storage.
+    ///
+    /// # Arguments
+    ///
+    /// * `action` - The action to run.
+    fn dry_run<T>(&mut self, action: impl FnOnce(&mut Self) -> T) -> T;
 }
 
 impl<R: Runtime> ChainApi for Sandbox<R> {
@@ -65,5 +72,41 @@ impl<R: Runtime> ChainApi for Sandbox<R> {
     fn balance(&mut self, address: &AccountId32) -> u128 {
         self.externalities
             .execute_with(|| pallet_balances::Pallet::<R>::free_balance(address))
+    }
+
+    fn dry_run<T>(&mut self, action: impl FnOnce(&mut Self) -> T) -> T {
+        // Make a backup of the backend.
+        let backend_backup = self.externalities.as_backend();
+
+        // Run the action, potentially modifying storage. Ensure, that there are no pending changes
+        // that would affect the reverted backend.
+        let result = action(self);
+        self.externalities
+            .commit_all()
+            .expect("Failed to commit changes");
+
+        // Restore the backend.
+        self.externalities.backend = backend_backup;
+
+        result
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::chain_api::ChainApi;
+    use crate::{runtime::MinimalRuntime, Sandbox, DEFAULT_ACTOR};
+
+    #[test]
+    fn dry_run_works() {
+        let mut sandbox = Sandbox::<MinimalRuntime>::new().expect("Failed to create sandbox");
+        let initial_balance = sandbox.balance(&DEFAULT_ACTOR);
+
+        sandbox.dry_run(|runtime| {
+            runtime.add_tokens(DEFAULT_ACTOR, 100);
+            assert_eq!(runtime.balance(&DEFAULT_ACTOR), initial_balance + 100);
+        });
+
+        assert_eq!(sandbox.balance(&DEFAULT_ACTOR), initial_balance);
     }
 }
