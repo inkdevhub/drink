@@ -1,11 +1,16 @@
 //! Basic chain API.
 
+use frame_support::dispatch::Dispatchable;
+use frame_support::sp_runtime::DispatchResultWithInfo;
 use frame_support::{sp_runtime::AccountId32, traits::tokens::currency::Currency};
 
 use crate::{DrinkResult, Error, Runtime, Sandbox};
 
+/// The runtime call type for a particular runtime.
+pub type RuntimeCall<R> = <R as frame_system::Config>::RuntimeCall;
+
 /// Interface for basic chain operations.
-pub trait ChainApi {
+pub trait ChainApi<R: Runtime> {
     /// Return the current height of the chain.
     fn current_height(&mut self) -> u64;
 
@@ -46,9 +51,20 @@ pub trait ChainApi {
     ///
     /// * `action` - The action to run.
     fn dry_run<T>(&mut self, action: impl FnOnce(&mut Self) -> T) -> T;
+
+    /// Execute a runtime call (dispatchable).
+    ///
+    /// # Arguments
+    ///
+    /// * `call` - The runtime call to execute.
+    fn runtime_call(
+        &mut self,
+        call: RuntimeCall<R>,
+        origin: <RuntimeCall<R> as Dispatchable>::RuntimeOrigin,
+    ) -> DispatchResultWithInfo<<RuntimeCall<R> as Dispatchable>::PostInfo>;
 }
 
-impl<R: Runtime> ChainApi for Sandbox<R> {
+impl<R: Runtime> ChainApi<R> for Sandbox<R> {
     fn current_height(&mut self) -> u64 {
         self.externalities
             .execute_with(|| frame_system::Pallet::<R>::block_number())
@@ -89,6 +105,14 @@ impl<R: Runtime> ChainApi for Sandbox<R> {
         self.externalities.backend = backend_backup;
 
         result
+    }
+
+    fn runtime_call(
+        &mut self,
+        call: RuntimeCall<R>,
+        origin: <RuntimeCall<R> as Dispatchable>::RuntimeOrigin,
+    ) -> DispatchResultWithInfo<<RuntimeCall<R> as Dispatchable>::PostInfo> {
+        self.externalities.execute_with(|| call.dispatch(origin))
     }
 }
 
