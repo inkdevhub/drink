@@ -118,8 +118,8 @@ impl<R: Runtime> ChainApi<R> for Sandbox<R> {
 
 #[cfg(test)]
 mod tests {
-    use crate::chain_api::ChainApi;
-    use crate::{runtime::MinimalRuntime, Sandbox, DEFAULT_ACTOR};
+    use crate::chain_api::{ChainApi, RuntimeCall};
+    use crate::{runtime::MinimalRuntime, AccountId32, Sandbox, DEFAULT_ACTOR};
 
     #[test]
     fn dry_run_works() {
@@ -132,5 +132,26 @@ mod tests {
         });
 
         assert_eq!(sandbox.balance(&DEFAULT_ACTOR), initial_balance);
+    }
+
+    #[test]
+    fn runtime_call_works() {
+        let mut sandbox = Sandbox::<MinimalRuntime>::new().expect("Failed to create sandbox");
+
+        const RECIPIENT: AccountId32 = AccountId32::new([2u8; 32]);
+        assert_ne!(DEFAULT_ACTOR, RECIPIENT);
+        let initial_balance = sandbox.balance(&RECIPIENT);
+
+        let call = RuntimeCall::<MinimalRuntime>::Balances(
+            pallet_balances::Call::<MinimalRuntime>::transfer {
+                dest: RECIPIENT,
+                value: 100,
+            },
+        );
+        let result = sandbox.runtime_call(call, Some(DEFAULT_ACTOR).into());
+        assert!(result.is_ok());
+
+        let expected_balance = initial_balance + 100;
+        assert_eq!(sandbox.balance(&RECIPIENT), expected_balance);
     }
 }
