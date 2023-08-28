@@ -67,7 +67,10 @@ pub trait ChainApi<R: Runtime> {
     ) -> DispatchResultWithInfo<<RuntimeCall<R> as Dispatchable>::PostInfo>;
 
     /// Return the events of the current block so far.
-    fn get_current_events(&mut self) -> Vec<EventRecordOf<R>>;
+    fn get_current_block_events(&mut self) -> Vec<EventRecordOf<R>>;
+
+    /// Reset the events of the current block.
+    fn reset_current_block_events(&mut self);
 }
 
 impl<R: Runtime> ChainApi<R> for Sandbox<R> {
@@ -121,9 +124,14 @@ impl<R: Runtime> ChainApi<R> for Sandbox<R> {
         self.externalities.execute_with(|| call.dispatch(origin))
     }
 
-    fn get_current_events(&mut self) -> Vec<EventRecordOf<R>> {
+    fn get_current_block_events(&mut self) -> Vec<EventRecordOf<R>> {
         self.externalities
             .execute_with(|| frame_system::Pallet::<R>::events())
+    }
+
+    fn reset_current_block_events(&mut self) {
+        self.externalities
+            .execute_with(|| frame_system::Pallet::<R>::reset_events())
     }
 }
 
@@ -180,13 +188,27 @@ mod tests {
     fn current_events() {
         let mut sandbox = Sandbox::<MinimalRuntime>::new().expect("Failed to create sandbox");
 
-        let events_before = sandbox.get_current_events();
+        let events_before = sandbox.get_current_block_events();
         assert!(events_before.is_empty());
 
         make_transfer(&mut sandbox, DEFAULT_ACTOR, 1).expect("Failed to make transfer");
 
-        let events_after = sandbox.get_current_events();
+        let events_after = sandbox.get_current_block_events();
         assert_eq!(events_after.len(), 1);
         assert!(matches!(events_after[0].event, RuntimeEvent::Balances(_)));
+    }
+
+    #[test]
+    fn resetting_events() {
+        let mut sandbox = Sandbox::<MinimalRuntime>::new().expect("Failed to create sandbox");
+
+        make_transfer(&mut sandbox, DEFAULT_ACTOR, 1).expect("Failed to make transfer");
+
+        assert!(!sandbox.get_current_block_events().is_empty());
+        sandbox.reset_current_block_events();
+        assert!(sandbox.get_current_block_events().is_empty());
+
+        make_transfer(&mut sandbox, DEFAULT_ACTOR, 1).expect("Failed to make transfer");
+        assert!(!sandbox.get_current_block_events().is_empty());
     }
 }
