@@ -57,7 +57,9 @@ impl<R: Runtime> Sandbox<R> {
 
         sandbox
             .externalities
-            .execute_with(|| R::initialize_block(0, Default::default()))
+            // We start the chain from the 1st block, so that events are collected (they are not
+            // recorded for the genesis block...).
+            .execute_with(|| R::initialize_block(1, Default::default()))
             .map_err(Error::BlockInitialize)?;
 
         Ok(sandbox)

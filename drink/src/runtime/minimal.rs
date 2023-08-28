@@ -136,10 +136,7 @@ impl Runtime for MinimalRuntime {
 
     fn initialize_block(height: u64, parent_hash: H256) -> Result<(), String> {
         System::reset_events();
-
-        if height > 0 {
-            System::initialize(&height, &parent_hash, &Default::default());
-        }
+        System::initialize(&height, &parent_hash, &Default::default());
 
         Balances::on_initialize(height);
         Timestamp::set_timestamp(
@@ -150,6 +147,8 @@ impl Runtime for MinimalRuntime {
         );
         Timestamp::on_initialize(height);
         Contracts::on_initialize(height);
+
+        System::note_finished_initialize();
 
         Ok(())
     }

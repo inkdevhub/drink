@@ -1,7 +1,7 @@
 //! Module containing the [`Runtime`](Runtime) trait and its example implementations. You can use
 //! `drink` with any runtime that implements the `Runtime` trait.
 
-mod minimal;
+pub mod minimal;
 
 use frame_support::sp_runtime::{AccountId32, Storage};
 pub use minimal::MinimalRuntime;

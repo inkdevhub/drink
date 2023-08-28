@@ -6,7 +6,7 @@ use frame_support::{
     traits::tokens::currency::Currency,
 };
 
-use crate::{DrinkResult, Error, Runtime, Sandbox};
+use crate::{DrinkResult, Error, EventRecordOf, Runtime, Sandbox};
 
 /// The runtime call type for a particular runtime.
 pub type RuntimeCall<R> = <R as frame_system::Config>::RuntimeCall;
@@ -65,6 +65,9 @@ pub trait ChainApi<R: Runtime> {
         call: RuntimeCall<R>,
         origin: <RuntimeCall<R> as Dispatchable>::RuntimeOrigin,
     ) -> DispatchResultWithInfo<<RuntimeCall<R> as Dispatchable>::PostInfo>;
+
+    /// Return the events of the current block so far.
+    fn get_current_events(&mut self) -> Vec<EventRecordOf<R>>;
 }
 
 impl<R: Runtime> ChainApi<R> for Sandbox<R> {
@@ -117,15 +120,33 @@ impl<R: Runtime> ChainApi<R> for Sandbox<R> {
     ) -> DispatchResultWithInfo<<RuntimeCall<R> as Dispatchable>::PostInfo> {
         self.externalities.execute_with(|| call.dispatch(origin))
     }
+
+    fn get_current_events(&mut self) -> Vec<EventRecordOf<R>> {
+        self.externalities
+            .execute_with(|| frame_system::Pallet::<R>::events())
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use frame_support::dispatch::Dispatchable;
+
     use crate::{
-        chain_api::{ChainApi, RuntimeCall},
-        runtime::MinimalRuntime,
+        chain_api::{ChainApi, DispatchResultWithInfo, RuntimeCall},
+        runtime::{minimal::RuntimeEvent, MinimalRuntime},
         AccountId32, Sandbox, DEFAULT_ACTOR,
     };
+
+    fn make_transfer(
+        sandbox: &mut Sandbox<MinimalRuntime>,
+        dest: AccountId32,
+        value: u128,
+    ) -> DispatchResultWithInfo<<RuntimeCall<MinimalRuntime> as Dispatchable>::PostInfo> {
+        let call = RuntimeCall::<MinimalRuntime>::Balances(
+            pallet_balances::Call::<MinimalRuntime>::transfer { dest, value },
+        );
+        sandbox.runtime_call(call, Some(DEFAULT_ACTOR).into())
+    }
 
     #[test]
     fn dry_run_works() {
@@ -148,16 +169,24 @@ mod tests {
         assert_ne!(DEFAULT_ACTOR, RECIPIENT);
         let initial_balance = sandbox.balance(&RECIPIENT);
 
-        let call = RuntimeCall::<MinimalRuntime>::Balances(
-            pallet_balances::Call::<MinimalRuntime>::transfer {
-                dest: RECIPIENT,
-                value: 100,
-            },
-        );
-        let result = sandbox.runtime_call(call, Some(DEFAULT_ACTOR).into());
+        let result = make_transfer(&mut sandbox, RECIPIENT, 100);
         assert!(result.is_ok());
 
         let expected_balance = initial_balance + 100;
         assert_eq!(sandbox.balance(&RECIPIENT), expected_balance);
+    }
+
+    #[test]
+    fn current_events() {
+        let mut sandbox = Sandbox::<MinimalRuntime>::new().expect("Failed to create sandbox");
+
+        let events_before = sandbox.get_current_events();
+        assert!(events_before.is_empty());
+
+        make_transfer(&mut sandbox, DEFAULT_ACTOR, 1).expect("Failed to make transfer");
+
+        let events_after = sandbox.get_current_events();
+        assert_eq!(events_after.len(), 1);
+        assert!(matches!(events_after[0].event, RuntimeEvent::Balances(_)));
     }
 }
