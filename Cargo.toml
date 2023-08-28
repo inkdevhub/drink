@@ -30,6 +30,7 @@ parity-scale-codec = { version = "3.6.0" }
 ratatui = { version = "0.21.0" }
 scale-info = { version = "2.5.0" }
 thiserror = { version = "1.0.40" }
+wat = { version = "1.0.71" }
 
 # Substrate dependencies
 
