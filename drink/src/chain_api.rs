@@ -1,11 +1,16 @@
 //! Basic chain API.
 
+use frame_support::dispatch::Dispatchable;
+use frame_support::sp_runtime::DispatchResultWithInfo;
 use frame_support::{sp_runtime::AccountId32, traits::tokens::currency::Currency};
 
 use crate::{DrinkResult, Error, Runtime, Sandbox};
 
+/// The runtime call type for a particular runtime.
+pub type RuntimeCall<R> = <R as frame_system::Config>::RuntimeCall;
+
 /// Interface for basic chain operations.
-pub trait ChainApi {
+pub trait ChainApi<R: Runtime> {
     /// Return the current height of the chain.
     fn current_height(&mut self) -> u64;
 
@@ -46,9 +51,21 @@ pub trait ChainApi {
     ///
     /// * `action` - The action to run.
     fn dry_run<T>(&mut self, action: impl FnOnce(&mut Self) -> T) -> T;
+
+    /// Execute a runtime call (dispatchable).
+    ///
+    /// # Arguments
+    ///
+    /// * `call` - The runtime call to execute.
+    /// * `origin` - The origin of the call.
+    fn runtime_call(
+        &mut self,
+        call: RuntimeCall<R>,
+        origin: <RuntimeCall<R> as Dispatchable>::RuntimeOrigin,
+    ) -> DispatchResultWithInfo<<RuntimeCall<R> as Dispatchable>::PostInfo>;
 }
 
-impl<R: Runtime> ChainApi for Sandbox<R> {
+impl<R: Runtime> ChainApi<R> for Sandbox<R> {
     fn current_height(&mut self) -> u64 {
         self.externalities
             .execute_with(|| frame_system::Pallet::<R>::block_number())
@@ -90,12 +107,20 @@ impl<R: Runtime> ChainApi for Sandbox<R> {
 
         result
     }
+
+    fn runtime_call(
+        &mut self,
+        call: RuntimeCall<R>,
+        origin: <RuntimeCall<R> as Dispatchable>::RuntimeOrigin,
+    ) -> DispatchResultWithInfo<<RuntimeCall<R> as Dispatchable>::PostInfo> {
+        self.externalities.execute_with(|| call.dispatch(origin))
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::chain_api::ChainApi;
-    use crate::{runtime::MinimalRuntime, Sandbox, DEFAULT_ACTOR};
+    use crate::chain_api::{ChainApi, RuntimeCall};
+    use crate::{runtime::MinimalRuntime, AccountId32, Sandbox, DEFAULT_ACTOR};
 
     #[test]
     fn dry_run_works() {
@@ -108,5 +133,26 @@ mod tests {
         });
 
         assert_eq!(sandbox.balance(&DEFAULT_ACTOR), initial_balance);
+    }
+
+    #[test]
+    fn runtime_call_works() {
+        let mut sandbox = Sandbox::<MinimalRuntime>::new().expect("Failed to create sandbox");
+
+        const RECIPIENT: AccountId32 = AccountId32::new([2u8; 32]);
+        assert_ne!(DEFAULT_ACTOR, RECIPIENT);
+        let initial_balance = sandbox.balance(&RECIPIENT);
+
+        let call = RuntimeCall::<MinimalRuntime>::Balances(
+            pallet_balances::Call::<MinimalRuntime>::transfer {
+                dest: RECIPIENT,
+                value: 100,
+            },
+        );
+        let result = sandbox.runtime_call(call, Some(DEFAULT_ACTOR).into());
+        assert!(result.is_ok());
+
+        let expected_balance = initial_balance + 100;
+        assert_eq!(sandbox.balance(&RECIPIENT), expected_balance);
     }
 }

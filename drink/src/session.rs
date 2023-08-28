@@ -164,7 +164,7 @@ impl<R: Runtime> Session<R> {
     }
 
     /// Returns a reference for basic chain API.
-    pub fn chain_api(&mut self) -> &mut impl ChainApi {
+    pub fn chain_api(&mut self) -> &mut impl ChainApi<R> {
         &mut self.sandbox
     }
 
