@@ -1,8 +1,10 @@
 //! Basic chain API.
 
-use frame_support::dispatch::Dispatchable;
-use frame_support::sp_runtime::DispatchResultWithInfo;
-use frame_support::{sp_runtime::AccountId32, traits::tokens::currency::Currency};
+use frame_support::{
+    dispatch::Dispatchable,
+    sp_runtime::{AccountId32, DispatchResultWithInfo},
+    traits::tokens::currency::Currency,
+};
 
 use crate::{DrinkResult, Error, Runtime, Sandbox};
 
@@ -119,8 +121,11 @@ impl<R: Runtime> ChainApi<R> for Sandbox<R> {
 
 #[cfg(test)]
 mod tests {
-    use crate::chain_api::{ChainApi, RuntimeCall};
-    use crate::{runtime::MinimalRuntime, AccountId32, Sandbox, DEFAULT_ACTOR};
+    use crate::{
+        chain_api::{ChainApi, RuntimeCall},
+        runtime::MinimalRuntime,
+        AccountId32, Sandbox, DEFAULT_ACTOR,
+    };
 
     #[test]
     fn dry_run_works() {

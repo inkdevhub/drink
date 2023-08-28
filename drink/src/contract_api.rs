@@ -140,3 +140,36 @@ pub fn decode_debug_buffer(buffer: &[u8]) -> Vec<String> {
     let decoded = buffer.iter().map(|b| *b as char).collect::<String>();
     decoded.split('\n').map(|s| s.to_string()).collect()
 }
+
+#[cfg(test)]
+mod tests {
+    use frame_support::sp_runtime::traits::Hash;
+
+    use super::*;
+    use crate::{MinimalRuntime, DEFAULT_ACTOR};
+
+    fn compile_module(contract_name: &str) -> Vec<u8> {
+        let path = [
+            std::env::var("CARGO_MANIFEST_DIR")
+                .as_deref()
+                .unwrap_or("drink"),
+            "/test-resources/",
+            contract_name,
+            ".wat",
+        ]
+        .concat();
+        wat::parse_file(path).expect("Failed to parse wat file")
+    }
+
+    #[test]
+    fn can_upload_code() {
+        let mut sandbox = Sandbox::<MinimalRuntime>::new().unwrap();
+        let wasm_binary = compile_module("transfer");
+        let hash = <<MinimalRuntime as frame_system::Config>::Hashing>::hash(&wasm_binary);
+
+        let result = sandbox.upload_contract(wasm_binary, DEFAULT_ACTOR, None);
+
+        assert!(result.is_ok());
+        assert_eq!(hash, result.unwrap().code_hash);
+    }
+}

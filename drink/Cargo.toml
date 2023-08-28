@@ -21,5 +21,8 @@ parity-scale-codec = { workspace = true }
 scale-info = { workspace = true }
 thiserror = { workspace = true }
 
+[dev-dependencies]
+wat = { workspace = true }
+
 [features]
 session = ["contract-transcode"]
