@@ -144,6 +144,7 @@ pub fn decode_debug_buffer(buffer: &[u8]) -> Vec<String> {
 #[cfg(test)]
 mod tests {
     use frame_support::sp_runtime::traits::Hash;
+    use pallet_contracts::Origin;
 
     use super::*;
     use crate::{
@@ -243,14 +244,17 @@ mod tests {
         assert_eq!(
             events[0].event,
             RuntimeEvent::Contracts(pallet_contracts::Event::<MinimalRuntime>::ContractEmitted {
-                contract: contract_address,
+                contract: contract_address.clone(),
                 data: vec![0, 0, 0, 0],
             })
         );
 
-        assert!(matches!(
+        assert_eq!(
             events[1].event,
-            RuntimeEvent::Contracts(pallet_contracts::Event::<MinimalRuntime>::Called { .. })
-        ));
+            RuntimeEvent::Contracts(pallet_contracts::Event::<MinimalRuntime>::Called {
+                contract: contract_address,
+                caller: Origin::Signed(DEFAULT_ACTOR),
+            }),
+        );
     }
 }
