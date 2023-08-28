@@ -57,6 +57,7 @@ pub trait ChainApi<R: Runtime> {
     /// # Arguments
     ///
     /// * `call` - The runtime call to execute.
+    /// * `origin` - The origin of the call.
     fn runtime_call(
         &mut self,
         call: RuntimeCall<R>,
