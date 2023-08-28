@@ -168,7 +168,7 @@ mod tests {
     #[test]
     fn can_upload_code() {
         let mut sandbox = Sandbox::<MinimalRuntime>::new().unwrap();
-        let wasm_binary = compile_module("transfer");
+        let wasm_binary = compile_module("dummy");
         let hash = <<MinimalRuntime as frame_system::Config>::Hashing>::hash(&wasm_binary);
 
         let result = sandbox.upload_contract(wasm_binary, DEFAULT_ACTOR, None);
@@ -180,7 +180,7 @@ mod tests {
     #[test]
     fn can_deploy_contract() {
         let mut sandbox = Sandbox::<MinimalRuntime>::new().unwrap();
-        let wasm_binary = compile_module("transfer");
+        let wasm_binary = compile_module("dummy");
 
         let events_before = sandbox.get_current_block_events();
         assert!(events_before.is_empty());
@@ -208,7 +208,7 @@ mod tests {
     #[test]
     fn can_call_contract() {
         let mut sandbox = Sandbox::<MinimalRuntime>::new().unwrap();
-        let wasm_binary = compile_module("transfer");
+        let wasm_binary = compile_module("dummy");
 
         let result = sandbox.deploy_contract(
             wasm_binary,
