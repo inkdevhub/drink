@@ -12,6 +12,12 @@ use frame_support::{
 };
 use pallet_contracts::{DefaultAddressGenerator, Frame, Schedule};
 
+// Re-export all pallets.
+pub use frame_system;
+pub use pallet_balances;
+pub use pallet_contracts;
+pub use pallet_timestamp;
+
 type Block = frame_system::mocking::MockBlock<MinimalRuntime>;
 
 frame_support::construct_runtime!(
