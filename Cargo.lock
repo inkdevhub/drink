@@ -944,7 +944,7 @@ dependencies = [
  "frame-support",
  "frame-system",
  "pallet-balances",
- "pallet-contracts",
+ "pallet-contracts-for-drink",
  "pallet-contracts-primitives",
  "pallet-timestamp",
  "parity-scale-codec",
@@ -2371,8 +2371,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-contracts"
-version = "4.0.0-dev"
+name = "pallet-contracts-for-drink"
+version = "21.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0e9f6abd1ee4a2d6e9702a45a646b87260cc9d36886b750496888454471cda69"
 dependencies = [
  "bitflags",
  "environmental",

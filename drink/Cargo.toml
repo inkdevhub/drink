@@ -14,7 +14,7 @@ contract-transcode = { workspace = true, optional = true }
 frame-support = { workspace = true }
 frame-system = { workspace = true }
 pallet-balances = { workspace = true }
-pallet-contracts = { workspace = true }
+pallet-contracts = { package = "pallet-contracts-for-drink", workspace = true }
 pallet-contracts-primitives = { workspace = true }
 pallet-timestamp = { workspace = true }
 parity-scale-codec = { workspace = true }
