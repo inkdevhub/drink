@@ -56,7 +56,7 @@ The only requirement for running DRInk! is having Rust installed. The code was t
 
 When you run the binary (`cargo run --release`) you'll see a DRink! TUI. You can also choose to start from a specific path by supplying the `--path` argument like:
 ```bash
-cargo run --release --path <absolute path to e.g. example/flipper>
+cargo run --release -- --path <absolute path to e.g. example/flipper>
 ```
 
 ### CLI modes
