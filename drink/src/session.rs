@@ -9,8 +9,8 @@ use pallet_contracts_primitives::{ContractExecResult, ContractInstantiateResult}
 use thiserror::Error;
 
 use crate::{
-    chain_api::ChainApi, contract_api::ContractApi, runtime::Runtime, AccountId32, EventRecordOf,
-    Sandbox, DEFAULT_ACTOR, DEFAULT_GAS_LIMIT,
+    chain_api::ChainApi, contract_api::ContractApi, pallet_contracts_debugging::DebugExt,
+    runtime::Runtime, AccountId32, EventRecordOf, Sandbox, DEFAULT_ACTOR, DEFAULT_GAS_LIMIT,
 };
 
 const ZERO_TRANSFER: u128 = 0;
@@ -331,5 +331,9 @@ impl<R: Runtime> Session<R> {
     /// Returns the last value returned from calling a contract.
     pub fn last_call_return(&self) -> Option<Value> {
         self.call_returns.last().cloned()
+    }
+
+    pub fn override_debug_handle(&mut self, d: DebugExt) {
+        self.sandbox.override_debug_handle(d);
     }
 }
