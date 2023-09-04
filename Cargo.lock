@@ -949,6 +949,8 @@ dependencies = [
  "pallet-timestamp",
  "parity-scale-codec",
  "scale-info",
+ "sp-externalities",
+ "sp-runtime-interface",
  "thiserror",
  "wat",
 ]

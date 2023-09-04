@@ -42,6 +42,8 @@ pallet-contracts = { package = "pallet-contracts-for-drink", version = "21.0.2" 
 pallet-contracts-primitives = { version = "25.0.0" }
 pallet-timestamp = { version = "21.0.0" }
 sp-core = { version = "22.0.0" }
+sp-externalities = { version = "0.20.0" }
+sp-runtime-interface = { version = "18.0.0" }
 
 # Local dependencies
 
