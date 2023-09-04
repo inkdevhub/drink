@@ -2372,9 +2372,9 @@ dependencies = [
 
 [[package]]
 name = "pallet-contracts-for-drink"
-version = "21.0.1"
+version = "21.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0e9f6abd1ee4a2d6e9702a45a646b87260cc9d36886b750496888454471cda69"
+checksum = "5f1071ed81959cbc593389d0f000fe6dbc7b1726af1c1580df162a6e94d0d0cb"
 dependencies = [
  "bitflags",
  "environmental",
