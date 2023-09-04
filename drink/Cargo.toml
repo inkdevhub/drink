@@ -28,6 +28,7 @@ thiserror = { workspace = true }
 wat = { workspace = true }
 
 [features]
+# This is required for the runtime-interface to work properly in the std env.
 default = ["std"]
 session = ["contract-transcode"]
 std = []
