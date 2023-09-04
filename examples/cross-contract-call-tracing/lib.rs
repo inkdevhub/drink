@@ -63,7 +63,7 @@ mod contract {
 #[cfg(test)]
 mod tests {
     use ink::storage::traits::Storable;
-    use std::{error::Error, fs, path::PathBuf, rc::Rc};
+    use std::{cell::RefCell, error::Error, fs, path::PathBuf, rc::Rc};
 
     use drink::{
         runtime::{
@@ -91,6 +91,12 @@ mod tests {
         Value::Tuple(Tuple::new(Some("Ok"), vec![v]))
     }
 
+    thread_local! {
+        static OUTER_ADDRESS:  RefCell<Option<AccountId32>> = RefCell::new(None);
+        static MIDDLE_ADDRESS:  RefCell<Option<AccountId32>> = RefCell::new(None);
+        static INNER_ADDRESS:  RefCell<Option<AccountId32>> = RefCell::new(None);
+    }
+
     struct TestDebugger;
     impl DebugExtT for TestDebugger {
         fn after_call(
@@ -112,8 +118,20 @@ mod tests {
             .unwrap();
 
             let return_decoded = if is_call {
+                let call_name = if contract_address
+                    == OUTER_ADDRESS.with(|a| a.borrow().clone().unwrap())
+                {
+                    "outer_call"
+                } else if contract_address == MIDDLE_ADDRESS.with(|a| a.borrow().clone().unwrap()) {
+                    "middle_call"
+                } else if contract_address == INNER_ADDRESS.with(|a| a.borrow().clone().unwrap()) {
+                    "inner_call"
+                } else {
+                    panic!("Unexpected contract address")
+                };
+
                 transcoder
-                    .decode_return("outer_call", &mut result.as_slice())
+                    .decode_return(call_name, &mut result.as_slice())
                     .unwrap()
             } else {
                 Value::Unit
@@ -132,8 +150,11 @@ mod tests {
         session.override_debug_handle(DebugExt(Box::new(TestDebugger {})));
 
         let outer_address = session.deploy(bytes(), "new", &[], vec![1])?;
+        OUTER_ADDRESS.with(|a| *a.borrow_mut() = Some(outer_address.clone()));
         let middle_address = session.deploy(bytes(), "new", &[], vec![2])?;
+        MIDDLE_ADDRESS.with(|a| *a.borrow_mut() = Some(middle_address.clone()));
         let inner_address = session.deploy(bytes(), "new", &[], vec![3])?;
+        INNER_ADDRESS.with(|a| *a.borrow_mut() = Some(inner_address.clone()));
 
         let value = session.call_with_address(
             outer_address,
