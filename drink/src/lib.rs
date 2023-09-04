@@ -64,11 +64,16 @@ impl<R: Runtime> Sandbox<R> {
             .execute_with(|| R::initialize_block(1, Default::default()))
             .map_err(Error::BlockInitialize)?;
 
+        // We register a noop debug extension by default.
         sandbox.override_debug_handle(DebugExt(Box::new(NoopDebugExt {})));
 
         Ok(sandbox)
     }
 
+    /// Overrides the debug extension.
+    ///
+    /// By default, a new `Sandbox` instance is created with a noop debug extension. This method
+    /// allows to override it with a custom debug extension.
     pub fn override_debug_handle(&mut self, d: DebugExt) {
         self.externalities.register_extension(d);
     }

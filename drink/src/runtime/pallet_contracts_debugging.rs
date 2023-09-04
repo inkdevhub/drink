@@ -1,3 +1,26 @@
+//! This module provides all the necessary elements for supporting contract debugging directly in
+//! the contracts pallet.
+//!
+//! # Smart-contract developer <-> pallet-contracts interaction flow
+//!
+//! The interaction between end-user and runtime is as follows:
+//! 1. At some points during execution, the pallet invokes some callback through its configuration
+//! parameter `Debug`.
+//! 2. In order to forward the callback outside the runtime, `Debug` will call a runtime interface,
+//! that will then forward the call further to the proper runtime extension.
+//! 3. The runtime extension can be fully controlled by the end-user. It just has to be registered
+//! in the runtime.
+//!
+//! So, in brief: pallet-contracts -> runtime interface -> runtime extension
+//!              |<-----------runtime side-------------->|<---user side--->|
+//!
+//! # Passing objects between runtime and runtime extension
+//!
+//! Unfortunately, runtime interface that lies between runtime and the end-user accepts only
+//! very simlpe argument types and those that implement some specific traits. This means that
+//! usually, complext objects will be passed in their encoded form (`Vec<u8>` obtained with scale
+//! encoding).
+
 use pallet_contracts::debug::{CallSpan, ExportedFunction, Tracing};
 use pallet_contracts_primitives::ExecReturnValue;
 use sp_externalities::{decl_extension, ExternalitiesExt};
@@ -7,26 +30,31 @@ use crate::runtime::Runtime;
 
 type AccountIdOf<R> = <R as frame_system::Config>::AccountId;
 
+/// The trait that allows injecting custom logic to handle contract debugging directly in the
+/// contracts pallet.
 pub trait DebugExtT {
+    /// Called after a contract call is made.
     fn after_call(
         &self,
-        contract_address: Vec<u8>,
-        is_call: bool,
-        input_data: Vec<u8>,
-        result: Vec<u8>,
+        _contract_address: Vec<u8>,
+        _is_call: bool,
+        _input_data: Vec<u8>,
+        _result: Vec<u8>,
     ) {
     }
 }
 
 decl_extension! {
+    /// A wrapper type for the `DebugExtT` debug extension.
     pub struct DebugExt(Box<dyn DebugExtT + Send>);
 }
 
+/// The simplest debug extension - does nothing.
 pub struct NoopDebugExt {}
 impl DebugExtT for NoopDebugExt {}
 
 #[runtime_interface]
-pub trait ContractCallDebugger {
+trait ContractCallDebugger {
     fn after_call(
         &mut self,
         contract_address: Vec<u8>,
@@ -40,6 +68,8 @@ pub trait ContractCallDebugger {
     }
 }
 
+/// Configuration parameter for the contracts pallet. Provides all the necessary trait
+/// implementations.
 pub enum DrinkDebug {}
 
 impl<R: Runtime> Tracing<R> for DrinkDebug {
@@ -58,9 +88,16 @@ impl<R: Runtime> Tracing<R> for DrinkDebug {
     }
 }
 
+/// A contract's call span.
+///
+/// It is created just before the call is made and `Self::after_call` is called after the call is
+/// done.
 pub struct DrinkCallSpan<AccountId> {
+    /// The address of the contract that has been called.
     pub contract_address: AccountId,
+    /// The entry point that has been called (either constructor or call).
     pub entry_point: ExportedFunction,
+    /// The input data of the call.
     pub input_data: Vec<u8>,
 }
 

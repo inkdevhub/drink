@@ -333,6 +333,10 @@ impl<R: Runtime> Session<R> {
         self.call_returns.last().cloned()
     }
 
+    /// Overrides the debug extension.
+    ///
+    /// By default, a new `Session` instance will use a noop debug extension. This method allows to
+    /// override it with a custom debug extension.
     pub fn override_debug_handle(&mut self, d: DebugExt) {
         self.sandbox.override_debug_handle(d);
     }
