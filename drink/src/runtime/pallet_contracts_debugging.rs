@@ -5,7 +5,7 @@ use sp_runtime_interface::runtime_interface;
 
 use crate::runtime::Runtime;
 
-type CodeHash<R> = <R as frame_system::Config>::Hash;
+type AccountIdOf<R> = <R as frame_system::Config>::AccountId;
 
 pub trait DebugExtT {
     fn after_call(&self, code_hash: Vec<u8>, is_call: bool, input_data: Vec<u8>, result: Vec<u8>) {}
@@ -22,46 +22,46 @@ impl DebugExtT for NoopDebugExt {}
 pub trait ContractCallDebugger {
     fn after_call(
         &mut self,
-        code_hash: Vec<u8>,
+        contract_address: Vec<u8>,
         is_call: bool,
         input_data: Vec<u8>,
         result: Vec<u8>,
     ) {
         self.extension::<DebugExt>()
             .expect("Failed to find `DebugExt` extension")
-            .after_call(code_hash, is_call, input_data, result);
+            .after_call(contract_address, is_call, input_data, result);
     }
 }
 
 pub enum DrinkDebug {}
 
 impl<R: Runtime> Tracing<R> for DrinkDebug {
-    type CallSpan = DrinkCallSpan<CodeHash<R>>;
+    type CallSpan = DrinkCallSpan<AccountIdOf<R>>;
 
     fn new_call_span(
-        code_hash: &CodeHash<R>,
+        contract_address: &AccountIdOf<R>,
         entry_point: ExportedFunction,
         input_data: &[u8],
     ) -> Self::CallSpan {
         DrinkCallSpan {
-            code_hash: *code_hash,
+            contract_address: contract_address.clone(),
             entry_point,
             input_data: input_data.to_vec(),
         }
     }
 }
 
-pub struct DrinkCallSpan<CodeHash> {
-    pub code_hash: CodeHash,
+pub struct DrinkCallSpan<AccountId> {
+    pub contract_address: AccountId,
     pub entry_point: ExportedFunction,
     pub input_data: Vec<u8>,
 }
 
-impl<CodeHash: AsRef<[u8]>> CallSpan for DrinkCallSpan<CodeHash> {
+impl<AccountId: AsRef<[u8]>> CallSpan for DrinkCallSpan<AccountId> {
     fn after_call(self, output: &ExecReturnValue) {
-        let raw_code_hash: &[u8] = self.code_hash.as_ref();
+        let raw_contract_address: &[u8] = self.contract_address.as_ref();
         contract_call_debugger::after_call(
-            raw_code_hash.to_vec(),
+            raw_contract_address.to_vec(),
             matches!(self.entry_point, ExportedFunction::Call),
             self.input_data.to_vec(),
             output.data.clone(),
