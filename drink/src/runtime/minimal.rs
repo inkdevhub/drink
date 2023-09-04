@@ -1,22 +1,25 @@
 #![allow(missing_docs)] // `construct_macro` doesn't allow doc comments for the runtime type.
 
+use std::time::SystemTime;
+
 use frame_support::{
     parameter_types,
     sp_runtime::{
         testing::H256,
         traits::{BlakeTwo256, Convert, IdentityLookup},
-        AccountId32, BuildStorage,
+        AccountId32, BuildStorage, Storage,
     },
-    traits::{ConstBool, ConstU128, ConstU32, ConstU64, Currency, Randomness},
+    traits::{ConstBool, ConstU128, ConstU32, ConstU64, Currency, Hooks, Randomness},
     weights::Weight,
 };
-use pallet_contracts::{DefaultAddressGenerator, Frame, Schedule};
-
 // Re-export all pallets.
 pub use frame_system;
 pub use pallet_balances;
 pub use pallet_contracts;
+use pallet_contracts::{DefaultAddressGenerator, Frame, Schedule};
 pub use pallet_timestamp;
+
+use crate::{runtime::pallet_contracts_debugging::DrinkDebug, Runtime, DEFAULT_ACTOR};
 
 type Block = frame_system::mocking::MockBlock<MinimalRuntime>;
 
@@ -121,14 +124,8 @@ impl pallet_contracts::Config for MinimalRuntime {
     type MaxDebugBufferLen = ConstU32<{ 2 * 1024 * 1024 }>;
     type Migrations = ();
     type DefaultDepositLimit = DefaultDepositLimit;
-    type Debug = ();
+    type Debug = DrinkDebug;
 }
-
-use std::time::SystemTime;
-
-use frame_support::{sp_runtime::Storage, traits::Hooks};
-
-use crate::{Runtime, DEFAULT_ACTOR};
 
 /// Default initial balance for the default account.
 pub const INITIAL_BALANCE: u128 = 1_000_000_000_000_000;
