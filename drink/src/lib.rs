@@ -16,6 +16,7 @@ use frame_support::{sp_io::TestExternalities, sp_runtime::BuildStorage};
 pub use frame_support::{sp_runtime::AccountId32, weights::Weight};
 use frame_system::{EventRecord, GenesisConfig};
 
+use crate::pallet_contracts_debugging::DebugExt;
 use crate::runtime::*;
 
 /// Main result type for the drink crate.
@@ -63,5 +64,9 @@ impl<R: Runtime> Sandbox<R> {
             .map_err(Error::BlockInitialize)?;
 
         Ok(sandbox)
+    }
+
+    pub fn register_debug_handle(&mut self, d: DebugExt) {
+        self.externalities.register_extension(d);
     }
 }
