@@ -17,6 +17,7 @@ pub use frame_support::{sp_runtime::AccountId32, weights::Weight};
 use frame_system::{EventRecord, GenesisConfig};
 
 use crate::pallet_contracts_debugging::DebugExt;
+use crate::runtime::pallet_contracts_debugging::NoopDebugExt;
 use crate::runtime::*;
 
 /// Main result type for the drink crate.
@@ -63,10 +64,12 @@ impl<R: Runtime> Sandbox<R> {
             .execute_with(|| R::initialize_block(1, Default::default()))
             .map_err(Error::BlockInitialize)?;
 
+        sandbox.override_debug_handle(DebugExt(Box::new(NoopDebugExt {})));
+
         Ok(sandbox)
     }
 
-    pub fn register_debug_handle(&mut self, d: DebugExt) {
+    pub fn override_debug_handle(&mut self, d: DebugExt) {
         self.externalities.register_extension(d);
     }
 }

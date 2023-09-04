@@ -8,12 +8,15 @@ use crate::runtime::Runtime;
 type CodeHash<R> = <R as frame_system::Config>::Hash;
 
 pub trait DebugExtT {
-    fn after_call(&self, code_hash: Vec<u8>, is_call: bool, input_data: Vec<u8>, result: Vec<u8>);
+    fn after_call(&self, code_hash: Vec<u8>, is_call: bool, input_data: Vec<u8>, result: Vec<u8>) {}
 }
 
 decl_extension! {
     pub struct DebugExt(Box<dyn DebugExtT + Send>);
 }
+
+pub struct NoopDebugExt {}
+impl DebugExtT for NoopDebugExt {}
 
 #[runtime_interface]
 pub trait ContractCallDebugger {
