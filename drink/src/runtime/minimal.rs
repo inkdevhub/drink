@@ -121,6 +121,7 @@ impl pallet_contracts::Config for MinimalRuntime {
     type MaxDebugBufferLen = ConstU32<{ 2 * 1024 * 1024 }>;
     type Migrations = ();
     type DefaultDepositLimit = DefaultDepositLimit;
+    type Debug = ();
 }
 
 use std::time::SystemTime;
