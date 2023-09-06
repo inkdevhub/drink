@@ -59,7 +59,7 @@ impl<R: Runtime> Sandbox<R> {
             .externalities
             // We start the chain from the 1st block, so that events are collected (they are not
             // recorded for the genesis block...).
-            .execute_with(|| R::initialize_block(1, Default::default()))
+            .execute_with(|| R::initialize_block(1u32.into(), Default::default()))
             .map_err(Error::BlockInitialize)?;
 
         // We register a noop debug extension by default.

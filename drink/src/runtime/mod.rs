@@ -6,6 +6,7 @@ pub mod minimal;
 pub mod pallet_contracts_debugging;
 
 use frame_support::sp_runtime::Storage;
+use frame_system::pallet_prelude::BlockNumberFor;
 pub use minimal::MinimalRuntime;
 
 /// The type of an account identifier.
@@ -15,7 +16,7 @@ pub type AccountId<R> = <R as frame_system::Config>::AccountId;
 ///
 /// Must contain at least system, balances and contracts pallets.
 pub trait Runtime:
-    frame_system::Config<Block = frame_system::mocking::MockBlock<MinimalRuntime>>
+    frame_system::Config
     + pallet_balances::Config<Balance = u128>
     + pallet_contracts::Config<Currency = pallet_balances::Pallet<Self>>
 {
@@ -26,14 +27,16 @@ pub trait Runtime:
 
     /// Initialize a new block at particular height.
     fn initialize_block(
-        _height: u64,
+        _height: BlockNumberFor<Self>,
         _parent_hash: <Self as frame_system::Config>::Hash,
     ) -> Result<(), String> {
         Ok(())
     }
 
     /// Finalize a block at particular height.
-    fn finalize_block(_height: u64) -> Result<<Self as frame_system::Config>::Hash, String> {
+    fn finalize_block(
+        _height: BlockNumberFor<Self>,
+    ) -> Result<<Self as frame_system::Config>::Hash, String> {
         Ok(Default::default())
     }
 

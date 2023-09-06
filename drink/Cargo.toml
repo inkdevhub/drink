@@ -20,6 +20,7 @@ pallet-timestamp = { workspace = true }
 parity-scale-codec = { workspace = true }
 sp-externalities = { workspace = true }
 sp-runtime-interface = { workspace = true }
+#contracts-node-runtime = { workspace = true }
 
 scale-info = { workspace = true }
 thiserror = { workspace = true }

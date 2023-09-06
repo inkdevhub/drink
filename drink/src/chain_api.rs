@@ -3,6 +3,8 @@
 use frame_support::{
     dispatch::Dispatchable, sp_runtime::DispatchResultWithInfo, traits::tokens::currency::Currency,
 };
+use frame_system::pallet_prelude::BlockNumberFor;
+use std::ops::Add;
 
 use crate::runtime::AccountId;
 use crate::{DrinkResult, Error, EventRecordOf, Runtime, Sandbox};
@@ -13,20 +15,23 @@ pub type RuntimeCall<R> = <R as frame_system::Config>::RuntimeCall;
 /// Interface for basic chain operations.
 pub trait ChainApi<R: Runtime> {
     /// Return the current height of the chain.
-    fn current_height(&mut self) -> u64;
+    fn current_height(&mut self) -> BlockNumberFor<R>;
 
     /// Build a new empty block and return the new height.
-    fn build_block(&mut self) -> DrinkResult<u64>;
+    fn build_block(&mut self) -> DrinkResult<BlockNumberFor<R>>;
 
     /// Build `n` empty blocks and return the new height.
     ///
     /// # Arguments
     ///
     /// * `n` - The number of blocks to build.
-    fn build_blocks(&mut self, n: u64) -> DrinkResult<u64> {
+    fn build_blocks(&mut self, n: BlockNumberFor<R>) -> DrinkResult<BlockNumberFor<R>> {
         let mut last_block = None;
-        for _ in 0..n {
+
+        let mut iter = BlockNumberFor::<R>::from(0u32);
+        while iter < n {
             last_block = Some(self.build_block()?);
+            iter = iter.add(BlockNumberFor::<R>::from(1u32));
         }
         Ok(last_block.unwrap_or_else(|| self.current_height()))
     }
@@ -73,17 +78,18 @@ pub trait ChainApi<R: Runtime> {
 }
 
 impl<R: Runtime> ChainApi<R> for Sandbox<R> {
-    fn current_height(&mut self) -> u64 {
+    fn current_height(&mut self) -> BlockNumberFor<R> {
         self.externalities
             .execute_with(|| frame_system::Pallet::<R>::block_number())
     }
 
-    fn build_block(&mut self) -> DrinkResult<u64> {
+    fn build_block(&mut self) -> DrinkResult<BlockNumberFor<R>> {
         let current_block = self.current_height();
         self.externalities.execute_with(|| {
             let block_hash = R::finalize_block(current_block).map_err(Error::BlockFinalize)?;
-            R::initialize_block(current_block + 1, block_hash).map_err(Error::BlockInitialize)?;
-            Ok(current_block + 1)
+            let new_number = current_block + BlockNumberFor::<R>::from(1u32);
+            R::initialize_block(new_number, block_hash).map_err(Error::BlockInitialize)?;
+            Ok(new_number)
         })
     }
 
