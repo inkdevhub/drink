@@ -208,6 +208,7 @@ mod tests {
     #[test]
     fn can_call_contract() {
         let mut sandbox = Sandbox::<MinimalRuntime>::new().unwrap();
+        let actor = MinimalRuntime::default_actor();
         let wasm_binary = compile_module("dummy");
 
         let result = sandbox.deploy_contract(
@@ -215,7 +216,7 @@ mod tests {
             0,
             vec![],
             vec![],
-            MinimalRuntime::default_actor(),
+            actor.clone(),
             DEFAULT_GAS_LIMIT,
             None,
         );
@@ -231,7 +232,7 @@ mod tests {
             contract_address.clone(),
             0,
             vec![],
-            MinimalRuntime::default_actor(),
+            actor.clone(),
             DEFAULT_GAS_LIMIT,
             None,
         );
@@ -253,7 +254,7 @@ mod tests {
             events[1].event,
             RuntimeEvent::Contracts(pallet_contracts::Event::<MinimalRuntime>::Called {
                 contract: contract_address,
-                caller: Origin::Signed(MinimalRuntime::default_actor()),
+                caller: Origin::Signed(actor),
             }),
         );
     }

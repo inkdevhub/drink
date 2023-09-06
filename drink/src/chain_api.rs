@@ -146,7 +146,7 @@ mod tests {
 
     use crate::{
         chain_api::{ChainApi, DispatchResultWithInfo, RuntimeCall},
-        runtime::{minimal::RuntimeEvent, MinimalRuntime},
+        runtime::{minimal::RuntimeEvent, MinimalRuntime, Runtime},
         AccountId32, Sandbox,
     };
 
@@ -164,20 +164,15 @@ mod tests {
     #[test]
     fn dry_run_works() {
         let mut sandbox = Sandbox::<MinimalRuntime>::new().expect("Failed to create sandbox");
-        let initial_balance = sandbox.balance(&MinimalRuntime::default_actor());
+        let actor = MinimalRuntime::default_actor();
+        let initial_balance = sandbox.balance(&actor);
 
         sandbox.dry_run(|runtime| {
-            runtime.add_tokens(MinimalRuntime::default_actor(), 100);
-            assert_eq!(
-                runtime.balance(&MinimalRuntime::default_actor()),
-                initial_balance + 100
-            );
+            runtime.add_tokens(actor.clone(), 100);
+            assert_eq!(runtime.balance(&actor), initial_balance + 100);
         });
 
-        assert_eq!(
-            sandbox.balance(&MinimalRuntime::default_actor()),
-            initial_balance
-        );
+        assert_eq!(sandbox.balance(&actor), initial_balance);
     }
 
     #[test]
@@ -213,16 +208,15 @@ mod tests {
     #[test]
     fn resetting_events() {
         let mut sandbox = Sandbox::<MinimalRuntime>::new().expect("Failed to create sandbox");
+        let actor = MinimalRuntime::default_actor();
 
-        make_transfer(&mut sandbox, MinimalRuntime::default_actor(), 1)
-            .expect("Failed to make transfer");
+        make_transfer(&mut sandbox, actor.clone(), 1).expect("Failed to make transfer");
 
         assert!(!sandbox.get_current_block_events().is_empty());
         sandbox.reset_current_block_events();
         assert!(sandbox.get_current_block_events().is_empty());
 
-        make_transfer(&mut sandbox, MinimalRuntime::default_actor(), 1)
-            .expect("Failed to make transfer");
+        make_transfer(&mut sandbox, actor, 1).expect("Failed to make transfer");
         assert!(!sandbox.get_current_block_events().is_empty());
     }
 }
