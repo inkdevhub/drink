@@ -27,7 +27,8 @@ clap = { version = "4.3.4" }
 contract-build = { version = "3.0.1" }
 contract-transcode = { version = "3.0.1" }
 crossterm = { version = "0.26.0" }
-parity-scale-codec = { version = "3.6.0" }
+parity-scale-codec = { version = "=3.6.5" }
+parity-scale-codec-derive = { version = "=3.6.5" }
 ratatui = { version = "0.21.0" }
 scale-info = { version = "2.5.0" }
 thiserror = { version = "1.0.40" }
@@ -44,7 +45,6 @@ pallet-timestamp = { version = "21.0.0" }
 sp-core = { version = "22.0.0" }
 sp-externalities = { version = "0.20.0" }
 sp-runtime-interface = { version = "18.0.0" }
-contracts-node-runtime = { version = "0.31.0" }
 
 # Local dependencies
 

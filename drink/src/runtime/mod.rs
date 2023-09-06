@@ -1,7 +1,6 @@
 //! Module containing the [`Runtime`](Runtime) trait and its example implementations. You can use
 //! `drink` with any runtime that implements the `Runtime` trait.
 
-// pub mod contracts_node;
 pub mod minimal;
 pub mod pallet_contracts_debugging;
 
