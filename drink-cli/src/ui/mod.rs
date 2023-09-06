@@ -6,8 +6,7 @@ mod layout;
 mod output;
 mod user_input;
 
-use std::{io, io::Stdout};
-use std::path::PathBuf;
+use std::{io, io::Stdout, path::PathBuf};
 
 use anyhow::{anyhow, Result};
 use crossterm::{
