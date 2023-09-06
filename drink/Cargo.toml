@@ -18,6 +18,7 @@ pallet-contracts = { workspace = true }
 pallet-contracts-primitives = { workspace = true }
 pallet-timestamp = { workspace = true }
 parity-scale-codec = { workspace = true }
+parity-scale-codec-derive = { workspace = true }
 sp-externalities = { workspace = true }
 sp-runtime-interface = { workspace = true }
 

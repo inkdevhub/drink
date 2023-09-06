@@ -13,7 +13,7 @@ pub enum CliCommand {
     #[clap(alias = "nb")]
     NextBlock {
         #[clap(default_value = "1")]
-        count: u64,
+        count: u32,
     },
     AddTokens {
         #[clap(value_parser = AccountId32::from_ss58check)]

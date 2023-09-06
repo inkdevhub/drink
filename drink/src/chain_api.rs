@@ -2,11 +2,12 @@
 
 use frame_support::{
     dispatch::Dispatchable,
-    sp_runtime::{AccountId32, DispatchResultWithInfo},
+    sp_runtime::{DispatchResultWithInfo, Saturating},
     traits::tokens::currency::Currency,
 };
+use frame_system::pallet_prelude::BlockNumberFor;
 
-use crate::{DrinkResult, Error, EventRecordOf, Runtime, Sandbox};
+use crate::{runtime::AccountIdFor, DrinkResult, Error, EventRecordOf, Runtime, Sandbox};
 
 /// The runtime call type for a particular runtime.
 pub type RuntimeCall<R> = <R as frame_system::Config>::RuntimeCall;
@@ -14,17 +15,17 @@ pub type RuntimeCall<R> = <R as frame_system::Config>::RuntimeCall;
 /// Interface for basic chain operations.
 pub trait ChainApi<R: Runtime> {
     /// Return the current height of the chain.
-    fn current_height(&mut self) -> u64;
+    fn current_height(&mut self) -> BlockNumberFor<R>;
 
     /// Build a new empty block and return the new height.
-    fn build_block(&mut self) -> DrinkResult<u64>;
+    fn build_block(&mut self) -> DrinkResult<BlockNumberFor<R>>;
 
     /// Build `n` empty blocks and return the new height.
     ///
     /// # Arguments
     ///
     /// * `n` - The number of blocks to build.
-    fn build_blocks(&mut self, n: u64) -> DrinkResult<u64> {
+    fn build_blocks(&mut self, n: u32) -> DrinkResult<BlockNumberFor<R>> {
         let mut last_block = None;
         for _ in 0..n {
             last_block = Some(self.build_block()?);
@@ -38,14 +39,14 @@ pub trait ChainApi<R: Runtime> {
     ///
     /// * `address` - The address of the account to add tokens to.
     /// * `amount` - The number of tokens to add.
-    fn add_tokens(&mut self, address: AccountId32, amount: u128);
+    fn add_tokens(&mut self, address: AccountIdFor<R>, amount: u128);
 
     /// Return the balance of an account.
     ///
     /// # Arguments
     ///
     /// * `address` - The address of the account to query.
-    fn balance(&mut self, address: &AccountId32) -> u128;
+    fn balance(&mut self, address: &AccountIdFor<R>) -> u128;
 
     /// Run an action without modifying the storage.
     ///
@@ -74,27 +75,28 @@ pub trait ChainApi<R: Runtime> {
 }
 
 impl<R: Runtime> ChainApi<R> for Sandbox<R> {
-    fn current_height(&mut self) -> u64 {
+    fn current_height(&mut self) -> BlockNumberFor<R> {
         self.externalities
             .execute_with(|| frame_system::Pallet::<R>::block_number())
     }
 
-    fn build_block(&mut self) -> DrinkResult<u64> {
-        let current_block = self.current_height();
+    fn build_block(&mut self) -> DrinkResult<BlockNumberFor<R>> {
+        let mut current_block = self.current_height();
         self.externalities.execute_with(|| {
             let block_hash = R::finalize_block(current_block).map_err(Error::BlockFinalize)?;
-            R::initialize_block(current_block + 1, block_hash).map_err(Error::BlockInitialize)?;
-            Ok(current_block + 1)
+            current_block.saturating_inc();
+            R::initialize_block(current_block, block_hash).map_err(Error::BlockInitialize)?;
+            Ok(current_block)
         })
     }
 
-    fn add_tokens(&mut self, address: AccountId32, amount: u128) {
+    fn add_tokens(&mut self, address: AccountIdFor<R>, amount: u128) {
         self.externalities.execute_with(|| {
             let _ = pallet_balances::Pallet::<R>::deposit_creating(&address, amount);
         });
     }
 
-    fn balance(&mut self, address: &AccountId32) -> u128 {
+    fn balance(&mut self, address: &AccountIdFor<R>) -> u128 {
         self.externalities
             .execute_with(|| pallet_balances::Pallet::<R>::free_balance(address))
     }
@@ -141,8 +143,8 @@ mod tests {
 
     use crate::{
         chain_api::{ChainApi, DispatchResultWithInfo, RuntimeCall},
-        runtime::{minimal::RuntimeEvent, MinimalRuntime},
-        AccountId32, Sandbox, DEFAULT_ACTOR,
+        runtime::{minimal::RuntimeEvent, MinimalRuntime, Runtime},
+        AccountId32, Sandbox,
     };
 
     fn make_transfer(
@@ -153,20 +155,21 @@ mod tests {
         let call = RuntimeCall::<MinimalRuntime>::Balances(
             pallet_balances::Call::<MinimalRuntime>::transfer { dest, value },
         );
-        sandbox.runtime_call(call, Some(DEFAULT_ACTOR).into())
+        sandbox.runtime_call(call, Some(MinimalRuntime::default_actor()).into())
     }
 
     #[test]
     fn dry_run_works() {
         let mut sandbox = Sandbox::<MinimalRuntime>::new().expect("Failed to create sandbox");
-        let initial_balance = sandbox.balance(&DEFAULT_ACTOR);
+        let actor = MinimalRuntime::default_actor();
+        let initial_balance = sandbox.balance(&actor);
 
         sandbox.dry_run(|runtime| {
-            runtime.add_tokens(DEFAULT_ACTOR, 100);
-            assert_eq!(runtime.balance(&DEFAULT_ACTOR), initial_balance + 100);
+            runtime.add_tokens(actor.clone(), 100);
+            assert_eq!(runtime.balance(&actor), initial_balance + 100);
         });
 
-        assert_eq!(sandbox.balance(&DEFAULT_ACTOR), initial_balance);
+        assert_eq!(sandbox.balance(&actor), initial_balance);
     }
 
     #[test]
@@ -174,7 +177,7 @@ mod tests {
         let mut sandbox = Sandbox::<MinimalRuntime>::new().expect("Failed to create sandbox");
 
         const RECIPIENT: AccountId32 = AccountId32::new([2u8; 32]);
-        assert_ne!(DEFAULT_ACTOR, RECIPIENT);
+        assert_ne!(MinimalRuntime::default_actor(), RECIPIENT);
         let initial_balance = sandbox.balance(&RECIPIENT);
 
         let result = make_transfer(&mut sandbox, RECIPIENT, 100);
@@ -191,7 +194,8 @@ mod tests {
         let events_before = sandbox.get_current_block_events();
         assert!(events_before.is_empty());
 
-        make_transfer(&mut sandbox, DEFAULT_ACTOR, 1).expect("Failed to make transfer");
+        make_transfer(&mut sandbox, MinimalRuntime::default_actor(), 1)
+            .expect("Failed to make transfer");
 
         let events_after = sandbox.get_current_block_events();
         assert_eq!(events_after.len(), 1);
@@ -201,14 +205,15 @@ mod tests {
     #[test]
     fn resetting_events() {
         let mut sandbox = Sandbox::<MinimalRuntime>::new().expect("Failed to create sandbox");
+        let actor = MinimalRuntime::default_actor();
 
-        make_transfer(&mut sandbox, DEFAULT_ACTOR, 1).expect("Failed to make transfer");
+        make_transfer(&mut sandbox, actor.clone(), 1).expect("Failed to make transfer");
 
         assert!(!sandbox.get_current_block_events().is_empty());
         sandbox.reset_current_block_events();
         assert!(sandbox.get_current_block_events().is_empty());
 
-        make_transfer(&mut sandbox, DEFAULT_ACTOR, 1).expect("Failed to make transfer");
+        make_transfer(&mut sandbox, actor, 1).expect("Failed to make transfer");
         assert!(!sandbox.get_current_block_events().is_empty());
     }
 }

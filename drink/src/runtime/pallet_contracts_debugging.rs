@@ -26,9 +26,7 @@ use pallet_contracts_primitives::ExecReturnValue;
 use sp_externalities::{decl_extension, ExternalitiesExt};
 use sp_runtime_interface::runtime_interface;
 
-use crate::runtime::Runtime;
-
-type AccountIdOf<R> = <R as frame_system::Config>::AccountId;
+use crate::runtime::{AccountIdFor, Runtime};
 
 /// The trait that allows injecting custom logic to handle contract debugging directly in the
 /// contracts pallet.
@@ -73,10 +71,10 @@ trait ContractCallDebugger {
 pub enum DrinkDebug {}
 
 impl<R: Runtime> Tracing<R> for DrinkDebug {
-    type CallSpan = DrinkCallSpan<AccountIdOf<R>>;
+    type CallSpan = DrinkCallSpan<AccountIdFor<R>>;
 
     fn new_call_span(
-        contract_address: &AccountIdOf<R>,
+        contract_address: &AccountIdFor<R>,
         entry_point: ExportedFunction,
         input_data: &[u8],
     ) -> Self::CallSpan {
@@ -101,11 +99,10 @@ pub struct DrinkCallSpan<AccountId> {
     pub input_data: Vec<u8>,
 }
 
-impl<AccountId: AsRef<[u8]>> CallSpan for DrinkCallSpan<AccountId> {
+impl<AccountId: parity_scale_codec::Encode> CallSpan for DrinkCallSpan<AccountId> {
     fn after_call(self, output: &ExecReturnValue) {
-        let raw_contract_address: &[u8] = self.contract_address.as_ref();
         contract_call_debugger::after_call(
-            raw_contract_address.to_vec(),
+            self.contract_address.encode(),
             matches!(self.entry_point, ExportedFunction::Call),
             self.input_data.to_vec(),
             output.data.clone(),

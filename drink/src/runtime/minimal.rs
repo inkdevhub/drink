@@ -14,14 +14,18 @@ use frame_support::{
 };
 // Re-export all pallets.
 pub use frame_system;
+use frame_system::pallet_prelude::BlockNumberFor;
 pub use pallet_balances;
 pub use pallet_contracts;
 use pallet_contracts::{DefaultAddressGenerator, Frame, Schedule};
 pub use pallet_timestamp;
 
-use crate::{runtime::pallet_contracts_debugging::DrinkDebug, Runtime, DEFAULT_ACTOR};
+use crate::{
+    runtime::{pallet_contracts_debugging::DrinkDebug, AccountIdFor},
+    Runtime,
+};
 
-type Block = frame_system::mocking::MockBlock<MinimalRuntime>;
+type Block = frame_system::mocking::MockBlockU32<MinimalRuntime>;
 
 frame_support::construct_runtime!(
     pub enum MinimalRuntime {
@@ -45,7 +49,7 @@ impl frame_system::Config for MinimalRuntime {
     type AccountId = AccountId32;
     type Lookup = IdentityLookup<Self::AccountId>;
     type RuntimeEvent = RuntimeEvent;
-    type BlockHashCount = ConstU64<250>;
+    type BlockHashCount = ConstU32<250>;
     type DbWeight = ();
     type Version = ();
     type PalletInfo = PalletInfo;
@@ -82,8 +86,8 @@ impl pallet_timestamp::Config for MinimalRuntime {
 }
 
 pub enum SandboxRandomness {}
-impl Randomness<H256, u64> for SandboxRandomness {
-    fn random(_subject: &[u8]) -> (H256, u64) {
+impl Randomness<H256, u32> for SandboxRandomness {
+    fn random(_subject: &[u8]) -> (H256, u32) {
         todo!("No randomness")
     }
 }
@@ -133,12 +137,12 @@ pub const INITIAL_BALANCE: u128 = 1_000_000_000_000_000;
 impl Runtime for MinimalRuntime {
     fn initialize_storage(storage: &mut Storage) -> Result<(), String> {
         pallet_balances::GenesisConfig::<Self> {
-            balances: vec![(DEFAULT_ACTOR, INITIAL_BALANCE)],
+            balances: vec![(Self::default_actor(), INITIAL_BALANCE)],
         }
         .assimilate_storage(storage)
     }
 
-    fn initialize_block(height: u64, parent_hash: H256) -> Result<(), String> {
+    fn initialize_block(height: BlockNumberFor<Self>, parent_hash: H256) -> Result<(), String> {
         System::reset_events();
         System::initialize(&height, &parent_hash, &Default::default());
 
@@ -157,11 +161,15 @@ impl Runtime for MinimalRuntime {
         Ok(())
     }
 
-    fn finalize_block(height: u64) -> Result<H256, String> {
+    fn finalize_block(height: BlockNumberFor<Self>) -> Result<H256, String> {
         Contracts::on_finalize(height);
         Timestamp::on_finalize(height);
         Balances::on_finalize(height);
 
         Ok(System::finalize().hash())
+    }
+
+    fn default_actor() -> AccountIdFor<Self> {
+        AccountId32::new([1u8; 32])
     }
 }

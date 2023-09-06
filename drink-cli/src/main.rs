@@ -1,6 +1,7 @@
+use std::path::PathBuf;
+
 use anyhow::Result;
 use clap::Parser;
-use std::path::PathBuf;
 
 use crate::ui::run_ui;
 
@@ -13,7 +14,7 @@ mod ui;
 #[command(author, version, about, long_about = None)]
 struct Args {
     /// Starts the CLI in the provided directory
-    #[arg(short, long, value_name = "DIRECTORY", )]
+    #[arg(short, long, value_name = "DIRECTORY")]
     path: Option<PathBuf>,
 }
 

@@ -29,10 +29,10 @@ pub fn execute(app_state: &mut AppState) -> Result<()> {
     match cli_command {
         CliCommand::Clear => app_state.ui_state.output.clear(),
         CliCommand::ChangeDir { path } => {
-            let target_dir = app_state.ui_state.pwd.join(path);
+            let target_dir = app_state.ui_state.cwd.join(path);
             match env::set_current_dir(target_dir) {
                 Ok(_) => {
-                    app_state.ui_state.pwd =
+                    app_state.ui_state.cwd =
                         env::current_dir().expect("Failed to get current directory");
                     app_state.print("Directory changed");
                 }
@@ -66,7 +66,7 @@ pub fn execute(app_state: &mut AppState) -> Result<()> {
     Ok(())
 }
 
-fn build_blocks(app_state: &mut AppState, count: u64) {
+fn build_blocks(app_state: &mut AppState, count: u32) {
     app_state.chain_info.block_height = app_state
         .session
         .chain_api()

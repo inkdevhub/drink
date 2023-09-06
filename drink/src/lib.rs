@@ -12,13 +12,17 @@ pub mod session;
 use std::marker::PhantomData;
 
 pub use error::Error;
-use frame_support::{sp_io::TestExternalities, sp_runtime::BuildStorage};
+use frame_support::{
+    sp_io::TestExternalities,
+    sp_runtime::{traits::One, BuildStorage},
+};
 pub use frame_support::{sp_runtime::AccountId32, weights::Weight};
-use frame_system::{EventRecord, GenesisConfig};
+use frame_system::{pallet_prelude::BlockNumberFor, EventRecord, GenesisConfig};
 
-use crate::pallet_contracts_debugging::DebugExt;
-use crate::runtime::pallet_contracts_debugging::NoopDebugExt;
-use crate::runtime::*;
+use crate::{
+    pallet_contracts_debugging::DebugExt,
+    runtime::{pallet_contracts_debugging::NoopDebugExt, *},
+};
 
 /// Main result type for the drink crate.
 pub type DrinkResult<T> = std::result::Result<T, Error>;
@@ -33,8 +37,6 @@ pub struct Sandbox<R: Runtime> {
     _phantom: PhantomData<R>,
 }
 
-/// Default extrinsic origin.
-pub const DEFAULT_ACTOR: AccountId32 = AccountId32::new([1u8; 32]);
 /// Default gas limit.
 pub const DEFAULT_GAS_LIMIT: Weight = Weight::from_parts(100_000_000_000, 3 * 1024 * 1024);
 
@@ -43,7 +45,7 @@ impl<R: Runtime> Sandbox<R> {
     ///
     /// Returns an error if the storage could not be initialized.
     ///
-    /// The storage is initialized with a genesis block with a single account `DEFAULT_ACTOR` with
+    /// The storage is initialized with a genesis block with a single account `R::default_actor()` with
     /// `INITIAL_BALANCE`.
     pub fn new() -> DrinkResult<Self> {
         let mut storage = GenesisConfig::<R>::default()
@@ -61,7 +63,7 @@ impl<R: Runtime> Sandbox<R> {
             .externalities
             // We start the chain from the 1st block, so that events are collected (they are not
             // recorded for the genesis block...).
-            .execute_with(|| R::initialize_block(1, Default::default()))
+            .execute_with(|| R::initialize_block(BlockNumberFor::<R>::one(), Default::default()))
             .map_err(Error::BlockInitialize)?;
 
         // We register a noop debug extension by default.

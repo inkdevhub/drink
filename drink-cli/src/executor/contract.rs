@@ -13,7 +13,7 @@ use crate::{
 };
 
 fn build_result(app_state: &mut AppState) -> Result<String, BuildError> {
-    let path_to_cargo_toml = app_state.ui_state.pwd.join(Path::new("Cargo.toml"));
+    let path_to_cargo_toml = app_state.ui_state.cwd.join(Path::new("Cargo.toml"));
     let manifest_path = ManifestPath::new(path_to_cargo_toml.clone()).map_err(|err| {
         BuildError::InvalidManifest {
             manifest_path: path_to_cargo_toml,
@@ -48,7 +48,7 @@ pub fn build(app_state: &mut AppState) {
 
 pub fn deploy(app_state: &mut AppState, constructor: String, args: Vec<String>, salt: Vec<u8>) {
     // Get raw contract bytes
-    let Some((contract_name, contract_file)) = find_wasm_blob(&app_state.ui_state.pwd) else {
+    let Some((contract_name, contract_file)) = find_wasm_blob(&app_state.ui_state.cwd) else {
         app_state.print_error("Failed to find contract file");
         return;
     };
@@ -64,7 +64,7 @@ pub fn deploy(app_state: &mut AppState, constructor: String, args: Vec<String>, 
     // Read contract metadata and prepare transcoder
     let metadata_path = app_state
         .ui_state
-        .pwd
+        .cwd
         .join(format!("target/ink/{contract_name}.json"));
 
     let Ok(transcoder) = ContractMessageTranscoder::load(metadata_path) else {
@@ -82,7 +82,7 @@ pub fn deploy(app_state: &mut AppState, constructor: String, args: Vec<String>, 
             app_state.contracts.add(Contract {
                 name: contract_name,
                 address,
-                base_path: app_state.ui_state.pwd.clone(),
+                base_path: app_state.ui_state.cwd.clone(),
                 transcoder,
             });
             app_state.print("Contract deployed successfully");
@@ -119,8 +119,8 @@ pub fn call(app_state: &mut AppState, message: String, args: Vec<String>) {
     }
 }
 
-fn find_wasm_blob(pwd: &Path) -> Option<(String, PathBuf)> {
-    let Ok(entries) = fs::read_dir(pwd.join("target/ink")) else {
+fn find_wasm_blob(cwd: &Path) -> Option<(String, PathBuf)> {
+    let Ok(entries) = fs::read_dir(cwd.join("target/ink")) else {
         return None;
     };
     let Some(file) = entries
