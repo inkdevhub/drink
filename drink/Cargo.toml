@@ -18,6 +18,9 @@ pallet-contracts = { workspace = true }
 pallet-contracts-primitives = { workspace = true }
 pallet-timestamp = { workspace = true }
 parity-scale-codec = { workspace = true }
+sp-externalities = { workspace = true }
+sp-runtime-interface = { workspace = true }
+
 scale-info = { workspace = true }
 thiserror = { workspace = true }
 
@@ -25,4 +28,7 @@ thiserror = { workspace = true }
 wat = { workspace = true }
 
 [features]
+# This is required for the runtime-interface to work properly in the std env.
+default = ["std"]
 session = ["contract-transcode"]
+std = []

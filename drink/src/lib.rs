@@ -16,6 +16,8 @@ use frame_support::{sp_io::TestExternalities, sp_runtime::BuildStorage};
 pub use frame_support::{sp_runtime::AccountId32, weights::Weight};
 use frame_system::{EventRecord, GenesisConfig};
 
+use crate::pallet_contracts_debugging::DebugExt;
+use crate::runtime::pallet_contracts_debugging::NoopDebugExt;
 use crate::runtime::*;
 
 /// Main result type for the drink crate.
@@ -62,6 +64,17 @@ impl<R: Runtime> Sandbox<R> {
             .execute_with(|| R::initialize_block(1, Default::default()))
             .map_err(Error::BlockInitialize)?;
 
+        // We register a noop debug extension by default.
+        sandbox.override_debug_handle(DebugExt(Box::new(NoopDebugExt {})));
+
         Ok(sandbox)
+    }
+
+    /// Overrides the debug extension.
+    ///
+    /// By default, a new `Sandbox` instance is created with a noop debug extension. This method
+    /// allows to override it with a custom debug extension.
+    pub fn override_debug_handle(&mut self, d: DebugExt) {
+        self.externalities.register_extension(d);
     }
 }

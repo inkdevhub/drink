@@ -2,6 +2,7 @@
 //! `drink` with any runtime that implements the `Runtime` trait.
 
 pub mod minimal;
+pub mod pallet_contracts_debugging;
 
 use frame_support::sp_runtime::{AccountId32, Storage};
 pub use minimal::MinimalRuntime;

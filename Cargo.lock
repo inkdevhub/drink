@@ -949,6 +949,8 @@ dependencies = [
  "pallet-timestamp",
  "parity-scale-codec",
  "scale-info",
+ "sp-externalities",
+ "sp-runtime-interface",
  "thiserror",
  "wat",
 ]
@@ -2372,9 +2374,9 @@ dependencies = [
 
 [[package]]
 name = "pallet-contracts-for-drink"
-version = "21.0.1"
+version = "21.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0e9f6abd1ee4a2d6e9702a45a646b87260cc9d36886b750496888454471cda69"
+checksum = "e73bc2df30641c195d3be0a105548a3f0cc4f250c9de7d24d4c51fc43d8c3ef4"
 dependencies = [
  "bitflags",
  "environmental",
