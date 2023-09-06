@@ -9,8 +9,11 @@ use pallet_contracts_primitives::{ContractExecResult, ContractInstantiateResult}
 use thiserror::Error;
 
 use crate::{
-    chain_api::ChainApi, contract_api::ContractApi, pallet_contracts_debugging::DebugExt,
-    runtime::Runtime, AccountId32, EventRecordOf, Sandbox, DEFAULT_ACTOR, DEFAULT_GAS_LIMIT,
+    chain_api::ChainApi,
+    contract_api::ContractApi,
+    pallet_contracts_debugging::DebugExt,
+    runtime::{AccountId, Runtime},
+    EventRecordOf, Sandbox, DEFAULT_GAS_LIMIT,
 };
 
 const ZERO_TRANSFER: u128 = 0;
@@ -104,13 +107,13 @@ pub enum SessionError {
 pub struct Session<R: Runtime> {
     sandbox: Sandbox<R>,
 
-    actor: AccountId32,
+    actor: AccountId<R>,
     gas_limit: Weight,
 
     transcoder: Option<Rc<ContractMessageTranscoder>>,
 
-    deploy_results: Vec<ContractInstantiateResult<AccountId32, u128, EventRecordOf<R>>>,
-    deploy_returns: Vec<AccountId32>,
+    deploy_results: Vec<ContractInstantiateResult<AccountId<R>, u128, EventRecordOf<R>>>,
+    deploy_returns: Vec<AccountId<R>>,
     call_results: Vec<ContractExecResult<u128, EventRecordOf<R>>>,
     call_returns: Vec<Value>,
 }
@@ -120,7 +123,7 @@ impl<R: Runtime> Session<R> {
     pub fn new(transcoder: Option<Rc<ContractMessageTranscoder>>) -> Result<Self, SessionError> {
         Ok(Self {
             sandbox: Sandbox::new().map_err(SessionError::Drink)?,
-            actor: DEFAULT_ACTOR,
+            actor: R::default_actor(),
             gas_limit: DEFAULT_GAS_LIMIT,
             transcoder,
             deploy_results: vec![],
@@ -131,12 +134,12 @@ impl<R: Runtime> Session<R> {
     }
 
     /// Sets a new actor and returns updated `self`.
-    pub fn with_actor(self, actor: AccountId32) -> Self {
+    pub fn with_actor(self, actor: AccountId<R>) -> Self {
         Self { actor, ..self }
     }
 
     /// Sets a new actor and returns the old one.
-    pub fn set_actor(&mut self, actor: AccountId32) -> AccountId32 {
+    pub fn set_actor(&mut self, actor: AccountId<R>) -> AccountId<R> {
         mem::replace(&mut self.actor, actor)
     }
 
@@ -194,7 +197,7 @@ impl<R: Runtime> Session<R> {
         constructor: &str,
         args: &[String],
         salt: Vec<u8>,
-    ) -> Result<AccountId32, SessionError> {
+    ) -> Result<AccountId<R>, SessionError> {
         let data = self
             .transcoder
             .as_ref()
@@ -236,7 +239,7 @@ impl<R: Runtime> Session<R> {
     /// Calls the last deployed contract. In case of a successful call, returns `self`.
     pub fn call_with_address_and(
         mut self,
-        address: AccountId32,
+        address: AccountId<R>,
         message: &str,
         args: &[String],
     ) -> Result<Self, SessionError> {
@@ -253,7 +256,7 @@ impl<R: Runtime> Session<R> {
     /// result.
     pub fn call_with_address(
         &mut self,
-        address: AccountId32,
+        address: AccountId<R>,
         message: &str,
         args: &[String],
     ) -> Result<Value, SessionError> {
@@ -262,7 +265,7 @@ impl<R: Runtime> Session<R> {
 
     fn call_internal(
         &mut self,
-        address: Option<AccountId32>,
+        address: Option<AccountId<R>>,
         message: &str,
         args: &[String],
     ) -> Result<Value, SessionError> {
@@ -314,12 +317,12 @@ impl<R: Runtime> Session<R> {
     /// Returns the last result of deploying a contract.
     pub fn last_deploy_result(
         &self,
-    ) -> Option<&ContractInstantiateResult<AccountId32, u128, EventRecordOf<R>>> {
+    ) -> Option<&ContractInstantiateResult<AccountId<R>, u128, EventRecordOf<R>>> {
         self.deploy_results.last()
     }
 
     /// Returns the address of the last deployed contract.
-    pub fn last_deploy_return(&self) -> Option<AccountId32> {
+    pub fn last_deploy_return(&self) -> Option<AccountId<R>> {
         self.deploy_returns.last().cloned()
     }
 

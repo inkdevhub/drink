@@ -1,11 +1,10 @@
 //! Basic chain API.
 
 use frame_support::{
-    dispatch::Dispatchable,
-    sp_runtime::{AccountId32, DispatchResultWithInfo},
-    traits::tokens::currency::Currency,
+    dispatch::Dispatchable, sp_runtime::DispatchResultWithInfo, traits::tokens::currency::Currency,
 };
 
+use crate::runtime::AccountId;
 use crate::{DrinkResult, Error, EventRecordOf, Runtime, Sandbox};
 
 /// The runtime call type for a particular runtime.
@@ -38,14 +37,14 @@ pub trait ChainApi<R: Runtime> {
     ///
     /// * `address` - The address of the account to add tokens to.
     /// * `amount` - The number of tokens to add.
-    fn add_tokens(&mut self, address: AccountId32, amount: u128);
+    fn add_tokens(&mut self, address: AccountId<R>, amount: u128);
 
     /// Return the balance of an account.
     ///
     /// # Arguments
     ///
     /// * `address` - The address of the account to query.
-    fn balance(&mut self, address: &AccountId32) -> u128;
+    fn balance(&mut self, address: &AccountId<R>) -> u128;
 
     /// Run an action without modifying the storage.
     ///
@@ -88,13 +87,13 @@ impl<R: Runtime> ChainApi<R> for Sandbox<R> {
         })
     }
 
-    fn add_tokens(&mut self, address: AccountId32, amount: u128) {
+    fn add_tokens(&mut self, address: AccountId<R>, amount: u128) {
         self.externalities.execute_with(|| {
             let _ = pallet_balances::Pallet::<R>::deposit_creating(&address, amount);
         });
     }
 
-    fn balance(&mut self, address: &AccountId32) -> u128 {
+    fn balance(&mut self, address: &AccountId<R>) -> u128 {
         self.externalities
             .execute_with(|| pallet_balances::Pallet::<R>::free_balance(address))
     }
@@ -142,7 +141,7 @@ mod tests {
     use crate::{
         chain_api::{ChainApi, DispatchResultWithInfo, RuntimeCall},
         runtime::{minimal::RuntimeEvent, MinimalRuntime},
-        AccountId32, Sandbox, DEFAULT_ACTOR,
+        AccountId32, Sandbox,
     };
 
     fn make_transfer(
@@ -153,20 +152,26 @@ mod tests {
         let call = RuntimeCall::<MinimalRuntime>::Balances(
             pallet_balances::Call::<MinimalRuntime>::transfer { dest, value },
         );
-        sandbox.runtime_call(call, Some(DEFAULT_ACTOR).into())
+        sandbox.runtime_call(call, Some(MinimalRuntime::default_actor()).into())
     }
 
     #[test]
     fn dry_run_works() {
         let mut sandbox = Sandbox::<MinimalRuntime>::new().expect("Failed to create sandbox");
-        let initial_balance = sandbox.balance(&DEFAULT_ACTOR);
+        let initial_balance = sandbox.balance(&MinimalRuntime::default_actor());
 
         sandbox.dry_run(|runtime| {
-            runtime.add_tokens(DEFAULT_ACTOR, 100);
-            assert_eq!(runtime.balance(&DEFAULT_ACTOR), initial_balance + 100);
+            runtime.add_tokens(MinimalRuntime::default_actor(), 100);
+            assert_eq!(
+                runtime.balance(&MinimalRuntime::default_actor()),
+                initial_balance + 100
+            );
         });
 
-        assert_eq!(sandbox.balance(&DEFAULT_ACTOR), initial_balance);
+        assert_eq!(
+            sandbox.balance(&MinimalRuntime::default_actor()),
+            initial_balance
+        );
     }
 
     #[test]
@@ -174,7 +179,7 @@ mod tests {
         let mut sandbox = Sandbox::<MinimalRuntime>::new().expect("Failed to create sandbox");
 
         const RECIPIENT: AccountId32 = AccountId32::new([2u8; 32]);
-        assert_ne!(DEFAULT_ACTOR, RECIPIENT);
+        assert_ne!(MinimalRuntime::default_actor(), RECIPIENT);
         let initial_balance = sandbox.balance(&RECIPIENT);
 
         let result = make_transfer(&mut sandbox, RECIPIENT, 100);
@@ -191,7 +196,8 @@ mod tests {
         let events_before = sandbox.get_current_block_events();
         assert!(events_before.is_empty());
 
-        make_transfer(&mut sandbox, DEFAULT_ACTOR, 1).expect("Failed to make transfer");
+        make_transfer(&mut sandbox, MinimalRuntime::default_actor(), 1)
+            .expect("Failed to make transfer");
 
         let events_after = sandbox.get_current_block_events();
         assert_eq!(events_after.len(), 1);
@@ -202,13 +208,15 @@ mod tests {
     fn resetting_events() {
         let mut sandbox = Sandbox::<MinimalRuntime>::new().expect("Failed to create sandbox");
 
-        make_transfer(&mut sandbox, DEFAULT_ACTOR, 1).expect("Failed to make transfer");
+        make_transfer(&mut sandbox, MinimalRuntime::default_actor(), 1)
+            .expect("Failed to make transfer");
 
         assert!(!sandbox.get_current_block_events().is_empty());
         sandbox.reset_current_block_events();
         assert!(sandbox.get_current_block_events().is_empty());
 
-        make_transfer(&mut sandbox, DEFAULT_ACTOR, 1).expect("Failed to make transfer");
+        make_transfer(&mut sandbox, MinimalRuntime::default_actor(), 1)
+            .expect("Failed to make transfer");
         assert!(!sandbox.get_current_block_events().is_empty());
     }
 }

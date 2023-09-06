@@ -33,8 +33,6 @@ pub struct Sandbox<R: Runtime> {
     _phantom: PhantomData<R>,
 }
 
-/// Default extrinsic origin.
-pub const DEFAULT_ACTOR: AccountId32 = AccountId32::new([1u8; 32]);
 /// Default gas limit.
 pub const DEFAULT_GAS_LIMIT: Weight = Weight::from_parts(100_000_000_000, 3 * 1024 * 1024);
 
@@ -43,7 +41,7 @@ impl<R: Runtime> Sandbox<R> {
     ///
     /// Returns an error if the storage could not be initialized.
     ///
-    /// The storage is initialized with a genesis block with a single account `DEFAULT_ACTOR` with
+    /// The storage is initialized with a genesis block with a single account `R::default_actor()` with
     /// `INITIAL_BALANCE`.
     pub fn new() -> DrinkResult<Self> {
         let mut storage = GenesisConfig::<R>::default()

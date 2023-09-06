@@ -44,6 +44,7 @@ pallet-timestamp = { version = "21.0.0" }
 sp-core = { version = "22.0.0" }
 sp-externalities = { version = "0.20.0" }
 sp-runtime-interface = { version = "18.0.0" }
+contracts-node-runtime = { version = "0.31.0" }
 
 # Local dependencies
 

@@ -19,7 +19,10 @@ pub use pallet_contracts;
 use pallet_contracts::{DefaultAddressGenerator, Frame, Schedule};
 pub use pallet_timestamp;
 
-use crate::{runtime::pallet_contracts_debugging::DrinkDebug, Runtime, DEFAULT_ACTOR};
+use crate::{
+    runtime::{pallet_contracts_debugging::DrinkDebug, AccountId},
+    Runtime,
+};
 
 type Block = frame_system::mocking::MockBlock<MinimalRuntime>;
 
@@ -133,7 +136,7 @@ pub const INITIAL_BALANCE: u128 = 1_000_000_000_000_000;
 impl Runtime for MinimalRuntime {
     fn initialize_storage(storage: &mut Storage) -> Result<(), String> {
         pallet_balances::GenesisConfig::<Self> {
-            balances: vec![(DEFAULT_ACTOR, INITIAL_BALANCE)],
+            balances: vec![(Self::default_actor(), INITIAL_BALANCE)],
         }
         .assimilate_storage(storage)
     }
@@ -163,5 +166,9 @@ impl Runtime for MinimalRuntime {
         Balances::on_finalize(height);
 
         Ok(System::finalize().hash())
+    }
+
+    fn default_actor() -> AccountId<Self> {
+        AccountId32::new([1u8; 32])
     }
 }

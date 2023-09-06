@@ -1,7 +1,8 @@
 use std::{env, path::PathBuf};
 
 pub use contracts::{Contract, ContractIndex, ContractRegistry};
-use drink::{runtime::MinimalRuntime, session::Session, Weight, DEFAULT_ACTOR, DEFAULT_GAS_LIMIT};
+use drink::runtime::Runtime;
+use drink::{runtime::MinimalRuntime, session::Session, Weight, DEFAULT_GAS_LIMIT};
 use sp_core::crypto::AccountId32;
 pub use user_input::UserInput;
 
@@ -23,7 +24,7 @@ impl Default for ChainInfo {
     fn default() -> Self {
         Self {
             block_height: 0,
-            actor: DEFAULT_ACTOR,
+            actor: MinimalRuntime::default_actor(),
             gas_limit: DEFAULT_GAS_LIMIT,
         }
     }
@@ -49,8 +50,8 @@ pub struct UiState {
 
 impl UiState {
     pub fn new(pwd_override: Option<PathBuf>) -> Self {
-        let pwd = pwd_override.unwrap_or_else(
-            || env::current_dir().expect("Failed to get current directory"));
+        let pwd = pwd_override
+            .unwrap_or_else(|| env::current_dir().expect("Failed to get current directory"));
 
         UiState {
             pwd,

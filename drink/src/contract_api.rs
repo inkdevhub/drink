@@ -1,12 +1,15 @@
 //! Contracts API.
 
-use frame_support::{sp_runtime::AccountId32, weights::Weight};
+use frame_support::weights::Weight;
 use pallet_contracts::{CollectEvents, DebugInfo, Determinism};
 use pallet_contracts_primitives::{
     Code, CodeUploadResult, ContractExecResult, ContractInstantiateResult,
 };
 
-use crate::{runtime::Runtime, EventRecordOf, Sandbox};
+use crate::{
+    runtime::{AccountId, Runtime},
+    EventRecordOf, Sandbox,
+};
 
 /// Interface for contract-related operations.
 pub trait ContractApi<R: Runtime> {
@@ -28,10 +31,10 @@ pub trait ContractApi<R: Runtime> {
         value: u128,
         data: Vec<u8>,
         salt: Vec<u8>,
-        origin: AccountId32,
+        origin: AccountId<R>,
         gas_limit: Weight,
         storage_deposit_limit: Option<u128>,
-    ) -> ContractInstantiateResult<AccountId32, u128, EventRecordOf<R>>;
+    ) -> ContractInstantiateResult<AccountId<R>, u128, EventRecordOf<R>>;
 
     /// Interface for `bare_upload_code` contract call.
     ///
@@ -43,7 +46,7 @@ pub trait ContractApi<R: Runtime> {
     fn upload_contract(
         &mut self,
         contract_bytes: Vec<u8>,
-        origin: AccountId32,
+        origin: AccountId<R>,
         storage_deposit_limit: Option<u128>,
     ) -> CodeUploadResult<<R as frame_system::Config>::Hash, u128>;
 
@@ -59,10 +62,10 @@ pub trait ContractApi<R: Runtime> {
     /// * `storage_deposit_limit` - The storage deposit limit for the contract call.
     fn call_contract(
         &mut self,
-        address: AccountId32,
+        address: AccountId<R>,
         value: u128,
         data: Vec<u8>,
-        origin: AccountId32,
+        origin: AccountId<R>,
         gas_limit: Weight,
         storage_deposit_limit: Option<u128>,
     ) -> ContractExecResult<u128, EventRecordOf<R>>;
@@ -75,10 +78,10 @@ impl<R: Runtime> ContractApi<R> for Sandbox<R> {
         value: u128,
         data: Vec<u8>,
         salt: Vec<u8>,
-        origin: AccountId32,
+        origin: AccountId<R>,
         gas_limit: Weight,
         storage_deposit_limit: Option<u128>,
-    ) -> ContractInstantiateResult<AccountId32, u128, EventRecordOf<R>> {
+    ) -> ContractInstantiateResult<AccountId<R>, u128, EventRecordOf<R>> {
         self.externalities.execute_with(|| {
             pallet_contracts::Pallet::<R>::bare_instantiate(
                 origin,
@@ -97,7 +100,7 @@ impl<R: Runtime> ContractApi<R> for Sandbox<R> {
     fn upload_contract(
         &mut self,
         contract_bytes: Vec<u8>,
-        origin: AccountId32,
+        origin: AccountId<R>,
         storage_deposit_limit: Option<u128>,
     ) -> CodeUploadResult<<R as frame_system::Config>::Hash, u128> {
         self.externalities.execute_with(|| {
@@ -112,10 +115,10 @@ impl<R: Runtime> ContractApi<R> for Sandbox<R> {
 
     fn call_contract(
         &mut self,
-        address: AccountId32,
+        address: AccountId<R>,
         value: u128,
         data: Vec<u8>,
-        origin: AccountId32,
+        origin: AccountId<R>,
         gas_limit: Weight,
         storage_deposit_limit: Option<u128>,
     ) -> ContractExecResult<u128, EventRecordOf<R>> {
@@ -147,10 +150,7 @@ mod tests {
     use pallet_contracts::Origin;
 
     use super::*;
-    use crate::{
-        chain_api::ChainApi, minimal::RuntimeEvent, MinimalRuntime, DEFAULT_ACTOR,
-        DEFAULT_GAS_LIMIT,
-    };
+    use crate::{chain_api::ChainApi, minimal::RuntimeEvent, MinimalRuntime, DEFAULT_GAS_LIMIT};
 
     fn compile_module(contract_name: &str) -> Vec<u8> {
         let path = [
@@ -171,7 +171,7 @@ mod tests {
         let wasm_binary = compile_module("dummy");
         let hash = <<MinimalRuntime as frame_system::Config>::Hashing>::hash(&wasm_binary);
 
-        let result = sandbox.upload_contract(wasm_binary, DEFAULT_ACTOR, None);
+        let result = sandbox.upload_contract(wasm_binary, MinimalRuntime::default_actor(), None);
 
         assert!(result.is_ok());
         assert_eq!(hash, result.unwrap().code_hash);
@@ -190,7 +190,7 @@ mod tests {
             0,
             vec![],
             vec![],
-            DEFAULT_ACTOR,
+            MinimalRuntime::default_actor(),
             DEFAULT_GAS_LIMIT,
             None,
         );
@@ -215,7 +215,7 @@ mod tests {
             0,
             vec![],
             vec![],
-            DEFAULT_ACTOR,
+            MinimalRuntime::default_actor(),
             DEFAULT_GAS_LIMIT,
             None,
         );
@@ -231,7 +231,7 @@ mod tests {
             contract_address.clone(),
             0,
             vec![],
-            DEFAULT_ACTOR,
+            MinimalRuntime::default_actor(),
             DEFAULT_GAS_LIMIT,
             None,
         );
@@ -253,7 +253,7 @@ mod tests {
             events[1].event,
             RuntimeEvent::Contracts(pallet_contracts::Event::<MinimalRuntime>::Called {
                 contract: contract_address,
-                caller: Origin::Signed(DEFAULT_ACTOR),
+                caller: Origin::Signed(MinimalRuntime::default_actor()),
             }),
         );
     }
