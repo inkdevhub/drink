@@ -12,9 +12,12 @@ pub mod session;
 use std::marker::PhantomData;
 
 pub use error::Error;
-use frame_support::{sp_io::TestExternalities, sp_runtime::BuildStorage};
+use frame_support::{
+    sp_io::TestExternalities,
+    sp_runtime::{traits::One, BuildStorage},
+};
 pub use frame_support::{sp_runtime::AccountId32, weights::Weight};
-use frame_system::{EventRecord, GenesisConfig};
+use frame_system::{pallet_prelude::BlockNumberFor, EventRecord, GenesisConfig};
 
 use crate::{
     pallet_contracts_debugging::DebugExt,
@@ -60,7 +63,7 @@ impl<R: Runtime> Sandbox<R> {
             .externalities
             // We start the chain from the 1st block, so that events are collected (they are not
             // recorded for the genesis block...).
-            .execute_with(|| R::initialize_block(1u32.into(), Default::default()))
+            .execute_with(|| R::initialize_block(BlockNumberFor::<R>::one(), Default::default()))
             .map_err(Error::BlockInitialize)?;
 
         // We register a noop debug extension by default.

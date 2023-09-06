@@ -12,7 +12,7 @@ use crate::{
     chain_api::ChainApi,
     contract_api::ContractApi,
     pallet_contracts_debugging::DebugExt,
-    runtime::{AccountId, Runtime},
+    runtime::{AccountIdFor, Runtime},
     EventRecordOf, Sandbox, DEFAULT_GAS_LIMIT,
 };
 
@@ -107,13 +107,13 @@ pub enum SessionError {
 pub struct Session<R: Runtime> {
     sandbox: Sandbox<R>,
 
-    actor: AccountId<R>,
+    actor: AccountIdFor<R>,
     gas_limit: Weight,
 
     transcoder: Option<Rc<ContractMessageTranscoder>>,
 
-    deploy_results: Vec<ContractInstantiateResult<AccountId<R>, u128, EventRecordOf<R>>>,
-    deploy_returns: Vec<AccountId<R>>,
+    deploy_results: Vec<ContractInstantiateResult<AccountIdFor<R>, u128, EventRecordOf<R>>>,
+    deploy_returns: Vec<AccountIdFor<R>>,
     call_results: Vec<ContractExecResult<u128, EventRecordOf<R>>>,
     call_returns: Vec<Value>,
 }
@@ -134,12 +134,12 @@ impl<R: Runtime> Session<R> {
     }
 
     /// Sets a new actor and returns updated `self`.
-    pub fn with_actor(self, actor: AccountId<R>) -> Self {
+    pub fn with_actor(self, actor: AccountIdFor<R>) -> Self {
         Self { actor, ..self }
     }
 
     /// Sets a new actor and returns the old one.
-    pub fn set_actor(&mut self, actor: AccountId<R>) -> AccountId<R> {
+    pub fn set_actor(&mut self, actor: AccountIdFor<R>) -> AccountIdFor<R> {
         mem::replace(&mut self.actor, actor)
     }
 
@@ -197,7 +197,7 @@ impl<R: Runtime> Session<R> {
         constructor: &str,
         args: &[String],
         salt: Vec<u8>,
-    ) -> Result<AccountId<R>, SessionError> {
+    ) -> Result<AccountIdFor<R>, SessionError> {
         let data = self
             .transcoder
             .as_ref()
@@ -239,7 +239,7 @@ impl<R: Runtime> Session<R> {
     /// Calls the last deployed contract. In case of a successful call, returns `self`.
     pub fn call_with_address_and(
         mut self,
-        address: AccountId<R>,
+        address: AccountIdFor<R>,
         message: &str,
         args: &[String],
     ) -> Result<Self, SessionError> {
@@ -256,7 +256,7 @@ impl<R: Runtime> Session<R> {
     /// result.
     pub fn call_with_address(
         &mut self,
-        address: AccountId<R>,
+        address: AccountIdFor<R>,
         message: &str,
         args: &[String],
     ) -> Result<Value, SessionError> {
@@ -265,7 +265,7 @@ impl<R: Runtime> Session<R> {
 
     fn call_internal(
         &mut self,
-        address: Option<AccountId<R>>,
+        address: Option<AccountIdFor<R>>,
         message: &str,
         args: &[String],
     ) -> Result<Value, SessionError> {
@@ -317,12 +317,12 @@ impl<R: Runtime> Session<R> {
     /// Returns the last result of deploying a contract.
     pub fn last_deploy_result(
         &self,
-    ) -> Option<&ContractInstantiateResult<AccountId<R>, u128, EventRecordOf<R>>> {
+    ) -> Option<&ContractInstantiateResult<AccountIdFor<R>, u128, EventRecordOf<R>>> {
         self.deploy_results.last()
     }
 
     /// Returns the address of the last deployed contract.
-    pub fn last_deploy_return(&self) -> Option<AccountId<R>> {
+    pub fn last_deploy_return(&self) -> Option<AccountIdFor<R>> {
         self.deploy_returns.last().cloned()
     }
 

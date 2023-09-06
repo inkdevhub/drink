@@ -26,7 +26,7 @@ use pallet_contracts_primitives::ExecReturnValue;
 use sp_externalities::{decl_extension, ExternalitiesExt};
 use sp_runtime_interface::runtime_interface;
 
-use crate::runtime::{AccountId, Runtime};
+use crate::runtime::{AccountIdFor, Runtime};
 
 /// The trait that allows injecting custom logic to handle contract debugging directly in the
 /// contracts pallet.
@@ -71,10 +71,10 @@ trait ContractCallDebugger {
 pub enum DrinkDebug {}
 
 impl<R: Runtime> Tracing<R> for DrinkDebug {
-    type CallSpan = DrinkCallSpan<AccountId<R>>;
+    type CallSpan = DrinkCallSpan<AccountIdFor<R>>;
 
     fn new_call_span(
-        contract_address: &AccountId<R>,
+        contract_address: &AccountIdFor<R>,
         entry_point: ExportedFunction,
         input_data: &[u8],
     ) -> Self::CallSpan {

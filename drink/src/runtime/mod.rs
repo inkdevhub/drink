@@ -9,7 +9,7 @@ use frame_system::pallet_prelude::BlockNumberFor;
 pub use minimal::MinimalRuntime;
 
 /// The type of an account identifier.
-pub type AccountId<R> = <R as frame_system::Config>::AccountId;
+pub type AccountIdFor<R> = <R as frame_system::Config>::AccountId;
 
 /// A runtime to use.
 ///
@@ -40,5 +40,5 @@ pub trait Runtime:
     }
 
     /// Default actor for the runtime.
-    fn default_actor() -> AccountId<Self>;
+    fn default_actor() -> AccountIdFor<Self>;
 }

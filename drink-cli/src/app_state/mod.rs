@@ -18,7 +18,7 @@ mod user_input;
 
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct ChainInfo {
-    pub block_height: u64,
+    pub block_height: u32,
     pub actor: AccountId32,
     pub gas_limit: Weight,
 }
@@ -42,7 +42,7 @@ pub enum Mode {
 
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct UiState {
-    pub pwd: PathBuf,
+    pub cwd: PathBuf,
     pub mode: Mode,
 
     pub user_input: UserInput,
@@ -52,12 +52,12 @@ pub struct UiState {
 }
 
 impl UiState {
-    pub fn new(pwd_override: Option<PathBuf>) -> Self {
-        let pwd = pwd_override
+    pub fn new(cwd_override: Option<PathBuf>) -> Self {
+        let cwd = cwd_override
             .unwrap_or_else(|| env::current_dir().expect("Failed to get current directory"));
 
         UiState {
-            pwd,
+            cwd,
             mode: Default::default(),
             user_input: Default::default(),
             output: Default::default(),
@@ -80,11 +80,11 @@ pub struct AppState {
 }
 
 impl AppState {
-    pub fn new(pwd_override: Option<PathBuf>) -> Self {
+    pub fn new(cwd_override: Option<PathBuf>) -> Self {
         AppState {
             session: Session::new(None).expect("Failed to create drinking session"),
             chain_info: Default::default(),
-            ui_state: UiState::new(pwd_override),
+            ui_state: UiState::new(cwd_override),
             contracts: Default::default(),
         }
     }

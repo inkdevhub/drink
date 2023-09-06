@@ -28,9 +28,9 @@ use crate::{
 
 type Terminal = ratatui::Terminal<CrosstermBackend<Stdout>>;
 
-pub fn run_ui(pwd: Option<PathBuf>) -> Result<()> {
+pub fn run_ui(cwd: Option<PathBuf>) -> Result<()> {
     let mut terminal = setup_dedicated_terminal()?;
-    let app_result = run_ui_app(&mut terminal, pwd);
+    let app_result = run_ui_app(&mut terminal, cwd);
     restore_original_terminal(terminal)?;
     app_result
 }
@@ -53,8 +53,8 @@ fn restore_original_terminal(mut terminal: Terminal) -> Result<()> {
     terminal.show_cursor().map_err(|e| anyhow!(e))
 }
 
-fn run_ui_app(terminal: &mut Terminal, pwd_override: Option<PathBuf>) -> Result<()> {
-    let mut app_state = AppState::new(pwd_override);
+fn run_ui_app(terminal: &mut Terminal, cwd_override: Option<PathBuf>) -> Result<()> {
+    let mut app_state = AppState::new(cwd_override);
 
     loop {
         terminal.draw(|f| layout(f, &mut app_state))?;

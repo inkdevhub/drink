@@ -7,7 +7,7 @@ use pallet_contracts_primitives::{
 };
 
 use crate::{
-    runtime::{AccountId, Runtime},
+    runtime::{AccountIdFor, Runtime},
     EventRecordOf, Sandbox,
 };
 
@@ -31,10 +31,10 @@ pub trait ContractApi<R: Runtime> {
         value: u128,
         data: Vec<u8>,
         salt: Vec<u8>,
-        origin: AccountId<R>,
+        origin: AccountIdFor<R>,
         gas_limit: Weight,
         storage_deposit_limit: Option<u128>,
-    ) -> ContractInstantiateResult<AccountId<R>, u128, EventRecordOf<R>>;
+    ) -> ContractInstantiateResult<AccountIdFor<R>, u128, EventRecordOf<R>>;
 
     /// Interface for `bare_upload_code` contract call.
     ///
@@ -46,7 +46,7 @@ pub trait ContractApi<R: Runtime> {
     fn upload_contract(
         &mut self,
         contract_bytes: Vec<u8>,
-        origin: AccountId<R>,
+        origin: AccountIdFor<R>,
         storage_deposit_limit: Option<u128>,
     ) -> CodeUploadResult<<R as frame_system::Config>::Hash, u128>;
 
@@ -62,10 +62,10 @@ pub trait ContractApi<R: Runtime> {
     /// * `storage_deposit_limit` - The storage deposit limit for the contract call.
     fn call_contract(
         &mut self,
-        address: AccountId<R>,
+        address: AccountIdFor<R>,
         value: u128,
         data: Vec<u8>,
-        origin: AccountId<R>,
+        origin: AccountIdFor<R>,
         gas_limit: Weight,
         storage_deposit_limit: Option<u128>,
     ) -> ContractExecResult<u128, EventRecordOf<R>>;
@@ -78,10 +78,10 @@ impl<R: Runtime> ContractApi<R> for Sandbox<R> {
         value: u128,
         data: Vec<u8>,
         salt: Vec<u8>,
-        origin: AccountId<R>,
+        origin: AccountIdFor<R>,
         gas_limit: Weight,
         storage_deposit_limit: Option<u128>,
-    ) -> ContractInstantiateResult<AccountId<R>, u128, EventRecordOf<R>> {
+    ) -> ContractInstantiateResult<AccountIdFor<R>, u128, EventRecordOf<R>> {
         self.externalities.execute_with(|| {
             pallet_contracts::Pallet::<R>::bare_instantiate(
                 origin,
@@ -100,7 +100,7 @@ impl<R: Runtime> ContractApi<R> for Sandbox<R> {
     fn upload_contract(
         &mut self,
         contract_bytes: Vec<u8>,
-        origin: AccountId<R>,
+        origin: AccountIdFor<R>,
         storage_deposit_limit: Option<u128>,
     ) -> CodeUploadResult<<R as frame_system::Config>::Hash, u128> {
         self.externalities.execute_with(|| {
@@ -115,10 +115,10 @@ impl<R: Runtime> ContractApi<R> for Sandbox<R> {
 
     fn call_contract(
         &mut self,
-        address: AccountId<R>,
+        address: AccountIdFor<R>,
         value: u128,
         data: Vec<u8>,
-        origin: AccountId<R>,
+        origin: AccountIdFor<R>,
         gas_limit: Weight,
         storage_deposit_limit: Option<u128>,
     ) -> ContractExecResult<u128, EventRecordOf<R>> {

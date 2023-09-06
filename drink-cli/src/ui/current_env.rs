@@ -17,7 +17,7 @@ Block height: {}
 Deployed contracts: {}
 Current actor: {}
 Current contract: {{ {} }}"#,
-        app_state.ui_state.pwd.to_str().unwrap(),
+        app_state.ui_state.cwd.to_str().unwrap(),
         app_state.chain_info.block_height,
         app_state.contracts.count(),
         app_state.chain_info.actor,

@@ -21,7 +21,7 @@ use pallet_contracts::{DefaultAddressGenerator, Frame, Schedule};
 pub use pallet_timestamp;
 
 use crate::{
-    runtime::{pallet_contracts_debugging::DrinkDebug, AccountId},
+    runtime::{pallet_contracts_debugging::DrinkDebug, AccountIdFor},
     Runtime,
 };
 
@@ -169,7 +169,7 @@ impl Runtime for MinimalRuntime {
         Ok(System::finalize().hash())
     }
 
-    fn default_actor() -> AccountId<Self> {
+    fn default_actor() -> AccountIdFor<Self> {
         AccountId32::new([1u8; 32])
     }
 }
