@@ -326,6 +326,11 @@ impl<R: Runtime> Session<R> {
         self.deploy_returns.last().cloned()
     }
 
+    /// Returns the addresses of all deployed contracts in the order of deploying.
+    pub fn deployed_contracts(&self) -> Vec<AccountIdFor<R>> {
+        self.deploy_returns.clone()
+    }
+
     /// Returns the last result of calling a contract.
     pub fn last_call_result(&self) -> Option<&ContractExecResult<u128, EventRecordOf<R>>> {
         self.call_results.last()
