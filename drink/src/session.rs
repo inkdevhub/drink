@@ -3,7 +3,7 @@
 use std::{mem, rc::Rc};
 
 pub use contract_transcode;
-use contract_transcode::{ContractMessageTranscoder, Value};
+use contract_transcode::ContractMessageTranscoder;
 use frame_support::{sp_runtime::DispatchError, weights::Weight};
 use pallet_contracts_primitives::{ContractExecResult, ContractInstantiateResult};
 use thiserror::Error;
@@ -115,7 +115,7 @@ pub struct Session<R: Runtime> {
     deploy_results: Vec<ContractInstantiateResult<AccountIdFor<R>, u128, EventRecordOf<R>>>,
     deploy_returns: Vec<AccountIdFor<R>>,
     call_results: Vec<ContractExecResult<u128, EventRecordOf<R>>>,
-    call_returns: Vec<Value>,
+    call_returns: Vec<Vec<u8>>,
 }
 
 impl<R: Runtime> Session<R> {
@@ -248,7 +248,7 @@ impl<R: Runtime> Session<R> {
     }
 
     /// Calls the last deployed contract. In case of a successful call, returns the decoded result.
-    pub fn call(&mut self, message: &str, args: &[String]) -> Result<Value, SessionError> {
+    pub fn call(&mut self, message: &str, args: &[String]) -> Result<Vec<u8>, SessionError> {
         self.call_internal(None, message, args)
     }
 
@@ -259,7 +259,7 @@ impl<R: Runtime> Session<R> {
         address: AccountIdFor<R>,
         message: &str,
         args: &[String],
-    ) -> Result<Value, SessionError> {
+    ) -> Result<Vec<u8>, SessionError> {
         self.call_internal(Some(address), message, args)
     }
 
@@ -268,7 +268,7 @@ impl<R: Runtime> Session<R> {
         address: Option<AccountIdFor<R>>,
         message: &str,
         args: &[String],
-    ) -> Result<Value, SessionError> {
+    ) -> Result<Vec<u8>, SessionError> {
         let data = self
             .transcoder
             .as_ref()
@@ -297,15 +297,9 @@ impl<R: Runtime> Session<R> {
         let ret = match &result.result {
             Ok(exec_result) if exec_result.did_revert() => Err(SessionError::CallReverted),
             Ok(exec_result) => {
-                let decoded = self
-                    .transcoder
-                    .as_ref()
-                    .ok_or(SessionError::NoTranscoder)?
-                    .decode_return(message, &mut exec_result.data.as_slice())
-                    .map_err(|err| SessionError::Decoding(err.to_string()))?;
-
-                self.call_returns.push(decoded.clone());
-                Ok(decoded)
+                let encoded = exec_result.data.clone();
+                self.call_returns.push(encoded.clone());
+                Ok(encoded)
             }
             Err(err) => Err(SessionError::CallFailed(*err)),
         };
@@ -336,8 +330,8 @@ impl<R: Runtime> Session<R> {
         self.call_results.last()
     }
 
-    /// Returns the last value returned from calling a contract.
-    pub fn last_call_return(&self) -> Option<Value> {
+    /// Returns the last value (in the encoded form) returned from calling a contract.
+    pub fn last_call_return(&self) -> Option<Vec<u8>> {
         self.call_returns.last().cloned()
     }
 

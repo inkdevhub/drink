@@ -36,11 +36,9 @@ mod tests {
 
     use drink::{
         runtime::MinimalRuntime,
-        session::{
-            contract_transcode::{ContractMessageTranscoder, Tuple, Value},
-            Session,
-        },
+        session::{contract_transcode::ContractMessageTranscoder, Session},
     };
+    use scale::Decode;
 
     fn transcoder() -> Option<Rc<ContractMessageTranscoder>> {
         Some(Rc::new(
@@ -53,10 +51,6 @@ mod tests {
         fs::read("./target/ink/flipper.wasm").expect("Failed to find or read contract file")
     }
 
-    fn ok(v: Value) -> Value {
-        Value::Tuple(Tuple::new(Some("Ok"), vec![v]))
-    }
-
     #[test]
     fn initialization() -> Result<(), Box<dyn Error>> {
         let init_value = Session::<MinimalRuntime>::new(transcoder())?
@@ -64,8 +58,10 @@ mod tests {
             .call_and("get", &[])?
             .last_call_return()
             .expect("Call was successful");
+        let init_value =
+            Result::<bool, ()>::decode(&mut init_value.as_slice()).expect("Failed to decode bool");
 
-        assert_eq!(init_value, ok(Value::Bool(true)));
+        assert_eq!(init_value, Ok(true));
 
         Ok(())
     }
@@ -80,8 +76,10 @@ mod tests {
             .call_and("get", &[])?
             .last_call_return()
             .expect("Call was successful");
+        let init_value =
+            Result::<bool, ()>::decode(&mut init_value.as_slice()).expect("Failed to decode bool");
 
-        assert_eq!(init_value, ok(Value::Bool(false)));
+        assert_eq!(init_value, Ok(false));
 
         Ok(())
     }
