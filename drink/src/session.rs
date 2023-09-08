@@ -364,7 +364,7 @@ impl<R: Runtime> Session<R> {
         self.call_returns.last().cloned()
     }
 
-    /// Returns the last value (in the encoded form) returned from calling a contract.
+    /// Returns the last value (in the decoded form) returned from calling a contract.
     ///
     /// Returns `None` if there has been no call yet, or if decoding failed.
     pub fn last_call_return<T: Decode>(&self) -> Option<MessageResult<T>> {
