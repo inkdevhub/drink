@@ -36,10 +36,7 @@ mod tests {
 
     use drink::{
         runtime::MinimalRuntime,
-        session::{
-            contract_transcode::{ContractMessageTranscoder, Tuple, Value},
-            Session,
-        },
+        session::{contract_transcode::ContractMessageTranscoder, Session},
     };
 
     fn transcoder() -> Option<Rc<ContractMessageTranscoder>> {
@@ -53,35 +50,33 @@ mod tests {
         fs::read("./target/ink/flipper.wasm").expect("Failed to find or read contract file")
     }
 
-    fn ok(v: Value) -> Value {
-        Value::Tuple(Tuple::new(Some("Ok"), vec![v]))
-    }
-
     #[test]
     fn initialization() -> Result<(), Box<dyn Error>> {
-        let init_value = Session::<MinimalRuntime>::new(transcoder())?
+        let init_value: bool = Session::<MinimalRuntime>::new(transcoder())?
             .deploy_and(bytes(), "new", &["true".to_string()], vec![])?
             .call_and("get", &[])?
             .last_call_return()
+            .expect("Call was successful, so there should be a return")
             .expect("Call was successful");
 
-        assert_eq!(init_value, ok(Value::Bool(true)));
+        assert_eq!(init_value, true);
 
         Ok(())
     }
 
     #[test]
     fn flipping() -> Result<(), Box<dyn Error>> {
-        let init_value = Session::<MinimalRuntime>::new(transcoder())?
+        let init_value: bool = Session::<MinimalRuntime>::new(transcoder())?
             .deploy_and(bytes(), "new", &["true".to_string()], vec![])?
             .call_and("flip", &[])?
             .call_and("flip", &[])?
             .call_and("flip", &[])?
             .call_and("get", &[])?
             .last_call_return()
+            .expect("Call was successful, so there should be a return")
             .expect("Call was successful");
 
-        assert_eq!(init_value, ok(Value::Bool(false)));
+        assert_eq!(init_value, false);
 
         Ok(())
     }
