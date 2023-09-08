@@ -3,6 +3,8 @@
 use std::time::SystemTime;
 
 use frame_support::{
+    dispatch::Dispatchable,
+    metadata::RuntimeMetadataPrefixed,
     parameter_types,
     sp_runtime::{
         testing::H256,
@@ -14,7 +16,7 @@ use frame_support::{
 };
 // Re-export all pallets.
 pub use frame_system;
-use frame_system::pallet_prelude::BlockNumberFor;
+use frame_system::{pallet_prelude::BlockNumberFor, Config};
 pub use pallet_balances;
 pub use pallet_contracts;
 use pallet_contracts::{DefaultAddressGenerator, Frame, Schedule};
@@ -171,5 +173,15 @@ impl Runtime for MinimalRuntime {
 
     fn default_actor() -> AccountIdFor<Self> {
         AccountId32::new([1u8; 32])
+    }
+
+    fn get_metadata() -> RuntimeMetadataPrefixed {
+        Self::metadata()
+    }
+
+    fn convert_account_to_origin(
+        account: AccountIdFor<Self>,
+    ) -> <<Self as Config>::RuntimeCall as Dispatchable>::RuntimeOrigin {
+        Some(account).into()
     }
 }
