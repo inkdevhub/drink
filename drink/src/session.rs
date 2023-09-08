@@ -67,9 +67,11 @@ pub enum SessionError {
     parity_scale_codec::Encode,
     parity_scale_codec::Decode,
     scale_info::TypeInfo,
+    Error,
 )]
 pub enum LangError {
     /// Failed to read execution input for the dispatchable.
+    #[error("Failed to read execution input for the dispatchable.")]
     CouldNotReadInput = 1u32,
 }
 
