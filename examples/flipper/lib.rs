@@ -38,7 +38,6 @@ mod tests {
         runtime::MinimalRuntime,
         session::{contract_transcode::ContractMessageTranscoder, Session},
     };
-    use scale::Decode;
 
     fn transcoder() -> Option<Rc<ContractMessageTranscoder>> {
         Some(Rc::new(
@@ -53,33 +52,31 @@ mod tests {
 
     #[test]
     fn initialization() -> Result<(), Box<dyn Error>> {
-        let init_value = Session::<MinimalRuntime>::new(transcoder())?
+        let init_value: bool = Session::<MinimalRuntime>::new(transcoder())?
             .deploy_and(bytes(), "new", &["true".to_string()], vec![])?
             .call_and("get", &[])?
             .last_call_return()
+            .expect("Call was successful, so there should be a return")
             .expect("Call was successful");
-        let init_value =
-            Result::<bool, ()>::decode(&mut init_value.as_slice()).expect("Failed to decode bool");
 
-        assert_eq!(init_value, Ok(true));
+        assert_eq!(init_value, true);
 
         Ok(())
     }
 
     #[test]
     fn flipping() -> Result<(), Box<dyn Error>> {
-        let init_value = Session::<MinimalRuntime>::new(transcoder())?
+        let init_value: bool = Session::<MinimalRuntime>::new(transcoder())?
             .deploy_and(bytes(), "new", &["true".to_string()], vec![])?
             .call_and("flip", &[])?
             .call_and("flip", &[])?
             .call_and("flip", &[])?
             .call_and("get", &[])?
             .last_call_return()
+            .expect("Call was successful, so there should be a return")
             .expect("Call was successful");
-        let init_value =
-            Result::<bool, ()>::decode(&mut init_value.as_slice()).expect("Failed to decode bool");
 
-        assert_eq!(init_value, Ok(false));
+        assert_eq!(init_value, false);
 
         Ok(())
     }
