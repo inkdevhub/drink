@@ -12,6 +12,11 @@ pub use minimal::MinimalRuntime;
 /// The type of an account identifier.
 pub type AccountIdFor<R> = <R as frame_system::Config>::AccountId;
 
+/// Export pallets that are used in the runtime.
+pub use frame_system;
+pub use pallet_balances;
+pub use pallet_contracts;
+
 /// A runtime to use.
 ///
 /// Must contain at least system, balances and contracts pallets.
