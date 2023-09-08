@@ -4,6 +4,7 @@
 pub mod minimal;
 pub mod pallet_contracts_debugging;
 
+use frame_support::metadata::RuntimeMetadataPrefixed;
 use frame_support::sp_runtime::Storage;
 use frame_system::pallet_prelude::BlockNumberFor;
 pub use minimal::MinimalRuntime;
@@ -41,4 +42,7 @@ pub trait Runtime:
 
     /// Default actor for the runtime.
     fn default_actor() -> AccountIdFor<Self>;
+
+    /// Metadata of the runtime.
+    fn get_metadata() -> RuntimeMetadataPrefixed;
 }

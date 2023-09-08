@@ -2,6 +2,7 @@
 
 use std::time::SystemTime;
 
+use frame_support::metadata::RuntimeMetadataPrefixed;
 use frame_support::{
     parameter_types,
     sp_runtime::{
@@ -171,5 +172,9 @@ impl Runtime for MinimalRuntime {
 
     fn default_actor() -> AccountIdFor<Self> {
         AccountId32::new([1u8; 32])
+    }
+
+    fn get_metadata() -> RuntimeMetadataPrefixed {
+        Self::metadata()
     }
 }
