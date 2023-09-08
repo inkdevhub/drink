@@ -27,8 +27,8 @@ clap = { version = "4.3.4" }
 contract-build = { version = "3.0.1" }
 contract-transcode = { version = "3.0.1" }
 crossterm = { version = "0.26.0" }
-parity-scale-codec = { version = "=3.6.5" }
-parity-scale-codec-derive = { version = "=3.6.5" }
+parity-scale-codec = { version = "3.4" }
+parity-scale-codec-derive = { version = "3.4" }
 ratatui = { version = "0.21.0" }
 scale-info = { version = "2.5.0" }
 thiserror = { version = "1.0.40" }
