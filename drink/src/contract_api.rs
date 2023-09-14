@@ -1,6 +1,7 @@
 //! Contracts API.
 
 use frame_support::weights::Weight;
+use frame_system::Config;
 use pallet_contracts::{CollectEvents, DebugInfo, Determinism};
 use pallet_contracts_primitives::{
     Code, CodeUploadResult, ContractExecResult, ContractInstantiateResult,
@@ -10,10 +11,11 @@ use crate::{
     runtime::{AccountIdFor, Runtime},
     EventRecordOf, Sandbox,
 };
+use parity_scale_codec::Decode as _;
 
 /// Interface for contract-related operations.
 pub trait ContractApi<R: Runtime> {
-    /// Interface for `bare_instantiate` contract call.
+    /// Interface for `bare_instantiate` contract call with a simultaneous upload.
     ///
     /// # Arguments
     ///
@@ -28,6 +30,29 @@ pub trait ContractApi<R: Runtime> {
     fn deploy_contract(
         &mut self,
         contract_bytes: Vec<u8>,
+        value: u128,
+        data: Vec<u8>,
+        salt: Vec<u8>,
+        origin: AccountIdFor<R>,
+        gas_limit: Weight,
+        storage_deposit_limit: Option<u128>,
+    ) -> ContractInstantiateResult<AccountIdFor<R>, u128, EventRecordOf<R>>;
+
+    /// Interface for `bare_instantiate` contract call for a previously uploaded contract.
+    ///
+    /// # Arguments
+    ///
+    /// * `code_hash` - The code hash of the contract to instantiate.
+    /// * `value` - The number of tokens to be transferred to the contract.
+    /// * `data` - The input data to be passed to the contract (including constructor name).
+    /// * `salt` - The salt to be used for contract address derivation.
+    /// * `origin` - The sender of the contract call.
+    /// * `gas_limit` - The gas limit for the contract call.
+    /// * `storage_deposit_limit` - The storage deposit limit for the contract call.
+    #[allow(clippy::too_many_arguments)]
+    fn instantiate_contract(
+        &mut self,
+        code_hash: Vec<u8>,
         value: u128,
         data: Vec<u8>,
         salt: Vec<u8>,
@@ -89,6 +114,34 @@ impl<R: Runtime> ContractApi<R> for Sandbox<R> {
                 gas_limit,
                 storage_deposit_limit,
                 Code::Upload(contract_bytes),
+                data,
+                salt,
+                DebugInfo::UnsafeDebug,
+                CollectEvents::UnsafeCollect,
+            )
+        })
+    }
+
+    fn instantiate_contract(
+        &mut self,
+        code_hash: Vec<u8>,
+        value: u128,
+        data: Vec<u8>,
+        salt: Vec<u8>,
+        origin: AccountIdFor<R>,
+        gas_limit: Weight,
+        storage_deposit_limit: Option<u128>,
+    ) -> ContractInstantiateResult<AccountIdFor<R>, u128, EventRecordOf<R>> {
+        let mut code_hash = &code_hash[..];
+        self.externalities.execute_with(|| {
+            pallet_contracts::Pallet::<R>::bare_instantiate(
+                origin,
+                value,
+                gas_limit,
+                storage_deposit_limit,
+                Code::Existing(
+                    <R as Config>::Hash::decode(&mut code_hash).expect("Invalid code hash"),
+                ),
                 data,
                 salt,
                 DebugInfo::UnsafeDebug,
