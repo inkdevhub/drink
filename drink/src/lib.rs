@@ -16,7 +16,10 @@ use frame_support::{
     sp_io::TestExternalities,
     sp_runtime::{traits::One, BuildStorage},
 };
-pub use frame_support::{sp_runtime::AccountId32, weights::Weight};
+pub use frame_support::{
+    sp_runtime::{AccountId32, DispatchError},
+    weights::Weight,
+};
 use frame_system::{pallet_prelude::BlockNumberFor, EventRecord, GenesisConfig};
 
 use crate::{
