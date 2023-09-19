@@ -127,10 +127,10 @@ pub type MessageResult<T> = Result<T, LangError>;
 /// use drink::runtime::MinimalRuntime;
 ///
 /// let mut session = Session::<MinimalRuntime>::new(Some(get_transcoder()))?;
-/// let _address = session.deploy(contract_bytes(), "new", &[], vec![])?;
-/// session.call("foo", &[])?;
+/// let _address = session.deploy(contract_bytes(), "new", &[], vec![], None)?;
+/// session.call("foo", &[], None)?;
 /// session.set_actor(bob());
-/// session.call("bar", &[])?;
+/// session.call("bar", &[], None)?;
 /// # Ok(()) }
 /// ```
 pub struct Session<R: Runtime> {
