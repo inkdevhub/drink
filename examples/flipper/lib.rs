@@ -53,8 +53,8 @@ mod tests {
     #[test]
     fn initialization() -> Result<(), Box<dyn Error>> {
         let init_value: bool = Session::<MinimalRuntime>::new(transcoder())?
-            .deploy_and(bytes(), "new", &["true".to_string()], vec![])?
-            .call_and("get", &[])?
+            .deploy_and(bytes(), "new", &["true".to_string()], vec![], None)?
+            .call_and("get", &[], None)?
             .last_call_return()
             .expect("Call was successful, so there should be a return")
             .expect("Call was successful");
@@ -67,11 +67,11 @@ mod tests {
     #[test]
     fn flipping() -> Result<(), Box<dyn Error>> {
         let init_value: bool = Session::<MinimalRuntime>::new(transcoder())?
-            .deploy_and(bytes(), "new", &["true".to_string()], vec![])?
-            .call_and("flip", &[])?
-            .call_and("flip", &[])?
-            .call_and("flip", &[])?
-            .call_and("get", &[])?
+            .deploy_and(bytes(), "new", &["true".to_string()], vec![], None)?
+            .call_and("flip", &[], None)?
+            .call_and("flip", &[], None)?
+            .call_and("flip", &[], None)?
+            .call_and("get", &[], None)?
             .last_call_return()
             .expect("Call was successful, so there should be a return")
             .expect("Call was successful");

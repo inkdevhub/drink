@@ -149,11 +149,11 @@ mod tests {
         let mut session = Session::<MinimalRuntime>::new(Some(transcoder()))?;
         session.override_debug_handle(DebugExt(Box::new(TestDebugger {})));
 
-        let outer_address = session.deploy(bytes(), "new", &[], vec![1])?;
+        let outer_address = session.deploy(bytes(), "new", &[], vec![1], None)?;
         OUTER_ADDRESS.with(|a| *a.borrow_mut() = Some(outer_address.clone()));
-        let middle_address = session.deploy(bytes(), "new", &[], vec![2])?;
+        let middle_address = session.deploy(bytes(), "new", &[], vec![2], None)?;
         MIDDLE_ADDRESS.with(|a| *a.borrow_mut() = Some(middle_address.clone()));
-        let inner_address = session.deploy(bytes(), "new", &[], vec![3])?;
+        let inner_address = session.deploy(bytes(), "new", &[], vec![3], None)?;
         INNER_ADDRESS.with(|a| *a.borrow_mut() = Some(inner_address.clone()));
 
         let value = session.call_with_address(
@@ -164,6 +164,7 @@ mod tests {
                 inner_address.to_string(),
                 "7".to_string(),
             ],
+            None,
         )?;
 
         assert_eq!(value, ok(Value::UInt(22)));
