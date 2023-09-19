@@ -103,10 +103,10 @@ pub type MessageResult<T> = Result<T, LangError>;
 /// use drink::runtime::MinimalRuntime;
 ///
 /// Session::<MinimalRuntime>::new(Some(get_transcoder()))?
-///     .deploy_and(contract_bytes(), "new", &[], vec![])?
-///     .call_and("foo", &[])?
+///     .deploy_and(contract_bytes(), "new", &[], vec![], None)?
+///     .call_and("foo", &[], None)?
 ///     .with_actor(bob())
-///     .call_and("bar", &[])?;
+///     .call_and("bar", &[], None)?;
 /// # Ok(()) }
 /// ```
 ///
