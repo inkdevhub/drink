@@ -19,7 +19,7 @@ homepage = "https://github.com/Cardinal-Cryptography/drink"
 license = "Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/Cardinal-Cryptography/drink"
-version = "0.1.8"
+version = "0.1.9"
 
 [workspace.dependencies]
 anyhow = { version = "1.0.71" }
@@ -48,4 +48,4 @@ sp-runtime-interface = { version = "18.0.0" }
 
 # Local dependencies
 
-drink = { version = "0.1.7", path = "drink" }
+drink = { version = "0.1.9", path = "drink" }
