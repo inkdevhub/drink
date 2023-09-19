@@ -76,7 +76,7 @@ pub fn deploy(app_state: &mut AppState, constructor: String, args: Vec<String>, 
     app_state.session.set_transcoder(Some(transcoder.clone()));
     match app_state
         .session
-        .deploy(contract_bytes, &constructor, args.as_slice(), salt)
+        .deploy(contract_bytes, &constructor, args.as_slice(), salt, None)
     {
         Ok(address) => {
             app_state.contracts.add(Contract {
@@ -108,7 +108,7 @@ pub fn call(app_state: &mut AppState, message: String, args: Vec<String>) {
     let address = contract.address.clone();
     match app_state
         .session
-        .call_with_address(address, &message, &args)
+        .call_with_address(address, &message, &args, None)
     {
         Ok(result) => app_state.print(&format!("Result: {:?}", result)),
         Err(err) => app_state.print_error(&format!("Failed to call contract\n{err}")),
