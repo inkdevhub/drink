@@ -68,3 +68,8 @@ jobs:
           cargo contract build --release
           cargo test --release
           popd
+
+          pushd examples/cross-contract-call-tracing
+          cargo contract build --release
+          cargo test --release
+          popd

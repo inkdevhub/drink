@@ -62,7 +62,6 @@ mod contract {
 
 #[cfg(test)]
 mod tests {
-    use ink::storage::traits::Storable;
     use std::{cell::RefCell, error::Error, fs, path::PathBuf, rc::Rc};
 
     use drink::{
@@ -71,11 +70,12 @@ mod tests {
             MinimalRuntime,
         },
         session::{
-            contract_transcode::{ContractMessageTranscoder, Tuple, Value},
+            contract_transcode::{ContractMessageTranscoder, Value},
             Session,
         },
         AccountId32,
     };
+    use ink::storage::traits::Storable;
 
     fn transcoder() -> Rc<ContractMessageTranscoder> {
         let path = PathBuf::from("target/ink/cross_contract_call_tracing.json");
@@ -85,10 +85,6 @@ mod tests {
     fn bytes() -> Vec<u8> {
         let path = "target/ink/cross_contract_call_tracing.wasm";
         fs::read(path).expect("Failed to find or read contract file")
-    }
-
-    fn ok(v: Value) -> Value {
-        Value::Tuple(Tuple::new(Some("Ok"), vec![v]))
     }
 
     thread_local! {
@@ -149,11 +145,11 @@ mod tests {
         let mut session = Session::<MinimalRuntime>::new(Some(transcoder()))?;
         session.override_debug_handle(DebugExt(Box::new(TestDebugger {})));
 
-        let outer_address = session.deploy(bytes(), "new", &[], vec![1])?;
+        let outer_address = session.deploy(bytes(), "new", &[], vec![1], None)?;
         OUTER_ADDRESS.with(|a| *a.borrow_mut() = Some(outer_address.clone()));
-        let middle_address = session.deploy(bytes(), "new", &[], vec![2])?;
+        let middle_address = session.deploy(bytes(), "new", &[], vec![2], None)?;
         MIDDLE_ADDRESS.with(|a| *a.borrow_mut() = Some(middle_address.clone()));
-        let inner_address = session.deploy(bytes(), "new", &[], vec![3])?;
+        let inner_address = session.deploy(bytes(), "new", &[], vec![3], None)?;
         INNER_ADDRESS.with(|a| *a.borrow_mut() = Some(inner_address.clone()));
 
         let value = session.call_with_address(
@@ -164,9 +160,11 @@ mod tests {
                 inner_address.to_string(),
                 "7".to_string(),
             ],
+            None,
         )?;
+        let value = u32::decode(&mut value.as_slice()).expect("Failed to decode return value");
 
-        assert_eq!(value, ok(Value::UInt(22)));
+        assert_eq!(value, value);
 
         Ok(())
     }

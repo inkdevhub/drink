@@ -17,8 +17,10 @@ use crate::{
     EventRecordOf, Sandbox, DEFAULT_GAS_LIMIT,
 };
 
-const ZERO_TRANSFER: u128 = 0;
-const DEFAULT_STORAGE_DEPOSIT_LIMIT: Option<u128> = None;
+type Balance = u128;
+
+const ZERO_TRANSFER: Balance = 0;
+const DEFAULT_STORAGE_DEPOSIT_LIMIT: Option<Balance> = None;
 
 /// Session specific errors.
 #[derive(Error, Debug)]
@@ -101,10 +103,10 @@ pub type MessageResult<T> = Result<T, LangError>;
 /// use drink::runtime::MinimalRuntime;
 ///
 /// Session::<MinimalRuntime>::new(Some(get_transcoder()))?
-///     .deploy_and(contract_bytes(), "new", &[], vec![])?
-///     .call_and("foo", &[])?
+///     .deploy_and(contract_bytes(), "new", &[], vec![], None)?
+///     .call_and("foo", &[], None)?
 ///     .with_actor(bob())
-///     .call_and("bar", &[])?;
+///     .call_and("bar", &[], None)?;
 /// # Ok(()) }
 /// ```
 ///
@@ -125,10 +127,10 @@ pub type MessageResult<T> = Result<T, LangError>;
 /// use drink::runtime::MinimalRuntime;
 ///
 /// let mut session = Session::<MinimalRuntime>::new(Some(get_transcoder()))?;
-/// let _address = session.deploy(contract_bytes(), "new", &[], vec![])?;
-/// session.call("foo", &[])?;
+/// let _address = session.deploy(contract_bytes(), "new", &[], vec![], None)?;
+/// session.call("foo", &[], None)?;
 /// session.set_actor(bob());
-/// session.call("bar", &[])?;
+/// session.call("bar", &[], None)?;
 /// # Ok(()) }
 /// ```
 pub struct Session<R: Runtime> {
@@ -139,9 +141,9 @@ pub struct Session<R: Runtime> {
 
     transcoder: Option<Rc<ContractMessageTranscoder>>,
 
-    deploy_results: Vec<ContractInstantiateResult<AccountIdFor<R>, u128, EventRecordOf<R>>>,
+    deploy_results: Vec<ContractInstantiateResult<AccountIdFor<R>, Balance, EventRecordOf<R>>>,
     deploy_returns: Vec<AccountIdFor<R>>,
-    call_results: Vec<ContractExecResult<u128, EventRecordOf<R>>>,
+    call_results: Vec<ContractExecResult<Balance, EventRecordOf<R>>>,
     call_returns: Vec<Vec<u8>>,
 }
 
@@ -203,27 +205,29 @@ impl<R: Runtime> Session<R> {
         &mut self.sandbox
     }
 
-    /// Deploys a contract with a given constructor, arguments and salt. In case of a success,
-    /// returns `self`.
+    /// Deploys a contract with a given constructor, arguments, salt and endowment. In case of
+    /// success, returns `self`.
     pub fn deploy_and(
         mut self,
         contract_bytes: Vec<u8>,
         constructor: &str,
         args: &[String],
         salt: Vec<u8>,
+        endowment: Option<Balance>,
     ) -> Result<Self, SessionError> {
-        self.deploy(contract_bytes, constructor, args, salt)
+        self.deploy(contract_bytes, constructor, args, salt, endowment)
             .map(|_| self)
     }
 
-    /// Deploys a contract with a given constructor, arguments and salt. In case of a success,
-    /// returns the address of the deployed contract.
+    /// Deploys a contract with a given constructor, arguments, salt and endowment. In case of
+    /// success, returns the address of the deployed contract.
     pub fn deploy(
         &mut self,
         contract_bytes: Vec<u8>,
         constructor: &str,
         args: &[String],
         salt: Vec<u8>,
+        endowment: Option<Balance>,
     ) -> Result<AccountIdFor<R>, SessionError> {
         let data = self
             .transcoder
@@ -234,7 +238,7 @@ impl<R: Runtime> Session<R> {
 
         let result = self.sandbox.deploy_contract(
             contract_bytes,
-            ZERO_TRANSFER,
+            endowment.unwrap_or(ZERO_TRANSFER),
             data,
             salt,
             self.actor.clone(),
@@ -259,8 +263,14 @@ impl<R: Runtime> Session<R> {
     }
 
     /// Calls a contract with a given address. In case of a successful call, returns `self`.
-    pub fn call_and(mut self, message: &str, args: &[String]) -> Result<Self, SessionError> {
-        self.call_internal(None, message, args).map(|_| self)
+    pub fn call_and(
+        mut self,
+        message: &str,
+        args: &[String],
+        endowment: Option<Balance>,
+    ) -> Result<Self, SessionError> {
+        self.call_internal(None, message, args, endowment)
+            .map(|_| self)
     }
 
     /// Calls the last deployed contract. In case of a successful call, returns `self`.
@@ -269,14 +279,20 @@ impl<R: Runtime> Session<R> {
         address: AccountIdFor<R>,
         message: &str,
         args: &[String],
+        endowment: Option<Balance>,
     ) -> Result<Self, SessionError> {
-        self.call_internal(Some(address), message, args)
+        self.call_internal(Some(address), message, args, endowment)
             .map(|_| self)
     }
 
     /// Calls the last deployed contract. In case of a successful call, returns the decoded result.
-    pub fn call(&mut self, message: &str, args: &[String]) -> Result<Vec<u8>, SessionError> {
-        self.call_internal(None, message, args)
+    pub fn call(
+        &mut self,
+        message: &str,
+        args: &[String],
+        endowment: Option<Balance>,
+    ) -> Result<Vec<u8>, SessionError> {
+        self.call_internal(None, message, args, endowment)
     }
 
     /// Calls a contract with a given address. In case of a successful call, returns the decoded
@@ -286,8 +302,9 @@ impl<R: Runtime> Session<R> {
         address: AccountIdFor<R>,
         message: &str,
         args: &[String],
+        endowment: Option<Balance>,
     ) -> Result<Vec<u8>, SessionError> {
-        self.call_internal(Some(address), message, args)
+        self.call_internal(Some(address), message, args, endowment)
     }
 
     fn call_internal(
@@ -295,6 +312,7 @@ impl<R: Runtime> Session<R> {
         address: Option<AccountIdFor<R>>,
         message: &str,
         args: &[String],
+        endowment: Option<Balance>,
     ) -> Result<Vec<u8>, SessionError> {
         let data = self
             .transcoder
@@ -314,7 +332,7 @@ impl<R: Runtime> Session<R> {
 
         let result = self.sandbox.call_contract(
             address,
-            ZERO_TRANSFER,
+            endowment.unwrap_or(ZERO_TRANSFER),
             data,
             self.actor.clone(),
             self.gas_limit,
@@ -338,7 +356,7 @@ impl<R: Runtime> Session<R> {
     /// Returns the last result of deploying a contract.
     pub fn last_deploy_result(
         &self,
-    ) -> Option<&ContractInstantiateResult<AccountIdFor<R>, u128, EventRecordOf<R>>> {
+    ) -> Option<&ContractInstantiateResult<AccountIdFor<R>, Balance, EventRecordOf<R>>> {
         self.deploy_results.last()
     }
 
@@ -353,7 +371,7 @@ impl<R: Runtime> Session<R> {
     }
 
     /// Returns the last result of calling a contract.
-    pub fn last_call_result(&self) -> Option<&ContractExecResult<u128, EventRecordOf<R>>> {
+    pub fn last_call_result(&self) -> Option<&ContractExecResult<Balance, EventRecordOf<R>>> {
         self.call_results.last()
     }
 
