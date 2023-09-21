@@ -1,6 +1,6 @@
 //! This module provides a context-aware interface for interacting with contracts.
 
-use std::{mem, rc::Rc, fmt::Debug};
+use std::{fmt::Debug, mem, rc::Rc};
 
 pub use contract_transcode;
 use contract_transcode::ContractMessageTranscoder;
