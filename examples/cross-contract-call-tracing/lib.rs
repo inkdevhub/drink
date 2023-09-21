@@ -156,9 +156,9 @@ mod tests {
             outer_address,
             "outer_call",
             &[
-                middle_address.to_string(),
-                inner_address.to_string(),
-                "7".to_string(),
+                &*middle_address.to_string(),
+                &*inner_address.to_string(),
+                "7",
             ],
             None,
         )?;
