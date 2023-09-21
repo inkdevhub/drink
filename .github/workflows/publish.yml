@@ -1,0 +1,26 @@
+---
+name: Publish to crates.io
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+concurrency:
+  group: ${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+  runs-on: [self-hosted, Linux, X64, large] # cargo publish needs to build project from scratch
+  steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - uses: katyo/publish-crates@v2
+        with:
+          dry-run: ${{ github.event_name != 'push' }}
+          registry-token: ${{ secrets.CRATES_IO_TOKEN }}
+          ignore-unpublished-changes: true
