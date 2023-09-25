@@ -1,6 +1,6 @@
 //! This module provides a context-aware interface for interacting with contracts.
 
-use std::{mem, rc::Rc};
+use std::{fmt::Debug, mem, rc::Rc};
 
 pub use contract_transcode;
 use contract_transcode::ContractMessageTranscoder;
@@ -21,6 +21,12 @@ type Balance = u128;
 
 const ZERO_TRANSFER: Balance = 0;
 const DEFAULT_STORAGE_DEPOSIT_LIMIT: Option<Balance> = None;
+
+/// Convenient value for an empty sequence of call/instantiation arguments.
+///
+/// Without it, you would have to specify explicitly a compatible type, like:
+/// `session.call::<String>(.., &[], ..)`.
+pub const NO_ARGS: &[String] = &[];
 
 /// Session specific errors.
 #[derive(Error, Debug)]
@@ -89,8 +95,12 @@ pub type MessageResult<T> = Result<T, LangError>;
 /// ```rust, no_run
 /// # use std::rc::Rc;
 /// # use contract_transcode::ContractMessageTranscoder;
-/// # use drink::session::Session;
-/// # use drink::AccountId32;
+/// # use drink::{
+/// #   session::Session,
+/// #   AccountId32,
+/// #   session::NO_ARGS,
+/// #   runtime::MinimalRuntime
+/// # };
 /// #
 /// # fn get_transcoder() -> Rc<ContractMessageTranscoder> {
 /// #   Rc::new(ContractMessageTranscoder::load("").unwrap())
@@ -100,13 +110,11 @@ pub type MessageResult<T> = Result<T, LangError>;
 ///
 /// # fn main() -> Result<(), drink::session::SessionError> {
 ///
-/// use drink::runtime::MinimalRuntime;
-///
 /// Session::<MinimalRuntime>::new(Some(get_transcoder()))?
-///     .deploy_and(contract_bytes(), "new", &[], vec![], None)?
-///     .call_and("foo", &[], None)?
+///     .deploy_and(contract_bytes(), "new", NO_ARGS, vec![], None)?
+///     .call_and("foo", NO_ARGS, None)?
 ///     .with_actor(bob())
-///     .call_and("bar", &[], None)?;
+///     .call_and("bar", NO_ARGS, None)?;
 /// # Ok(()) }
 /// ```
 ///
@@ -114,9 +122,12 @@ pub type MessageResult<T> = Result<T, LangError>;
 /// ```rust, no_run
 /// # use std::rc::Rc;
 /// # use contract_transcode::ContractMessageTranscoder;
-/// # use drink::session::Session;
-/// # use drink::AccountId32;
-/// #
+/// # use drink::{
+/// #   session::Session,
+/// #   AccountId32,
+/// #   runtime::MinimalRuntime,
+/// #   session::NO_ARGS
+/// # };
 /// # fn get_transcoder() -> Rc<ContractMessageTranscoder> {
 /// #   Rc::new(ContractMessageTranscoder::load("").unwrap())
 /// # }
@@ -124,13 +135,12 @@ pub type MessageResult<T> = Result<T, LangError>;
 /// # fn bob() -> AccountId32 { AccountId32::new([0; 32]) }
 ///
 /// # fn main() -> Result<(), drink::session::SessionError> {
-/// use drink::runtime::MinimalRuntime;
 ///
 /// let mut session = Session::<MinimalRuntime>::new(Some(get_transcoder()))?;
-/// let _address = session.deploy(contract_bytes(), "new", &[], vec![], None)?;
-/// session.call("foo", &[], None)?;
+/// let _address = session.deploy(contract_bytes(), "new", NO_ARGS, vec![], None)?;
+/// session.call("foo", NO_ARGS, None)?;
 /// session.set_actor(bob());
-/// session.call("bar", &[], None)?;
+/// session.call("bar", NO_ARGS, None)?;
 /// # Ok(()) }
 /// ```
 pub struct Session<R: Runtime> {
@@ -207,11 +217,11 @@ impl<R: Runtime> Session<R> {
 
     /// Deploys a contract with a given constructor, arguments, salt and endowment. In case of
     /// success, returns `self`.
-    pub fn deploy_and(
+    pub fn deploy_and<S: AsRef<str> + Debug>(
         mut self,
         contract_bytes: Vec<u8>,
         constructor: &str,
-        args: &[String],
+        args: &[S],
         salt: Vec<u8>,
         endowment: Option<Balance>,
     ) -> Result<Self, SessionError> {
@@ -221,11 +231,11 @@ impl<R: Runtime> Session<R> {
 
     /// Deploys a contract with a given constructor, arguments, salt and endowment. In case of
     /// success, returns the address of the deployed contract.
-    pub fn deploy(
+    pub fn deploy<S: AsRef<str> + Debug>(
         &mut self,
         contract_bytes: Vec<u8>,
         constructor: &str,
-        args: &[String],
+        args: &[S],
         salt: Vec<u8>,
         endowment: Option<Balance>,
     ) -> Result<AccountIdFor<R>, SessionError> {
@@ -263,10 +273,10 @@ impl<R: Runtime> Session<R> {
     }
 
     /// Calls a contract with a given address. In case of a successful call, returns `self`.
-    pub fn call_and(
+    pub fn call_and<S: AsRef<str> + Debug>(
         mut self,
         message: &str,
-        args: &[String],
+        args: &[S],
         endowment: Option<Balance>,
     ) -> Result<Self, SessionError> {
         self.call_internal(None, message, args, endowment)
@@ -274,11 +284,11 @@ impl<R: Runtime> Session<R> {
     }
 
     /// Calls the last deployed contract. In case of a successful call, returns `self`.
-    pub fn call_with_address_and(
+    pub fn call_with_address_and<S: AsRef<str> + Debug>(
         mut self,
         address: AccountIdFor<R>,
         message: &str,
-        args: &[String],
+        args: &[S],
         endowment: Option<Balance>,
     ) -> Result<Self, SessionError> {
         self.call_internal(Some(address), message, args, endowment)
@@ -286,10 +296,10 @@ impl<R: Runtime> Session<R> {
     }
 
     /// Calls the last deployed contract. In case of a successful call, returns the decoded result.
-    pub fn call(
+    pub fn call<S: AsRef<str> + Debug>(
         &mut self,
         message: &str,
-        args: &[String],
+        args: &[S],
         endowment: Option<Balance>,
     ) -> Result<Vec<u8>, SessionError> {
         self.call_internal(None, message, args, endowment)
@@ -297,21 +307,21 @@ impl<R: Runtime> Session<R> {
 
     /// Calls a contract with a given address. In case of a successful call, returns the decoded
     /// result.
-    pub fn call_with_address(
+    pub fn call_with_address<S: AsRef<str> + Debug>(
         &mut self,
         address: AccountIdFor<R>,
         message: &str,
-        args: &[String],
+        args: &[S],
         endowment: Option<Balance>,
     ) -> Result<Vec<u8>, SessionError> {
         self.call_internal(Some(address), message, args, endowment)
     }
 
-    fn call_internal(
+    fn call_internal<S: AsRef<str> + Debug>(
         &mut self,
         address: Option<AccountIdFor<R>>,
         message: &str,
-        args: &[String],
+        args: &[S],
         endowment: Option<Balance>,
     ) -> Result<Vec<u8>, SessionError> {
         let data = self

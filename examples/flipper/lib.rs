@@ -36,7 +36,7 @@ mod tests {
 
     use drink::{
         runtime::MinimalRuntime,
-        session::{contract_transcode::ContractMessageTranscoder, Session},
+        session::{contract_transcode::ContractMessageTranscoder, Session, NO_ARGS},
     };
 
     fn transcoder() -> Option<Rc<ContractMessageTranscoder>> {
@@ -53,8 +53,8 @@ mod tests {
     #[test]
     fn initialization() -> Result<(), Box<dyn Error>> {
         let init_value: bool = Session::<MinimalRuntime>::new(transcoder())?
-            .deploy_and(bytes(), "new", &["true".to_string()], vec![], None)?
-            .call_and("get", &[], None)?
+            .deploy_and(bytes(), "new", &["true"], vec![], None)?
+            .call_and("get", NO_ARGS, None)?
             .last_call_return()
             .expect("Call was successful, so there should be a return")
             .expect("Call was successful");
@@ -67,11 +67,11 @@ mod tests {
     #[test]
     fn flipping() -> Result<(), Box<dyn Error>> {
         let init_value: bool = Session::<MinimalRuntime>::new(transcoder())?
-            .deploy_and(bytes(), "new", &["true".to_string()], vec![], None)?
-            .call_and("flip", &[], None)?
-            .call_and("flip", &[], None)?
-            .call_and("flip", &[], None)?
-            .call_and("get", &[], None)?
+            .deploy_and(bytes(), "new", &["true"], vec![], None)?
+            .call_and("flip", NO_ARGS, None)?
+            .call_and("flip", NO_ARGS, None)?
+            .call_and("flip", NO_ARGS, None)?
+            .call_and("get", NO_ARGS, None)?
             .last_call_return()
             .expect("Call was successful, so there should be a return")
             .expect("Call was successful");

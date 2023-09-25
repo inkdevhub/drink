@@ -6,12 +6,12 @@ use pallet_contracts::{CollectEvents, DebugInfo, Determinism};
 use pallet_contracts_primitives::{
     Code, CodeUploadResult, ContractExecResult, ContractInstantiateResult,
 };
+use parity_scale_codec::Decode as _;
 
 use crate::{
     runtime::{AccountIdFor, Runtime},
     EventRecordOf, Sandbox,
 };
-use parity_scale_codec::Decode as _;
 
 /// Interface for contract-related operations.
 pub trait ContractApi<R: Runtime> {
