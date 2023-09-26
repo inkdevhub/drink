@@ -12,6 +12,8 @@ pub use minimal::MinimalRuntime;
 
 /// The type of an account identifier.
 pub type AccountIdFor<R> = <R as frame_system::Config>::AccountId;
+/// The type of a hash.
+pub type HashFor<R> = <R as frame_system::Config>::Hash;
 
 /// Export pallets that are used in the runtime.
 pub use frame_system;
