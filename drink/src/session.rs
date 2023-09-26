@@ -13,7 +13,7 @@ use crate::{
     chain_api::ChainApi,
     contract_api::ContractApi,
     pallet_contracts_debugging::DebugExt,
-    runtime::{AccountIdFor, Runtime},
+    runtime::{AccountIdFor, HashFor, Runtime},
     EventRecordOf, Sandbox, DEFAULT_GAS_LIMIT,
 };
 
@@ -46,6 +46,9 @@ pub enum SessionError {
     /// Deployment failed (aborted by the pallet).
     #[error("Contract deployment failed before execution: {0:?}")]
     DeploymentFailed(DispatchError),
+    /// Code upload failed (aborted by the pallet).
+    #[error("Code upload failed: {0:?}")]
+    UploadFailed(DispatchError),
     /// Call has been reverted by the contract.
     #[error("Contract call has been reverted")]
     CallReverted,
@@ -270,6 +273,24 @@ impl<R: Runtime> Session<R> {
 
         self.deploy_results.push(result);
         ret
+    }
+
+    /// Uploads a raw contract code. In case of success, returns `self`.
+    pub fn upload_and(mut self, contract_bytes: Vec<u8>) -> Result<Self, SessionError> {
+        self.upload(contract_bytes).map(|_| self)
+    }
+
+    /// Uploads a raw contract code. In case of success returns the code hash.
+    pub fn upload(&mut self, contract_bytes: Vec<u8>) -> Result<HashFor<R>, SessionError> {
+        let result = self.sandbox.upload_contract(
+            contract_bytes,
+            self.actor.clone(),
+            DEFAULT_STORAGE_DEPOSIT_LIMIT,
+        );
+
+        result
+            .map(|upload_result| upload_result.code_hash)
+            .map_err(SessionError::UploadFailed)
     }
 
     /// Calls a contract with a given address. In case of a successful call, returns `self`.
