@@ -4,10 +4,9 @@ use std::{fmt::Debug, mem, rc::Rc};
 
 pub use contract_transcode;
 use contract_transcode::ContractMessageTranscoder;
-use frame_support::{sp_runtime::DispatchError, weights::Weight};
+use frame_support::{ weights::Weight};
 use pallet_contracts_primitives::{ContractExecResult, ContractInstantiateResult};
 use parity_scale_codec::Decode;
-use thiserror::Error;
 
 use crate::{
     chain_api::ChainApi,
@@ -16,6 +15,9 @@ use crate::{
     runtime::{AccountIdFor, HashFor, Runtime},
     EventRecordOf, Sandbox, DEFAULT_GAS_LIMIT,
 };
+
+pub mod errors;
+use errors::{SessionError, MessageResult};
 
 type Balance = u128;
 
@@ -27,67 +29,6 @@ const DEFAULT_STORAGE_DEPOSIT_LIMIT: Option<Balance> = None;
 /// Without it, you would have to specify explicitly a compatible type, like:
 /// `session.call::<String>(.., &[], ..)`.
 pub const NO_ARGS: &[String] = &[];
-
-/// Session specific errors.
-#[derive(Error, Debug)]
-pub enum SessionError {
-    /// Encoding data failed.
-    #[error("Encoding call data failed: {0}")]
-    Encoding(String),
-    /// Decoding data failed.
-    #[error("Decoding call data failed: {0}")]
-    Decoding(String),
-    /// Crate-specific error.
-    #[error("{0:?}")]
-    Drink(#[from] crate::Error),
-    /// Deployment has been reverted by the contract.
-    #[error("Contract deployment has been reverted")]
-    DeploymentReverted,
-    /// Deployment failed (aborted by the pallet).
-    #[error("Contract deployment failed before execution: {0:?}")]
-    DeploymentFailed(DispatchError),
-    /// Code upload failed (aborted by the pallet).
-    #[error("Code upload failed: {0:?}")]
-    UploadFailed(DispatchError),
-    /// Call has been reverted by the contract.
-    #[error("Contract call has been reverted")]
-    CallReverted,
-    /// Contract call failed (aborted by the pallet).
-    #[error("Contract call failed before execution: {0:?}")]
-    CallFailed(DispatchError),
-    /// There is no deployed contract to call.
-    #[error("No deployed contract")]
-    NoContract,
-    /// There is no transcoder to encode/decode contract messages.
-    #[error("Missing transcoder")]
-    NoTranscoder,
-}
-
-/// Every contract message wraps its return value in `Result<T, LangResult>`. This is the error
-/// type.
-///
-/// Copied from ink primitives.
-#[non_exhaustive]
-#[repr(u32)]
-#[derive(
-    Debug,
-    Copy,
-    Clone,
-    PartialEq,
-    Eq,
-    parity_scale_codec::Encode,
-    parity_scale_codec::Decode,
-    scale_info::TypeInfo,
-    Error,
-)]
-pub enum LangError {
-    /// Failed to read execution input for the dispatchable.
-    #[error("Failed to read execution input for the dispatchable.")]
-    CouldNotReadInput = 1u32,
-}
-
-/// The `Result` type for ink! messages.
-pub type MessageResult<T> = Result<T, LangError>;
 
 /// Wrapper around `Sandbox` that provides a convenient API for interacting with multiple contracts.
 ///
