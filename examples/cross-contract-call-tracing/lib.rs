@@ -142,14 +142,17 @@ mod tests {
 
     #[test]
     fn test() -> Result<(), Box<dyn Error>> {
-        let mut session = Session::<MinimalRuntime>::new(Some(transcoder()))?;
+        let mut session = Session::<MinimalRuntime>::new()?;
         session.override_debug_handle(DebugExt(Box::new(TestDebugger {})));
 
-        let outer_address = session.deploy(bytes(), "new", NO_ARGS, vec![1], None)?;
+        let outer_address =
+            session.deploy(bytes(), "new", NO_ARGS, vec![1], None, &transcoder())?;
         OUTER_ADDRESS.with(|a| *a.borrow_mut() = Some(outer_address.clone()));
-        let middle_address = session.deploy(bytes(), "new", NO_ARGS, vec![2], None)?;
+        let middle_address =
+            session.deploy(bytes(), "new", NO_ARGS, vec![2], None, &transcoder())?;
         MIDDLE_ADDRESS.with(|a| *a.borrow_mut() = Some(middle_address.clone()));
-        let inner_address = session.deploy(bytes(), "new", NO_ARGS, vec![3], None)?;
+        let inner_address =
+            session.deploy(bytes(), "new", NO_ARGS, vec![3], None, &transcoder())?;
         INNER_ADDRESS.with(|a| *a.borrow_mut() = Some(inner_address.clone()));
 
         let value = session.call_with_address(
