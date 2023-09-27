@@ -17,6 +17,8 @@ use crate::{
 };
 
 pub mod errors;
+mod transcoding;
+
 use errors::{MessageResult, SessionError};
 
 type Balance = u128;
