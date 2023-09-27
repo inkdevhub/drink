@@ -1,7 +1,7 @@
 //! Module exposing errors and result types for the session API.
 
-use thiserror::Error;
 use frame_support::sp_runtime::DispatchError;
+use thiserror::Error;
 
 /// Session specific errors.
 #[derive(Error, Debug)]
@@ -45,15 +45,15 @@ pub enum SessionError {
 #[non_exhaustive]
 #[repr(u32)]
 #[derive(
-Debug,
-Copy,
-Clone,
-PartialEq,
-Eq,
-parity_scale_codec::Encode,
-parity_scale_codec::Decode,
-scale_info::TypeInfo,
-Error,
+    Debug,
+    Copy,
+    Clone,
+    PartialEq,
+    Eq,
+    parity_scale_codec::Encode,
+    parity_scale_codec::Decode,
+    scale_info::TypeInfo,
+    Error,
 )]
 pub enum LangError {
     /// Failed to read execution input for the dispatchable.

@@ -4,7 +4,7 @@ use std::{fmt::Debug, mem, rc::Rc};
 
 pub use contract_transcode;
 use contract_transcode::ContractMessageTranscoder;
-use frame_support::{ weights::Weight};
+use frame_support::weights::Weight;
 use pallet_contracts_primitives::{ContractExecResult, ContractInstantiateResult};
 use parity_scale_codec::Decode;
 
@@ -17,7 +17,7 @@ use crate::{
 };
 
 pub mod errors;
-use errors::{SessionError, MessageResult};
+use errors::{MessageResult, SessionError};
 
 type Balance = u128;
 
