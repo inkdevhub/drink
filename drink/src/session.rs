@@ -21,6 +21,8 @@ mod transcoding;
 
 use errors::{MessageResult, SessionError};
 
+use crate::session::transcoding::TranscoderRegistry;
+
 type Balance = u128;
 
 const ZERO_TRANSFER: Balance = 0;
@@ -54,10 +56,10 @@ pub const NO_ARGS: &[String] = &[];
 /// # fn contract_bytes() -> Vec<u8> { vec![] }
 /// # fn bob() -> AccountId32 { AccountId32::new([0; 32]) }
 ///
-/// # fn main() -> Result<(), drink::session::SessionError> {
+/// # fn main() -> Result<(), drink::session::errors::SessionError> {
 ///
-/// Session::<MinimalRuntime>::new(Some(get_transcoder()))?
-///     .deploy_and(contract_bytes(), "new", NO_ARGS, vec![], None)?
+/// Session::<MinimalRuntime>::new()?
+///     .deploy_and(contract_bytes(), "new", NO_ARGS, vec![], None, &get_transcoder())?
 ///     .call_and("foo", NO_ARGS, None)?
 ///     .with_actor(bob())
 ///     .call_and("bar", NO_ARGS, None)?;
@@ -80,10 +82,10 @@ pub const NO_ARGS: &[String] = &[];
 /// # fn contract_bytes() -> Vec<u8> { vec![] }
 /// # fn bob() -> AccountId32 { AccountId32::new([0; 32]) }
 ///
-/// # fn main() -> Result<(), drink::session::SessionError> {
+/// # fn main() -> Result<(), drink::session::errors::SessionError> {
 ///
-/// let mut session = Session::<MinimalRuntime>::new(Some(get_transcoder()))?;
-/// let _address = session.deploy(contract_bytes(), "new", NO_ARGS, vec![], None)?;
+/// let mut session = Session::<MinimalRuntime>::new()?;
+/// let _address = session.deploy(contract_bytes(), "new", NO_ARGS, vec![], None, &get_transcoder())?;
 /// session.call("foo", NO_ARGS, None)?;
 /// session.set_actor(bob());
 /// session.call("bar", NO_ARGS, None)?;
@@ -95,7 +97,7 @@ pub struct Session<R: Runtime> {
     actor: AccountIdFor<R>,
     gas_limit: Weight,
 
-    transcoder: Option<Rc<ContractMessageTranscoder>>,
+    transcoders: TranscoderRegistry<AccountIdFor<R>>,
 
     deploy_results: Vec<ContractInstantiateResult<AccountIdFor<R>, Balance, EventRecordOf<R>>>,
     deploy_returns: Vec<AccountIdFor<R>>,
@@ -104,13 +106,13 @@ pub struct Session<R: Runtime> {
 }
 
 impl<R: Runtime> Session<R> {
-    /// Creates a new `Session` with optional reference to a transcoder.
-    pub fn new(transcoder: Option<Rc<ContractMessageTranscoder>>) -> Result<Self, SessionError> {
+    /// Creates a new `Session`.
+    pub fn new() -> Result<Self, SessionError> {
         Ok(Self {
             sandbox: Sandbox::new().map_err(SessionError::Drink)?,
             actor: R::default_actor(),
             gas_limit: DEFAULT_GAS_LIMIT,
-            transcoder,
+            transcoders: TranscoderRegistry::new(),
             deploy_results: vec![],
             deploy_returns: vec![],
             call_results: vec![],
@@ -138,17 +140,23 @@ impl<R: Runtime> Session<R> {
         mem::replace(&mut self.gas_limit, gas_limit)
     }
 
-    /// Sets a new transcoder and returns updated `self`.
-    pub fn with_transcoder(self, transcoder: Option<Rc<ContractMessageTranscoder>>) -> Self {
-        Self { transcoder, ..self }
+    /// Register a transcoder for a particular contract and returns updated `self`.
+    pub fn with_transcoder(
+        mut self,
+        contract_address: AccountIdFor<R>,
+        transcoder: &Rc<ContractMessageTranscoder>,
+    ) -> Self {
+        self.set_transcoder(contract_address, transcoder);
+        self
     }
 
-    /// Sets a new transcoder and returns the old one.
+    /// Registers a transcoder for a particular contract.
     pub fn set_transcoder(
         &mut self,
-        transcoder: Option<Rc<ContractMessageTranscoder>>,
-    ) -> Option<Rc<ContractMessageTranscoder>> {
-        mem::replace(&mut self.transcoder, transcoder)
+        contract_address: AccountIdFor<R>,
+        transcoder: &Rc<ContractMessageTranscoder>,
+    ) {
+        self.transcoders.register(contract_address, transcoder);
     }
 
     /// Returns a reference for basic chain API.
@@ -170,9 +178,17 @@ impl<R: Runtime> Session<R> {
         args: &[S],
         salt: Vec<u8>,
         endowment: Option<Balance>,
+        transcoder: &Rc<ContractMessageTranscoder>,
     ) -> Result<Self, SessionError> {
-        self.deploy(contract_bytes, constructor, args, salt, endowment)
-            .map(|_| self)
+        self.deploy(
+            contract_bytes,
+            constructor,
+            args,
+            salt,
+            endowment,
+            transcoder,
+        )
+        .map(|_| self)
     }
 
     /// Deploys a contract with a given constructor, arguments, salt and endowment. In case of
@@ -184,11 +200,9 @@ impl<R: Runtime> Session<R> {
         args: &[S],
         salt: Vec<u8>,
         endowment: Option<Balance>,
+        transcoder: &Rc<ContractMessageTranscoder>,
     ) -> Result<AccountIdFor<R>, SessionError> {
-        let data = self
-            .transcoder
-            .as_ref()
-            .ok_or(SessionError::NoTranscoder)?
+        let data = transcoder
             .encode(constructor, args)
             .map_err(|err| SessionError::Encoding(err.to_string()))?;
 
@@ -209,6 +223,9 @@ impl<R: Runtime> Session<R> {
             Ok(exec_result) => {
                 let address = exec_result.account_id.clone();
                 self.deploy_returns.push(address.clone());
+
+                self.transcoders.register(address.clone(), transcoder);
+
                 Ok(address)
             }
             Err(err) => Err(SessionError::DeploymentFailed(*err)),
@@ -288,13 +305,6 @@ impl<R: Runtime> Session<R> {
         args: &[S],
         endowment: Option<Balance>,
     ) -> Result<Vec<u8>, SessionError> {
-        let data = self
-            .transcoder
-            .as_ref()
-            .ok_or(SessionError::NoTranscoder)?
-            .encode(message, args)
-            .map_err(|err| SessionError::Encoding(err.to_string()))?;
-
         let address = match address {
             Some(address) => address,
             None => self
@@ -303,6 +313,14 @@ impl<R: Runtime> Session<R> {
                 .ok_or(SessionError::NoContract)?
                 .clone(),
         };
+
+        let data = self
+            .transcoders
+            .get(&address)
+            .as_ref()
+            .ok_or(SessionError::NoTranscoder)?
+            .encode(message, args)
+            .map_err(|err| SessionError::Encoding(err.to_string()))?;
 
         let result = self.sandbox.call_contract(
             address,

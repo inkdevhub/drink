@@ -33,7 +33,7 @@ pub enum SessionError {
     /// There is no deployed contract to call.
     #[error("No deployed contract")]
     NoContract,
-    /// There is no transcoder to encode/decode contract messages.
+    /// There is no registered transcoder to encode/decode messages for the called contract.
     #[error("Missing transcoder")]
     NoTranscoder,
 }
