@@ -73,11 +73,14 @@ pub fn deploy(app_state: &mut AppState, constructor: String, args: Vec<String>, 
     };
     let transcoder = Rc::new(transcoder);
 
-    app_state.session.set_transcoder(Some(transcoder.clone()));
-    match app_state
-        .session
-        .deploy(contract_bytes, &constructor, args.as_slice(), salt, None)
-    {
+    match app_state.session.deploy(
+        contract_bytes,
+        &constructor,
+        args.as_slice(),
+        salt,
+        None,
+        &transcoder,
+    ) {
         Ok(address) => {
             app_state.contracts.add(Contract {
                 name: contract_name,
@@ -100,10 +103,6 @@ pub fn call(app_state: &mut AppState, message: String, args: Vec<String>) {
         app_state.print_error("No deployed contract");
         return;
     };
-
-    app_state
-        .session
-        .set_transcoder(Some(contract.transcoder.clone()));
 
     let address = contract.address.clone();
     match app_state

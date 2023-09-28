@@ -82,7 +82,7 @@ pub struct AppState {
 impl AppState {
     pub fn new(cwd_override: Option<PathBuf>) -> Self {
         AppState {
-            session: Session::new(None).expect("Failed to create drinking session"),
+            session: Session::new().expect("Failed to create drinking session"),
             chain_info: Default::default(),
             ui_state: UiState::new(cwd_override),
             contracts: Default::default(),

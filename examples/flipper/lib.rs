@@ -39,11 +39,11 @@ mod tests {
         session::{contract_transcode::ContractMessageTranscoder, Session, NO_ARGS},
     };
 
-    fn transcoder() -> Option<Rc<ContractMessageTranscoder>> {
-        Some(Rc::new(
+    fn transcoder() -> Rc<ContractMessageTranscoder> {
+        Rc::new(
             ContractMessageTranscoder::load(PathBuf::from("./target/ink/flipper.json"))
                 .expect("Failed to create transcoder"),
-        ))
+        )
     }
 
     fn bytes() -> Vec<u8> {
@@ -52,8 +52,8 @@ mod tests {
 
     #[test]
     fn initialization() -> Result<(), Box<dyn Error>> {
-        let init_value: bool = Session::<MinimalRuntime>::new(transcoder())?
-            .deploy_and(bytes(), "new", &["true"], vec![], None)?
+        let init_value: bool = Session::<MinimalRuntime>::new()?
+            .deploy_and(bytes(), "new", &["true"], vec![], None, &transcoder())?
             .call_and("get", NO_ARGS, None)?
             .last_call_return()
             .expect("Call was successful, so there should be a return")
@@ -66,8 +66,8 @@ mod tests {
 
     #[test]
     fn flipping() -> Result<(), Box<dyn Error>> {
-        let init_value: bool = Session::<MinimalRuntime>::new(transcoder())?
-            .deploy_and(bytes(), "new", &["true"], vec![], None)?
+        let init_value: bool = Session::<MinimalRuntime>::new()?
+            .deploy_and(bytes(), "new", &["true"], vec![], None, &transcoder())?
             .call_and("flip", NO_ARGS, None)?
             .call_and("flip", NO_ARGS, None)?
             .call_and("flip", NO_ARGS, None)?
