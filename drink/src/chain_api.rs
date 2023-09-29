@@ -1,8 +1,7 @@
 //! Basic chain API.
 
 use frame_support::{
-    dispatch::Dispatchable,
-    sp_runtime::{DispatchResultWithInfo, Saturating},
+    sp_runtime::{traits::Dispatchable, DispatchResultWithInfo, Saturating},
     traits::tokens::currency::Currency,
 };
 use frame_system::pallet_prelude::BlockNumberFor;
@@ -139,7 +138,7 @@ impl<R: Runtime> ChainApi<R> for Sandbox<R> {
 
 #[cfg(test)]
 mod tests {
-    use frame_support::dispatch::Dispatchable;
+    use frame_support::sp_runtime::traits::Dispatchable;
 
     use crate::{
         chain_api::{ChainApi, DispatchResultWithInfo, RuntimeCall},

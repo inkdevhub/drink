@@ -12,15 +12,13 @@ pub mod session;
 use std::marker::PhantomData;
 
 pub use error::Error;
-use frame_support::{
-    sp_io::TestExternalities,
-    sp_runtime::{traits::One, BuildStorage},
-};
+use frame_support::sp_runtime::{traits::One, BuildStorage};
 pub use frame_support::{
     sp_runtime::{AccountId32, DispatchError},
     weights::Weight,
 };
 use frame_system::{pallet_prelude::BlockNumberFor, EventRecord, GenesisConfig};
+use sp_io::TestExternalities;
 
 use crate::{
     pallet_contracts_debugging::DebugExt,

@@ -4,9 +4,8 @@
 pub mod minimal;
 pub mod pallet_contracts_debugging;
 
-use frame_support::{
-    dispatch::Dispatchable, metadata::RuntimeMetadataPrefixed, sp_runtime::Storage,
-};
+pub use frame_metadata::RuntimeMetadataPrefixed;
+use frame_support::sp_runtime::{traits::Dispatchable, Storage};
 use frame_system::pallet_prelude::BlockNumberFor;
 pub use minimal::MinimalRuntime;
 
