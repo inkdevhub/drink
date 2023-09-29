@@ -39,7 +39,8 @@ pub struct Sandbox<R: Runtime> {
 }
 
 /// Default gas limit.
-pub const DEFAULT_GAS_LIMIT: Weight = Weight::from_parts(100_000_000_000, 3 * 1024 * 1024);
+pub const DEFAULT_GAS_LIMIT: Weight =
+    Weight::from_parts(1_000_000_000_000_000, 3 * 1024 * 1024 * 1024);
 
 impl<R: Runtime> Sandbox<R> {
     /// Creates a new sandbox.
