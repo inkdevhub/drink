@@ -36,15 +36,15 @@ wat = { version = "1.0.71" }
 
 # Substrate dependencies
 
-frame-support = { version = "22.0.0" }
-frame-system = { version = "22.0.0" }
-pallet-balances = { version = "22.0.0" }
-pallet-contracts = { package = "pallet-contracts-for-drink", version = "21.0.3" }
-pallet-contracts-primitives = { version = "25.0.0" }
-pallet-timestamp = { version = "21.0.0" }
-sp-core = { version = "22.0.0" }
-sp-externalities = { version = "0.20.0" }
-sp-runtime-interface = { version = "18.0.0" }
+frame-support = { version = "23.0.0" }
+frame-system = { version = "23.0.0" }
+pallet-balances = { version = "23.0.0" }
+pallet-contracts = { package = "pallet-contracts-for-drink", version = "22.0.0" }
+pallet-contracts-primitives = { version = "26.0.0" }
+pallet-timestamp = { version = "22.0.0" }
+sp-core = { version = "23.0.0" }
+sp-externalities = { version = "0.21.0" }
+sp-runtime-interface = { version = "19.0.0" }
 
 # Local dependencies
 
