@@ -251,10 +251,18 @@ mod tests {
         assert!(!result.result.unwrap().result.did_revert());
 
         let events = result.events.expect("Drink should collect events");
-        let instantiation_event = events.last().expect("There should be an event");
+        let event_count = events.len();
+        let instantiation_event = events[event_count - 2].clone();
         assert!(matches!(
             instantiation_event.event,
             RuntimeEvent::Contracts(pallet_contracts::Event::<MinimalRuntime>::Instantiated { .. })
+        ));
+        let deposit_event = events[event_count - 1].clone();
+        assert!(matches!(
+            deposit_event.event,
+            RuntimeEvent::Contracts(
+                pallet_contracts::Event::<MinimalRuntime>::StorageDepositTransferredAndHeld { .. }
+            )
         ));
     }
 

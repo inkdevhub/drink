@@ -2,14 +2,13 @@
 
 use std::time::SystemTime;
 
+use frame_metadata::RuntimeMetadataPrefixed;
 use frame_support::{
-    dispatch::Dispatchable,
-    metadata::RuntimeMetadataPrefixed,
     parameter_types,
     sp_runtime::{
         testing::H256,
-        traits::{BlakeTwo256, Convert, IdentityLookup},
-        AccountId32, BuildStorage, Storage,
+        traits::{BlakeTwo256, Convert, Dispatchable, IdentityLookup},
+        AccountId32, BuildStorage, Perbill, Storage,
     },
     traits::{ConstBool, ConstU128, ConstU32, ConstU64, Currency, Hooks, Randomness},
     weights::Weight,
@@ -75,9 +74,9 @@ impl pallet_balances::Config for MinimalRuntime {
     type FreezeIdentifier = ();
     type MaxLocks = ();
     type MaxReserves = ();
-    type MaxHolds = ();
+    type MaxHolds = ConstU32<1>;
     type MaxFreezes = ();
-    type RuntimeHoldReason = ();
+    type RuntimeHoldReason = RuntimeHoldReason;
 }
 
 impl pallet_timestamp::Config for MinimalRuntime {
@@ -107,6 +106,8 @@ parameter_types! {
     };
     pub DeletionWeightLimit: Weight = Weight::zero();
     pub DefaultDepositLimit: BalanceOf = 10_000_000;
+    pub CodeHashLockupDepositPercent: Perbill = Perbill::from_percent(0);
+    pub MaxDelegateDependencies: u32 = 32;
 }
 
 impl pallet_contracts::Config for MinimalRuntime {
@@ -131,6 +132,10 @@ impl pallet_contracts::Config for MinimalRuntime {
     type Migrations = ();
     type DefaultDepositLimit = DefaultDepositLimit;
     type Debug = DrinkDebug;
+    type CodeHashLockupDepositPercent = CodeHashLockupDepositPercent;
+    type MaxDelegateDependencies = MaxDelegateDependencies;
+    type RuntimeHoldReason = RuntimeHoldReason;
+    type Environment = ();
 }
 
 /// Default initial balance for the default account.

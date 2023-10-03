@@ -21,7 +21,7 @@
 //! usually, complex objects will be passed in their encoded form (`Vec<u8>` obtained with scale
 //! encoding).
 
-use pallet_contracts::debug::{CallSpan, ExportedFunction, Tracing};
+use pallet_contracts::debug::{CallInterceptor, CallSpan, ExecResult, ExportedFunction, Tracing};
 use pallet_contracts_primitives::ExecReturnValue;
 use sp_externalities::{decl_extension, ExternalitiesExt};
 use sp_runtime_interface::runtime_interface;
@@ -69,6 +69,17 @@ trait ContractCallDebugger {
 /// Configuration parameter for the contracts pallet. Provides all the necessary trait
 /// implementations.
 pub enum DrinkDebug {}
+
+impl<R: Runtime> CallInterceptor<R> for DrinkDebug {
+    fn intercept_call(
+        _contract_address: &AccountIdFor<R>,
+        _entry_point: &ExportedFunction,
+        _input_data: &[u8],
+    ) -> Option<ExecResult> {
+        // We don't want to intercept any calls. At least for now.
+        None
+    }
+}
 
 impl<R: Runtime> Tracing<R> for DrinkDebug {
     type CallSpan = DrinkCallSpan<AccountIdFor<R>>;
