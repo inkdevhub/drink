@@ -6,6 +6,18 @@ pub struct MockRegistry<AccountId> {
     mocked_contracts: Vec<ContractMock<AccountId>>,
 }
 
+impl<AccountId> MockRegistry<AccountId> {
+    pub fn new() -> Self {
+        Self {
+            mocked_contracts: Vec::new(),
+        }
+    }
+
+    pub fn register_mock(&mut self, contract: ContractMock<AccountId>) {
+        self.mocked_contracts.push(contract);
+    }
+}
+
 pub struct ContractMock<AccountId> {
     mocked_addresses: Vec<AccountId>,
     mocked_methods: Vec<Box<dyn MethodMockT>>,
