@@ -139,7 +139,7 @@ impl pallet_contracts::Config for MinimalRuntime {
 }
 
 /// Default initial balance for the default account.
-pub const INITIAL_BALANCE: u128 = 1_000_000_000_000_000_000;
+pub const INITIAL_BALANCE: u128 = 1_000_000_000_000_000;
 
 impl Runtime for MinimalRuntime {
     fn initialize_storage(storage: &mut Storage) -> Result<(), String> {
