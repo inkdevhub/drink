@@ -74,7 +74,7 @@ impl pallet_balances::Config for MinimalRuntime {
     type FreezeIdentifier = ();
     type MaxLocks = ();
     type MaxReserves = ();
-    type MaxHolds = ();
+    type MaxHolds = ConstU32<1>;
     type MaxFreezes = ();
     type RuntimeHoldReason = RuntimeHoldReason;
 }

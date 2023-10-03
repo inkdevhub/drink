@@ -40,8 +40,7 @@ frame-metadata = { version = "16.0.0" }
 frame-support = { version = "23.0.0" }
 frame-system = { version = "23.0.0" }
 pallet-balances = { version = "23.0.0" }
-#pallet-contracts = { package = "pallet-contracts-for-drink", version = "22.0.0" }
-pallet-contracts = { package = "pallet-contracts-for-drink", path = "../polkadot-sdk/substrate/frame/contracts" }
+pallet-contracts = { package = "pallet-contracts-for-drink", version = "22.0.0" }
 pallet-contracts-primitives = { version = "26.0.0" }
 pallet-timestamp = { version = "22.0.0" }
 sp-core = { version = "23.0.0" }
