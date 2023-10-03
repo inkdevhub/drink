@@ -6,9 +6,11 @@
 pub mod chain_api;
 pub mod contract_api;
 mod error;
+pub mod mock;
 pub mod runtime;
 #[cfg(feature = "session")]
 pub mod session;
+
 use std::marker::PhantomData;
 
 pub use error::Error;
