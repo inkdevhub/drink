@@ -73,3 +73,8 @@ jobs:
           cargo contract build --release
           cargo test --release
           popd
+          
+          pushd examples/mocking
+          cargo contract build --release
+          cargo test --release
+          popd
