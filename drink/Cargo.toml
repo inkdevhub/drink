@@ -26,8 +26,6 @@ sp-runtime-interface = { workspace = true }
 
 scale-info = { workspace = true }
 thiserror = { workspace = true }
-
-[dev-dependencies]
 wat = { workspace = true }
 
 [features]
