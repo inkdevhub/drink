@@ -40,9 +40,12 @@ mod tests {
     use std::{error::Error, fs, path::PathBuf, rc::Rc};
 
     use drink::{
+        mock::{ContractMock, MockingApi},
         runtime::MinimalRuntime,
         session::{contract_transcode::ContractMessageTranscoder, Session, NO_ARGS},
     };
+
+    use crate::CALLEE_SELECTOR;
 
     fn transcoder() -> Rc<ContractMessageTranscoder> {
         Rc::new(
@@ -57,14 +60,16 @@ mod tests {
 
     #[test]
     fn initialization() -> Result<(), Box<dyn Error>> {
-        Session::<MinimalRuntime>::new()?.deploy_and(
-            bytes(),
-            "new",
-            NO_ARGS,
-            vec![],
-            None,
-            &transcoder(),
-        )?;
+        let mut session = Session::<MinimalRuntime>::new()?;
+        session.deploy(bytes(), "new", NO_ARGS, vec![], None, &transcoder())?;
+
+        let mock = MockBuilder::new()
+            .with_selector(CALLEE_SELECTOR)
+            .with_matcher(|arg: u32| arg == 42)
+            .with_return((1, 2))
+            .build();
+
+        session.mocking_api().register_mock(todo!());
 
         Ok(())
     }
