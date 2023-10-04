@@ -38,7 +38,7 @@ pub type EventRecordOf<T> =
 /// A sandboxed runtime.
 pub struct Sandbox<R: Runtime> {
     externalities: TestExternalities,
-    mock_registry: MockRegistry<AccountIdFor<R>>,
+    mock_registry: MockRegistry,
     _phantom: PhantomData<R>,
 }
 

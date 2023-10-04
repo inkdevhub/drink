@@ -40,7 +40,7 @@ mod tests {
     use std::{error::Error, fs, path::PathBuf, rc::Rc};
 
     use drink::{
-        mock::{ContractMock, MockingApi},
+        mock::{ContractMock, MessageMockBuilder, MockingApi},
         runtime::MinimalRuntime,
         session::{contract_transcode::ContractMessageTranscoder, Session, NO_ARGS},
     };
@@ -63,13 +63,14 @@ mod tests {
         let mut session = Session::<MinimalRuntime>::new()?;
         session.deploy(bytes(), "new", NO_ARGS, vec![], None, &transcoder())?;
 
-        let mock = MockBuilder::new()
-            .with_selector(CALLEE_SELECTOR)
-            .with_matcher(|arg: u32| arg == 42)
-            .with_return((1, 2))
+        let mocked_message = MessageMockBuilder::new()
+            .with_selector(CALLEE_SELECTOR.to_bytes())
+            .with_body(Box::new(|_: u32| (0, 0)))
             .build();
 
-        session.mocking_api().register_mock(todo!());
+        let mocked_contract = ContractMock::new().with_message(mocked_message);
+
+        session.mocking_api().deploy_mock(mocked_contract);
 
         Ok(())
     }

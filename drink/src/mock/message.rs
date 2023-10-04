@@ -5,6 +5,9 @@ use crate::mock::builder_utils::{Set, Setter, UnSet};
 type Body<Args, Ret> = Box<dyn Fn(Args) -> Ret>;
 type Selector = [u8; 4];
 
+pub trait MessageMockT {}
+impl<Args, Ret> MessageMockT for MessageMock<Args, Ret> {}
+
 pub struct MessageMock<Args, Ret> {
     selector: Selector,
     body: Body<Args, Ret>,
