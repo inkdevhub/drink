@@ -1,6 +1,12 @@
 //! Mocking contract feature.
 
+mod builder_utils;
+mod message;
+mod mocking_api;
+
 use std::marker::PhantomData;
+
+pub use mocking_api::MockingApi;
 
 pub struct MockRegistry<AccountId> {
     mocked_contracts: Vec<ContractMock<AccountId>>,

@@ -21,7 +21,7 @@ mod transcoding;
 
 use errors::{MessageResult, SessionError};
 
-use crate::session::transcoding::TranscoderRegistry;
+use crate::{mock::MockingApi, session::transcoding::TranscoderRegistry};
 
 type Balance = u128;
 
@@ -166,6 +166,11 @@ impl<R: Runtime> Session<R> {
 
     /// Returns a reference for basic contracts API.
     pub fn contracts_api(&mut self) -> &mut impl ContractApi<R> {
+        &mut self.sandbox
+    }
+
+    /// Returns a reference for mocking API.
+    pub fn mocking_api(&mut self) -> &mut impl MockingApi<R> {
         &mut self.sandbox
     }
 

@@ -23,7 +23,7 @@ use frame_system::{pallet_prelude::BlockNumberFor, EventRecord, GenesisConfig};
 use sp_io::TestExternalities;
 
 use crate::{
-    mock::{ContractMock, MockRegistry},
+    mock::MockRegistry,
     pallet_contracts_debugging::DebugExt,
     runtime::{pallet_contracts_debugging::NoopDebugExt, *},
 };
@@ -84,10 +84,5 @@ impl<R: Runtime> Sandbox<R> {
     /// allows to override it with a custom debug extension.
     pub fn override_debug_handle(&mut self, d: DebugExt) {
         self.externalities.register_extension(d);
-    }
-
-    /// Register a new contract mock.
-    pub fn register_mock(&mut self, mock: ContractMock<AccountIdFor<R>>) {
-        self.mock_registry.register_mock(mock);
     }
 }
