@@ -6,7 +6,7 @@
 pub mod chain_api;
 pub mod contract_api;
 mod error;
-pub mod mock;
+mod mock;
 pub mod runtime;
 #[cfg(feature = "session")]
 pub mod session;
@@ -23,7 +23,10 @@ pub use frame_support::{
     weights::Weight,
 };
 use frame_system::{pallet_prelude::BlockNumberFor, EventRecord, GenesisConfig};
-use parity_scale_codec::Encode;
+pub use mock::{ContractMock, MessageMock, MockingApi, Selector};
+use pallet_contracts::debug::ExecResult;
+use pallet_contracts_primitives::{ExecReturnValue, ReturnFlags};
+use parity_scale_codec::{Decode, Encode};
 use sp_io::TestExternalities;
 
 use crate::{
@@ -109,13 +112,40 @@ struct MockExtension<AccountId: Ord> {
     mock_registry: Arc<Mutex<MockRegistry<AccountId>>>,
 }
 
-impl<AccountId: Ord> InterceptingExtT for MockExtension<AccountId> {
+impl<AccountId: Ord + Decode> InterceptingExtT for MockExtension<AccountId> {
     fn intercept_call(
         &self,
         contract_address: Vec<u8>,
         _is_call: bool,
         input_data: Vec<u8>,
     ) -> Vec<u8> {
-        None::<()>.encode()
+        let contract_address = Decode::decode(&mut &contract_address[..])
+            .expect("Contract address should be decodable");
+
+        match self
+            .mock_registry
+            .lock()
+            .expect("Should be able to acquire registry")
+            .get(&contract_address)
+        {
+            None => None::<()>.encode(),
+            Some(mock) => {
+                let (selector, call_data) = input_data.split_at(4);
+                let selector: Selector = selector
+                    .try_into()
+                    .expect("Input data should contain at least selector bytes");
+
+                let result = mock
+                    .call(selector, call_data.to_vec())
+                    .expect("TODO: let the user define the fallback mechanism");
+
+                let result: ExecResult = Ok(ExecReturnValue {
+                    flags: ReturnFlags::empty(),
+                    data: result,
+                });
+
+                Some(result).encode()
+            }
+        }
     }
 }
