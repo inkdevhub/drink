@@ -25,7 +25,7 @@ mod intercepting;
 mod runtime;
 mod tracing;
 
-pub use runtime::{DebugExt, DebugExtT, NoopDebugExt};
+pub use runtime::{NoopTracingExt, TracingExt, TracingExtT};
 
 /// Main configuration parameter for the contracts pallet debugging. Provides all the necessary
 /// trait implementations.

@@ -66,7 +66,7 @@ mod tests {
 
     use drink::{
         runtime::{
-            pallet_contracts_debugging::{DebugExt, DebugExtT},
+            pallet_contracts_debugging::{TracingExt, TracingExtT},
             MinimalRuntime,
         },
         session::{
@@ -94,7 +94,7 @@ mod tests {
     }
 
     struct TestDebugger;
-    impl DebugExtT for TestDebugger {
+    impl TracingExtT for TestDebugger {
         fn after_call(
             &self,
             contract_address: Vec<u8>,
@@ -143,7 +143,7 @@ mod tests {
     #[test]
     fn test() -> Result<(), Box<dyn Error>> {
         let mut session = Session::<MinimalRuntime>::new()?;
-        session.override_debug_handle(DebugExt(Box::new(TestDebugger {})));
+        session.override_debug_handle(TracingExt(Box::new(TestDebugger {})));
 
         let outer_address =
             session.deploy(bytes(), "new", NO_ARGS, vec![1], None, &transcoder())?;

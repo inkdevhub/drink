@@ -11,7 +11,7 @@ pub trait ContractCallDebugger {
         input_data: Vec<u8>,
         result: Vec<u8>,
     ) {
-        self.extension::<DebugExt>()
+        self.extension::<TracingExt>()
             .expect("Failed to find `DebugExt` extension")
             .after_call(contract_address, is_call, input_data, result);
     }
@@ -19,7 +19,7 @@ pub trait ContractCallDebugger {
 
 /// This trait describes the interface of a runtime extension that can be used to debug contract
 /// calls.
-pub trait DebugExtT {
+pub trait TracingExtT {
     /// Called after a contract call is made.
     fn after_call(
         &self,
@@ -32,10 +32,10 @@ pub trait DebugExtT {
 }
 
 decl_extension! {
-    /// A wrapper type for the `DebugExtT` debug extension.
-    pub struct DebugExt(Box<dyn DebugExtT + Send>);
+    /// A wrapper type for the `TracingExtT` debug extension.
+    pub struct TracingExt(Box<dyn TracingExtT + Send>);
 }
 
 /// The simplest debug extension - does nothing.
-pub struct NoopDebugExt {}
-impl DebugExtT for NoopDebugExt {}
+pub struct NoopTracingExt {}
+impl TracingExtT for NoopTracingExt {}

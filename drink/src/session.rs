@@ -11,7 +11,7 @@ use parity_scale_codec::Decode;
 use crate::{
     chain_api::ChainApi,
     contract_api::ContractApi,
-    pallet_contracts_debugging::DebugExt,
+    pallet_contracts_debugging::TracingExt,
     runtime::{AccountIdFor, HashFor, Runtime},
     EventRecordOf, Sandbox, DEFAULT_GAS_LIMIT,
 };
@@ -391,7 +391,7 @@ impl<R: Runtime> Session<R> {
     ///
     /// By default, a new `Session` instance will use a noop debug extension. This method allows to
     /// override it with a custom debug extension.
-    pub fn override_debug_handle(&mut self, d: DebugExt) {
+    pub fn override_debug_handle(&mut self, d: TracingExt) {
         self.sandbox.override_debug_handle(d);
     }
 }
