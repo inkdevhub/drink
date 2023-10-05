@@ -25,7 +25,7 @@ use sp_io::TestExternalities;
 use crate::{
     mock::MockRegistry,
     pallet_contracts_debugging::TracingExt,
-    runtime::{pallet_contracts_debugging::NoopTracingExt, *},
+    runtime::{pallet_contracts_debugging::NoopExt, *},
 };
 
 /// Main result type for the drink crate.
@@ -75,7 +75,7 @@ impl<R: Runtime> Sandbox<R> {
             .map_err(Error::BlockInitialize)?;
 
         // We register a noop debug extension by default.
-        sandbox.override_debug_handle(TracingExt(Box::new(NoopTracingExt {})));
+        sandbox.override_debug_handle(TracingExt(Box::new(NoopExt {})));
 
         Ok(sandbox)
     }
