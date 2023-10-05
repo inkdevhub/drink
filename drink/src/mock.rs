@@ -6,7 +6,7 @@ mod mocking_api;
 
 use std::collections::BTreeMap;
 
-pub use contract::{ContractMock, MessageMock, Selector};
+pub use contract::{mock_message, ContractMock, MessageMock, Selector};
 use error::MockingError;
 pub use mocking_api::MockingApi;
 

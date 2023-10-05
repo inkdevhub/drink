@@ -3,6 +3,11 @@ use sp_externalities::{decl_extension, ExternalitiesExt};
 use sp_runtime_interface::runtime_interface;
 
 /// Contracts pallet outsources debug callbacks through this runtime interface.
+///
+/// Essentially, in our case, it just exposes extensions to the runtime.
+///
+/// At this level, data passed back/forth must be either primitive or implement some specific
+/// traits. For simplicity, we just go with primitives and codec encoded data.
 #[runtime_interface]
 pub trait ContractCallDebugger {
     fn after_call(
@@ -60,7 +65,8 @@ pub trait InterceptingExtT {
         _is_call: bool,
         _input_data: Vec<u8>,
     ) -> Vec<u8> {
-        None::<()>.encode() // do not intercept, continue standard procedure
+        // By default, do not intercept, continue with the standard procedure.
+        None::<()>.encode()
     }
 }
 

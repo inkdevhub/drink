@@ -6,6 +6,6 @@ use crate::Selector;
 pub enum MockingError {
     #[error("Message not found (unknown selector: {0:?})")]
     MessageNotFound(Selector),
-    #[error("Message failed")]
-    MessageFailed,
+    #[error("Decoding message arguments failed: {0:?}")]
+    ArgumentDecoding(parity_scale_codec::Error),
 }

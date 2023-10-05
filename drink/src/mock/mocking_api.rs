@@ -33,7 +33,6 @@ impl<R: Runtime> MockingApi<R> for Sandbox<R> {
 
         self.mock_counter += 1;
         self.mock_registry
-            .as_ref()
             .lock()
             .expect("Should be able to acquire lock on registry")
             .register(mock_address.clone(), mock);
@@ -41,7 +40,7 @@ impl<R: Runtime> MockingApi<R> for Sandbox<R> {
         mock_address
     }
 
-    fn mock_existing_contract(&mut self, mock: ContractMock, address: AccountIdFor<R>) {
+    fn mock_existing_contract(&mut self, _mock: ContractMock, _address: AccountIdFor<R>) {
         todo!("soon")
     }
 }

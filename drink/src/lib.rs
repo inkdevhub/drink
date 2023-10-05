@@ -23,7 +23,7 @@ pub use frame_support::{
     weights::Weight,
 };
 use frame_system::{pallet_prelude::BlockNumberFor, EventRecord, GenesisConfig};
-pub use mock::{ContractMock, MessageMock, MockingApi, Selector};
+pub use mock::{mock_message, ContractMock, MessageMock, MockingApi, Selector};
 use pallet_contracts::debug::ExecResult;
 use pallet_contracts_primitives::{ExecReturnValue, ReturnFlags};
 use parity_scale_codec::{Decode, Encode};
@@ -102,17 +102,16 @@ impl<R: Runtime> Sandbox<R> {
 
     fn setup_mock_extension(&mut self) {
         self.externalities
-            .register_extension(InterceptingExt(Box::new(MockExtension {
+            .register_extension(InterceptingExt(Box::new(MockingExtension {
                 mock_registry: Arc::clone(&self.mock_registry),
             })));
     }
 }
-
-struct MockExtension<AccountId: Ord> {
+struct MockingExtension<AccountId: Ord> {
     mock_registry: Arc<Mutex<MockRegistry<AccountId>>>,
 }
 
-impl<AccountId: Ord + Decode> InterceptingExtT for MockExtension<AccountId> {
+impl<AccountId: Ord + Decode> InterceptingExtT for MockingExtension<AccountId> {
     fn intercept_call(
         &self,
         contract_address: Vec<u8>,
