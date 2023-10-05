@@ -5,7 +5,7 @@
 
 pub mod chain_api;
 pub mod contract_api;
-mod error;
+pub mod errors;
 mod mock;
 pub mod runtime;
 #[cfg(feature = "session")]
@@ -16,14 +16,14 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-pub use error::Error;
+pub use errors::Error;
 use frame_support::sp_runtime::{traits::One, BuildStorage};
 pub use frame_support::{
     sp_runtime::{AccountId32, DispatchError},
     weights::Weight,
 };
 use frame_system::{pallet_prelude::BlockNumberFor, EventRecord, GenesisConfig};
-pub use mock::{mock_message, ContractMock, MessageMock, MockingApi, Selector};
+pub use mock::{mock_message, ContractMock, MessageMock, MockedCallResult, MockingApi, Selector};
 use pallet_contracts::debug::ExecResult;
 use pallet_contracts_primitives::{ExecReturnValue, ReturnFlags};
 use parity_scale_codec::{Decode, Encode};
@@ -100,6 +100,7 @@ impl<R: Runtime> Sandbox<R> {
         self.externalities.register_extension(d);
     }
 
+    /// Registers the extension for intercepting calls to contracts.
     fn setup_mock_extension(&mut self) {
         self.externalities
             .register_extension(InterceptingExt(Box::new(MockingExtension {
@@ -107,7 +108,13 @@ impl<R: Runtime> Sandbox<R> {
             })));
     }
 }
+
+/// Runtime extension enabling contract call interception.
 struct MockingExtension<AccountId: Ord> {
+    /// Mock registry, shared with the sandbox.
+    ///
+    /// Potentially the runtime is executed in parallel and thus we need to wrap the registry in
+    /// `Arc<Mutex>` instead of `Rc<RefCell>`.
     mock_registry: Arc<Mutex<MockRegistry<AccountId>>>,
 }
 
@@ -127,7 +134,10 @@ impl<AccountId: Ord + Decode> InterceptingExtT for MockingExtension<AccountId> {
             .expect("Should be able to acquire registry")
             .get(&contract_address)
         {
+            // There is no mock registered for this address, so we return `None` to indicate that
+            // the call should be executed normally.
             None => None::<()>.encode(),
+            // We intercept the call and return the result of the mock.
             Some(mock) => {
                 let (selector, call_data) = input_data.split_at(4);
                 let selector: Selector = selector

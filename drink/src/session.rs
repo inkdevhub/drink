@@ -16,10 +16,10 @@ use crate::{
     EventRecordOf, Sandbox, DEFAULT_GAS_LIMIT,
 };
 
-pub mod errors;
+pub mod error;
 mod transcoding;
 
-use errors::{MessageResult, SessionError};
+use error::{MessageResult, SessionError};
 
 use crate::{mock::MockingApi, session::transcoding::TranscoderRegistry};
 
@@ -56,7 +56,7 @@ pub const NO_ARGS: &[String] = &[];
 /// # fn contract_bytes() -> Vec<u8> { vec![] }
 /// # fn bob() -> AccountId32 { AccountId32::new([0; 32]) }
 ///
-/// # fn main() -> Result<(), drink::session::errors::SessionError> {
+/// # fn main() -> Result<(), drink::session::error::SessionError> {
 ///
 /// Session::<MinimalRuntime>::new()?
 ///     .deploy_and(contract_bytes(), "new", NO_ARGS, vec![], None, &get_transcoder())?
@@ -82,7 +82,7 @@ pub const NO_ARGS: &[String] = &[];
 /// # fn contract_bytes() -> Vec<u8> { vec![] }
 /// # fn bob() -> AccountId32 { AccountId32::new([0; 32]) }
 ///
-/// # fn main() -> Result<(), drink::session::errors::SessionError> {
+/// # fn main() -> Result<(), drink::session::error::SessionError> {
 ///
 /// let mut session = Session::<MinimalRuntime>::new()?;
 /// let _address = session.deploy(contract_bytes(), "new", NO_ARGS, vec![], None, &get_transcoder())?;

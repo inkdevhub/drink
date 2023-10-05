@@ -34,8 +34,7 @@ pub trait ContractCallDebugger {
     }
 }
 
-/// This trait describes the interface of a runtime extension that can be used to debug contract
-/// calls.
+/// This trait describes a runtime extension that can be used to debug contract calls.
 pub trait TracingExtT {
     /// Called after a contract call is made.
     fn after_call(
@@ -53,8 +52,7 @@ decl_extension! {
     pub struct TracingExt(Box<dyn TracingExtT + Send>);
 }
 
-/// This trait describes the interface of a runtime extension that can be used to intercept contract
-/// calls.
+/// This trait describes a runtime extension that can be used to intercept contract calls.
 pub trait InterceptingExtT {
     /// Called when a contract call is made.
     ///

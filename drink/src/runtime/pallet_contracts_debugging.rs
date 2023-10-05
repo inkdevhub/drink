@@ -16,10 +16,9 @@
 //!
 //! # Passing objects between runtime and runtime extension
 //!
-//! Unfortunately, runtime interface that lies between runtime and the end-user accepts only
-//! very simple argument types and those that implement some specific traits. This means that
-//! usually, complex objects will be passed in their encoded form (`Vec<u8>` obtained with scale
-//! encoding).
+//! Unfortunately, runtime interface that lies between runtime, and the end-user accepts only
+//! simple argument types, and those that implement some specific traits. This means that usually,
+//! complex objects will be passed in their encoded form (`Vec<u8>` obtained with scale encoding).
 
 mod intercepting;
 mod runtime;
