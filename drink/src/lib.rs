@@ -20,12 +20,16 @@ pub use frame_support::{
     weights::Weight,
 };
 use frame_system::{pallet_prelude::BlockNumberFor, EventRecord, GenesisConfig};
+use parity_scale_codec::Encode;
 use sp_io::TestExternalities;
 
 use crate::{
     mock::MockRegistry,
-    pallet_contracts_debugging::TracingExt,
-    runtime::{pallet_contracts_debugging::NoopExt, *},
+    pallet_contracts_debugging::{InterceptingExt, TracingExt},
+    runtime::{
+        pallet_contracts_debugging::{InterceptingExtT, NoopExt},
+        *,
+    },
 };
 
 /// Main result type for the drink crate.
@@ -77,6 +81,8 @@ impl<R: Runtime> Sandbox<R> {
         // We register a noop debug extension by default.
         sandbox.override_debug_handle(TracingExt(Box::new(NoopExt {})));
 
+        sandbox.setup_mock_extension();
+
         Ok(sandbox)
     }
 
@@ -86,5 +92,22 @@ impl<R: Runtime> Sandbox<R> {
     /// allows to override it with a custom debug extension.
     pub fn override_debug_handle(&mut self, d: TracingExt) {
         self.externalities.register_extension(d);
+    }
+
+    fn setup_mock_extension(&mut self) {
+        self.externalities
+            .register_extension(InterceptingExt(Box::new(MockExtension {})));
+    }
+}
+
+struct MockExtension;
+impl InterceptingExtT for MockExtension {
+    fn intercept_call(
+        &self,
+        contract_address: Vec<u8>,
+        is_call: bool,
+        input_data: Vec<u8>,
+    ) -> Vec<u8> {
+        None::<()>.encode()
     }
 }

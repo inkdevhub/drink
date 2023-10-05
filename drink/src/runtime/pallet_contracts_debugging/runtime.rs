@@ -52,6 +52,8 @@ decl_extension! {
 /// calls.
 pub trait InterceptingExtT {
     /// Called when a contract call is made.
+    ///
+    /// The returned value must be a valid codec encoding for `Option<ExecResult>`.
     fn intercept_call(
         &self,
         _contract_address: Vec<u8>,
