@@ -19,9 +19,9 @@ use crate::{
 pub mod error;
 mod transcoding;
 
-use error::{MessageResult, SessionError};
+use error::SessionError;
 
-use crate::{mock::MockingApi, session::transcoding::TranscoderRegistry};
+use crate::{errors::MessageResult, mock::MockingApi, session::transcoding::TranscoderRegistry};
 
 type Balance = u128;
 
