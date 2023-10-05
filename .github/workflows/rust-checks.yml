@@ -59,6 +59,8 @@ jobs:
       - name: Run tests for examples
         shell: bash
         run: |
+          # todo: use loop xD
+          
           pushd examples/flipper
           cargo contract build --release
           cargo test --release
