@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use crate::mock::builder_utils::{Set, Setter, UnSet};
 
-type Body<Args, Ret> = Box<dyn Fn(Args) -> Ret>;
+type Body<Args, Ret> = Box<dyn Fn(Args) -> Ret + Send + Sync>;
 type Selector = [u8; 4];
 
 pub trait MessageMockT {}

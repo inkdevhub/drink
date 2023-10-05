@@ -1,7 +1,7 @@
 use crate::mock::message::MessageMockT;
 
 pub struct ContractMock {
-    messages: Vec<Box<dyn MessageMockT>>,
+    messages: Vec<Box<dyn MessageMockT + Send + Sync>>,
 }
 
 impl ContractMock {
@@ -11,7 +11,7 @@ impl ContractMock {
         }
     }
 
-    pub fn with_message<M: MessageMockT + 'static>(mut self, message: M) -> Self {
+    pub fn with_message<M: MessageMockT + Send + Sync + 'static>(mut self, message: M) -> Self {
         self.messages.push(Box::new(message));
         self
     }

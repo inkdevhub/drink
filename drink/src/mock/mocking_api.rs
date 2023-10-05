@@ -32,7 +32,11 @@ impl<R: Runtime> MockingApi<R> for Sandbox<R> {
             .account_id;
 
         self.mock_counter += 1;
-        self.mock_registry.register(mock_address.clone(), mock);
+        self.mock_registry
+            .as_ref()
+            .lock()
+            .expect("Should be able to acquire lock on registry")
+            .register(mock_address.clone(), mock);
 
         mock_address
     }

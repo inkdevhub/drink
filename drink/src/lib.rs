@@ -11,7 +11,10 @@ pub mod runtime;
 #[cfg(feature = "session")]
 pub mod session;
 
-use std::marker::PhantomData;
+use std::{
+    marker::PhantomData,
+    sync::{Arc, Mutex},
+};
 
 pub use error::Error;
 use frame_support::sp_runtime::{traits::One, BuildStorage};
@@ -42,7 +45,7 @@ pub type EventRecordOf<T> =
 /// A sandboxed runtime.
 pub struct Sandbox<R: Runtime> {
     externalities: TestExternalities,
-    mock_registry: MockRegistry<AccountIdFor<R>>,
+    mock_registry: Arc<Mutex<MockRegistry<AccountIdFor<R>>>>,
     mock_counter: usize,
     _phantom: PhantomData<R>,
 }
@@ -66,7 +69,7 @@ impl<R: Runtime> Sandbox<R> {
 
         let mut sandbox = Self {
             externalities: TestExternalities::new(storage),
-            mock_registry: MockRegistry::new(),
+            mock_registry: Arc::new(Mutex::new(MockRegistry::new())),
             mock_counter: 0,
             _phantom: PhantomData,
         };
@@ -96,16 +99,21 @@ impl<R: Runtime> Sandbox<R> {
 
     fn setup_mock_extension(&mut self) {
         self.externalities
-            .register_extension(InterceptingExt(Box::new(MockExtension {})));
+            .register_extension(InterceptingExt(Box::new(MockExtension {
+                mock_registry: Arc::clone(&self.mock_registry),
+            })));
     }
 }
 
-struct MockExtension;
-impl InterceptingExtT for MockExtension {
+struct MockExtension<AccountId: Ord> {
+    mock_registry: Arc<Mutex<MockRegistry<AccountId>>>,
+}
+
+impl<AccountId: Ord> InterceptingExtT for MockExtension<AccountId> {
     fn intercept_call(
         &self,
         contract_address: Vec<u8>,
-        is_call: bool,
+        _is_call: bool,
         input_data: Vec<u8>,
     ) -> Vec<u8> {
         None::<()>.encode()
