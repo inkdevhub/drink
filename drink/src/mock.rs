@@ -24,9 +24,9 @@ impl<AccountId: Ord> MockRegistry<AccountId> {
         }
     }
 
-    /// Registers `mock` for `address`.
-    pub fn register(&mut self, address: AccountId, mock: ContractMock) {
-        self.mocked_contracts.insert(address, mock);
+    /// Registers `mock` for `address`. Returns the previous mock, if any.
+    pub fn register(&mut self, address: AccountId, mock: ContractMock) -> Option<ContractMock> {
+        self.mocked_contracts.insert(address, mock)
     }
 
     /// Returns the mock for `address`, if any.
