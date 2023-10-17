@@ -8,7 +8,7 @@ use crate::{
 /// Interface for basic mocking operations.
 pub trait MockingApi<R: Runtime> {
     /// Deploy `mock` as a standard contract. Returns the address of the deployed contract.
-    fn deploy_mock(&mut self, mock: ContractMock) -> AccountIdFor<R>;
+    fn deploy(&mut self, mock: ContractMock) -> AccountIdFor<R>;
 
     /// Mock part of an existing contract. In particular, allows to override real behavior of
     /// deployed contract's messages.
@@ -16,7 +16,7 @@ pub trait MockingApi<R: Runtime> {
 }
 
 impl<R: Runtime> MockingApi<R> for Sandbox<R> {
-    fn deploy_mock(&mut self, mock: ContractMock) -> AccountIdFor<R> {
+    fn deploy(&mut self, mock: ContractMock) -> AccountIdFor<R> {
         // We have to deploy some contract. We use a dummy contract for that. Thanks to that, we
         // ensure that the pallet will treat our mock just as a regular contract, until we actually
         // call it.
