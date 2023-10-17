@@ -68,7 +68,7 @@ mod tests {
         let mocked_contract =
             ContractMock::new().with_message(CALLEE_SELECTOR, mock_message(|()| RETURN_VALUE));
 
-        // Secondly, we are deploy it, similarly to a standard deployment action.
+        // Secondly, we deploy it, similarly to a standard deployment action.
         let mock_address = session.mocking_api().deploy_mock(mocked_contract);
 
         // Now, we can deploy our proper contract and verify its behavior.
