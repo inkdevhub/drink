@@ -1015,7 +1015,7 @@ checksum = "9ea835d29036a4087793836fa931b08837ad5e957da9e23886b29586fb9b6650"
 
 [[package]]
 name = "drink"
-version = "0.4.1"
+version = "0.5.0"
 dependencies = [
  "contract-transcode",
  "frame-metadata",
@@ -1037,7 +1037,7 @@ dependencies = [
 
 [[package]]
 name = "drink-cli"
-version = "0.4.1"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -2478,9 +2478,9 @@ dependencies = [
 
 [[package]]
 name = "pallet-contracts-for-drink"
-version = "22.0.0"
+version = "22.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9ef4598e638732ef5487b972c68b3b521d2953436cb3dd51b575ed6cbd16783f"
+checksum = "3f039ee77b4ff6ab8b4e427bab636dd23ba1257ed631616c98c0859a83a5e690"
 dependencies = [
  "bitflags",
  "environmental",

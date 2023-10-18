@@ -16,107 +16,16 @@
 //!
 //! # Passing objects between runtime and runtime extension
 //!
-//! Unfortunately, runtime interface that lies between runtime and the end-user accepts only
-//! very simple argument types and those that implement some specific traits. This means that
-//! usually, complex objects will be passed in their encoded form (`Vec<u8>` obtained with scale
-//! encoding).
+//! Unfortunately, runtime interface that lies between runtime, and the end-user accepts only
+//! simple argument types, and those that implement some specific traits. This means that usually,
+//! complex objects will be passed in their encoded form (`Vec<u8>` obtained with scale encoding).
 
-use pallet_contracts::debug::{CallInterceptor, CallSpan, ExecResult, ExportedFunction, Tracing};
-use pallet_contracts_primitives::ExecReturnValue;
-use sp_externalities::{decl_extension, ExternalitiesExt};
-use sp_runtime_interface::runtime_interface;
+mod intercepting;
+mod runtime;
+mod tracing;
 
-use crate::runtime::{AccountIdFor, Runtime};
+pub use runtime::{InterceptingExt, InterceptingExtT, NoopExt, TracingExt, TracingExtT};
 
-/// The trait that allows injecting custom logic to handle contract debugging directly in the
-/// contracts pallet.
-pub trait DebugExtT {
-    /// Called after a contract call is made.
-    fn after_call(
-        &self,
-        _contract_address: Vec<u8>,
-        _is_call: bool,
-        _input_data: Vec<u8>,
-        _result: Vec<u8>,
-    ) {
-    }
-}
-
-decl_extension! {
-    /// A wrapper type for the `DebugExtT` debug extension.
-    pub struct DebugExt(Box<dyn DebugExtT + Send>);
-}
-
-/// The simplest debug extension - does nothing.
-pub struct NoopDebugExt {}
-impl DebugExtT for NoopDebugExt {}
-
-#[runtime_interface]
-trait ContractCallDebugger {
-    fn after_call(
-        &mut self,
-        contract_address: Vec<u8>,
-        is_call: bool,
-        input_data: Vec<u8>,
-        result: Vec<u8>,
-    ) {
-        self.extension::<DebugExt>()
-            .expect("Failed to find `DebugExt` extension")
-            .after_call(contract_address, is_call, input_data, result);
-    }
-}
-
-/// Configuration parameter for the contracts pallet. Provides all the necessary trait
-/// implementations.
+/// Main configuration parameter for the contracts pallet debugging. Provides all the necessary
+/// trait implementations.
 pub enum DrinkDebug {}
-
-impl<R: Runtime> CallInterceptor<R> for DrinkDebug {
-    fn intercept_call(
-        _contract_address: &AccountIdFor<R>,
-        _entry_point: &ExportedFunction,
-        _input_data: &[u8],
-    ) -> Option<ExecResult> {
-        // We don't want to intercept any calls. At least for now.
-        None
-    }
-}
-
-impl<R: Runtime> Tracing<R> for DrinkDebug {
-    type CallSpan = DrinkCallSpan<AccountIdFor<R>>;
-
-    fn new_call_span(
-        contract_address: &AccountIdFor<R>,
-        entry_point: ExportedFunction,
-        input_data: &[u8],
-    ) -> Self::CallSpan {
-        DrinkCallSpan {
-            contract_address: contract_address.clone(),
-            entry_point,
-            input_data: input_data.to_vec(),
-        }
-    }
-}
-
-/// A contract's call span.
-///
-/// It is created just before the call is made and `Self::after_call` is called after the call is
-/// done.
-pub struct DrinkCallSpan<AccountId> {
-    /// The address of the contract that has been called.
-    pub contract_address: AccountId,
-    /// The entry point that has been called (either constructor or call).
-    pub entry_point: ExportedFunction,
-    /// The input data of the call.
-    pub input_data: Vec<u8>,
-}
-
-impl<AccountId: parity_scale_codec::Encode> CallSpan for DrinkCallSpan<AccountId> {
-    fn after_call(self, output: &ExecReturnValue) {
-        contract_call_debugger::after_call(
-            self.contract_address.encode(),
-            matches!(self.entry_point, ExportedFunction::Call),
-            self.input_data.to_vec(),
-            output.data.clone(),
-        );
-    }
-}

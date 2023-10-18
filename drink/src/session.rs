@@ -11,17 +11,17 @@ use parity_scale_codec::Decode;
 use crate::{
     chain_api::ChainApi,
     contract_api::ContractApi,
-    pallet_contracts_debugging::DebugExt,
+    pallet_contracts_debugging::TracingExt,
     runtime::{AccountIdFor, HashFor, Runtime},
     EventRecordOf, Sandbox, DEFAULT_GAS_LIMIT,
 };
 
-pub mod errors;
+pub mod error;
 mod transcoding;
 
-use errors::{MessageResult, SessionError};
+use error::SessionError;
 
-use crate::session::transcoding::TranscoderRegistry;
+use crate::{errors::MessageResult, mock::MockingApi, session::transcoding::TranscoderRegistry};
 
 type Balance = u128;
 
@@ -56,7 +56,7 @@ pub const NO_ARGS: &[String] = &[];
 /// # fn contract_bytes() -> Vec<u8> { vec![] }
 /// # fn bob() -> AccountId32 { AccountId32::new([0; 32]) }
 ///
-/// # fn main() -> Result<(), drink::session::errors::SessionError> {
+/// # fn main() -> Result<(), drink::session::error::SessionError> {
 ///
 /// Session::<MinimalRuntime>::new()?
 ///     .deploy_and(contract_bytes(), "new", NO_ARGS, vec![], None, &get_transcoder())?
@@ -82,7 +82,7 @@ pub const NO_ARGS: &[String] = &[];
 /// # fn contract_bytes() -> Vec<u8> { vec![] }
 /// # fn bob() -> AccountId32 { AccountId32::new([0; 32]) }
 ///
-/// # fn main() -> Result<(), drink::session::errors::SessionError> {
+/// # fn main() -> Result<(), drink::session::error::SessionError> {
 ///
 /// let mut session = Session::<MinimalRuntime>::new()?;
 /// let _address = session.deploy(contract_bytes(), "new", NO_ARGS, vec![], None, &get_transcoder())?;
@@ -166,6 +166,11 @@ impl<R: Runtime> Session<R> {
 
     /// Returns a reference for basic contracts API.
     pub fn contracts_api(&mut self) -> &mut impl ContractApi<R> {
+        &mut self.sandbox
+    }
+
+    /// Returns a reference for mocking API.
+    pub fn mocking_api(&mut self) -> &mut impl MockingApi<R> {
         &mut self.sandbox
     }
 
@@ -386,7 +391,7 @@ impl<R: Runtime> Session<R> {
     ///
     /// By default, a new `Session` instance will use a noop debug extension. This method allows to
     /// override it with a custom debug extension.
-    pub fn override_debug_handle(&mut self, d: DebugExt) {
+    pub fn override_debug_handle(&mut self, d: TracingExt) {
         self.sandbox.override_debug_handle(d);
     }
 }
