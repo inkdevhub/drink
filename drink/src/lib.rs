@@ -30,6 +30,7 @@ use parity_scale_codec::{Decode, Encode};
 use sp_io::TestExternalities;
 
 use crate::{
+    errors::MessageResult,
     mock::MockRegistry,
     pallet_contracts_debugging::{InterceptingExt, TracingExt},
     runtime::{
@@ -148,8 +149,16 @@ impl<AccountId: Ord + Decode> InterceptingExtT for MockingExtension<AccountId> {
                     .call(selector, call_data.to_vec())
                     .expect("TODO: let the user define the fallback mechanism");
 
+                let decoded_result: MessageResult<()> =
+                    Decode::decode(&mut &result[..]).expect("Mock result should be decodable");
+
+                let flags = match decoded_result {
+                    Ok(_) => ReturnFlags::empty(),
+                    Err(_) => ReturnFlags::REVERT,
+                };
+
                 let result: ExecResult = Ok(ExecReturnValue {
-                    flags: ReturnFlags::empty(),
+                    flags,
                     data: result,
                 });
 
