@@ -149,6 +149,8 @@ impl<AccountId: Ord + Decode> InterceptingExtT for MockingExtension<AccountId> {
                     .call(selector, call_data.to_vec())
                     .expect("TODO: let the user define the fallback mechanism");
 
+                // Although we don't know the exact type, thanks to the SCALE encoding we know
+                // that `()` will always succeed (we only care about the `Ok`/`Err` distinction).
                 let decoded_result: MessageResult<()> =
                     Decode::decode(&mut &result[..]).expect("Mock result should be decodable");
 
