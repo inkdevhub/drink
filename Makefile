@@ -1,4 +1,7 @@
-.PHONY: run build lint clean help
+.PHONY: run build lint test_examples clean help
+
+EXAMPLES = ./examples
+EXAMPLES_PATHS := $(shell find $(EXAMPLES) -mindepth 1 -maxdepth 1 -type d)
 
 run: ## Run the project
 	cargo run --release
@@ -7,8 +10,15 @@ build: ## Build the project
 	cargo build --release
 
 lint: ## Run the linter
-	cargo fmt
+	cargo +nightly fmt
 	cargo clippy --release -- -D warnings
+
+test_examples: ## Run tests for the examples
+	@for dir in $(EXAMPLES_PATHS); do \
+		echo "Processing $$dir" ; \
+		cargo contract build --quiet --manifest-path $$dir/Cargo.toml --release ; \
+		cargo test --quiet --manifest-path $$dir/Cargo.toml --release; \
+	done
 
 clean: ## Clean all the workspace build files
 	cargo clean
