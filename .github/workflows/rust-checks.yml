@@ -58,25 +58,4 @@ jobs:
 
       - name: Run tests for examples
         shell: bash
-        run: |
-          # todo: use loop xD
-          
-          pushd examples/flipper
-          cargo contract build --release
-          cargo test --release
-          popd
-          
-          pushd examples/counter
-          cargo contract build --release
-          cargo test --release
-          popd
-
-          pushd examples/cross-contract-call-tracing
-          cargo contract build --release
-          cargo test --release
-          popd
-          
-          pushd examples/mocking
-          cargo contract build --release
-          cargo test --release
-          popd
+        run: make test_examples
