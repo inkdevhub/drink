@@ -1052,6 +1052,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "drink-test-macro"
+version = "0.5.1"
+
+[[package]]
 name = "duct"
 version = "0.13.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"

@@ -1,0 +1,15 @@
+[package]
+name = "drink-test-macro"
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+readme.workspace = true
+repository.workspace = true
+version.workspace = true
+description = "Procedural macro providing a `#[drink::test]` attribute for `drink`-based contract testing"
+
+[lib]
+proc-macro = true
+
+[dependencies]
