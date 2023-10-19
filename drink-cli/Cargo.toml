@@ -21,4 +21,4 @@ thiserror = { workspace = true }
 pallet-contracts-primitives = { workspace = true }
 sp-core = { workspace = true, features = ["serde"] }
 
-drink = { workspace = true, features = ["session"] }
+drink = { workspace = true }
