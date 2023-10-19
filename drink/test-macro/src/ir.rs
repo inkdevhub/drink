@@ -2,16 +2,22 @@ use darling::{ast::NestedMeta, FromMeta};
 use proc_macro2::TokenStream as TokenStream2;
 use syn::ItemFn;
 
+/// The macro arguments (available configuration).
 #[derive(FromMeta)]
 struct MacroArgs {
+    /// The manifests of the contracts to be built for the test.
     #[darling(default, multiple, rename = "manifest")]
     manifests: Vec<String>,
+    /// Whether the contracts should be built in the debug mode.
     #[darling(default)]
     compile_in_debug_mode: bool,
 }
 
+/// Intermediate representation of the macro arguments and configuration.
 pub struct IR {
+    /// Macro configuration.
     args: MacroArgs,
+    /// The attributed function (testcase).
     function: ItemFn,
 }
 
