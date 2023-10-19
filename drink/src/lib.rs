@@ -10,6 +10,7 @@ mod mock;
 pub mod runtime;
 #[cfg(feature = "session")]
 pub mod session;
+pub mod testing_utils;
 
 use std::{
     marker::PhantomData,
