@@ -1,5 +1,6 @@
 use darling::{ast::NestedMeta, FromMeta};
 use proc_macro2::TokenStream as TokenStream2;
+use syn::ItemFn;
 
 #[derive(FromMeta)]
 struct MacroArgs {
@@ -11,6 +12,7 @@ struct MacroArgs {
 
 pub struct IR {
     args: MacroArgs,
+    function: ItemFn,
 }
 
 impl TryFrom<(TokenStream2, TokenStream2)> for IR {
@@ -18,7 +20,11 @@ impl TryFrom<(TokenStream2, TokenStream2)> for IR {
 
     fn try_from((attr, item): (TokenStream2, TokenStream2)) -> Result<Self, Self::Error> {
         let args = MacroArgs::from_list(&NestedMeta::parse_meta_list(attr)?)?;
-        Ok(IR { args })
+        let item_fn = syn::parse2::<ItemFn>(item)?;
+        Ok(IR {
+            args,
+            function: item_fn,
+        })
     }
 }
 
@@ -30,6 +36,10 @@ impl IR {
     pub fn compile_in_debug_mode(&self) -> bool {
         self.args.compile_in_debug_mode
     }
+
+    pub fn function(&self) -> &ItemFn {
+        &self.function
+    }
 }
 
 #[cfg(test)]
@@ -38,6 +48,10 @@ mod tests {
 
     use super::*;
 
+    fn empty_function() -> TokenStream2 {
+        quote! { fn test() {} }
+    }
+
     #[test]
     fn argument_parsing() {
         let attr = quote! {
@@ -45,7 +59,7 @@ mod tests {
             manifest = "some path",
             compile_in_debug_mode
         };
-        let ir = IR::try_from((attr, Default::default())).expect("failed to parse macro args");
+        let ir = IR::try_from((attr, empty_function())).expect("failed to parse macro args");
 
         assert_eq!(ir.manifests(), &["../foo/Cargo.toml", "some path"]);
         assert!(ir.compile_in_debug_mode());
@@ -54,7 +68,7 @@ mod tests {
     #[test]
     fn default_arguments() {
         let attr = quote! {};
-        let ir = IR::try_from((attr, Default::default())).expect("failed to parse macro args");
+        let ir = IR::try_from((attr, empty_function())).expect("failed to parse macro args");
 
         assert_eq!(ir.manifests(), &Vec::<String>::new());
         assert!(!ir.compile_in_debug_mode());

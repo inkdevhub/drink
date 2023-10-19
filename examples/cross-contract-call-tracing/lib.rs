@@ -140,7 +140,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[drink::test]
     fn test() -> Result<(), Box<dyn Error>> {
         let mut session = Session::<MinimalRuntime>::new()?;
         session.override_debug_handle(TracingExt(Box::new(TestDebugger {})));

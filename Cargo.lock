@@ -1053,6 +1053,7 @@ name = "drink"
 version = "0.6.0"
 dependencies = [
  "contract-transcode",
+ "drink-test-macro",
  "frame-metadata",
  "frame-support",
  "frame-system",

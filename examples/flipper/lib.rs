@@ -50,7 +50,7 @@ mod tests {
         fs::read("./target/ink/flipper.wasm").expect("Failed to find or read contract file")
     }
 
-    #[test]
+    #[drink::test]
     fn initialization() -> Result<(), Box<dyn Error>> {
         let init_value: bool = Session::<MinimalRuntime>::new()?
             .deploy_and(bytes(), "new", &["true"], vec![], None, &transcoder())?
@@ -64,7 +64,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[drink::test]
     fn flipping() -> Result<(), Box<dyn Error>> {
         let init_value: bool = Session::<MinimalRuntime>::new()?
             .deploy_and(bytes(), "new", &["true"], vec![], None, &transcoder())?

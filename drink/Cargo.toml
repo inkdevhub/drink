@@ -28,6 +28,8 @@ scale-info = { workspace = true }
 thiserror = { workspace = true }
 wat = { workspace = true }
 
+drink-test-macro = { workspace = true }
+
 [features]
 default = [
     # This is required for the runtime-interface to work properly in the std env.
