@@ -13,3 +13,7 @@ description = "Procedural macro providing a `#[drink::test]` attribute for `drin
 proc-macro = true
 
 [dependencies]
+darling = "0.20.3"
+proc-macro2 = "1"
+syn = { version = "2", features = ["full"] }
+quote = "1"
