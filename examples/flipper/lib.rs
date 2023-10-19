@@ -32,28 +32,19 @@ mod flipper {
 
 #[cfg(test)]
 mod tests {
-    use std::{error::Error, fs, path::PathBuf, rc::Rc};
+    use std::{error::Error};
 
     use drink::{
         runtime::MinimalRuntime,
-        session::{contract_transcode::ContractMessageTranscoder, Session, NO_ARGS},
+        session::{ContractBundle, Session, NO_ARGS},
+        local_bundle,
     };
-
-    fn transcoder() -> Rc<ContractMessageTranscoder> {
-        Rc::new(
-            ContractMessageTranscoder::load(PathBuf::from("./target/ink/flipper.json"))
-                .expect("Failed to create transcoder"),
-        )
-    }
-
-    fn bytes() -> Vec<u8> {
-        fs::read("./target/ink/flipper.wasm").expect("Failed to find or read contract file")
-    }
 
     #[test]
     fn initialization() -> Result<(), Box<dyn Error>> {
+        let contract = ContractBundle::load("./target/ink/flipper.contract")?;
         let init_value: bool = Session::<MinimalRuntime>::new()?
-            .deploy_and(bytes(), "new", &["true"], vec![], None, &transcoder())?
+            .deploy_bundle_and(contract, "new", &["true"], vec![], None)?
             .call_and("get", NO_ARGS, None)?
             .last_call_return()
             .expect("Call was successful, so there should be a return")
@@ -66,8 +57,9 @@ mod tests {
 
     #[test]
     fn flipping() -> Result<(), Box<dyn Error>> {
+        let contract = local_bundle!();
         let init_value: bool = Session::<MinimalRuntime>::new()?
-            .deploy_and(bytes(), "new", &["true"], vec![], None, &transcoder())?
+            .deploy_bundle_and(contract, "new", &["true"], vec![], None)?
             .call_and("flip", NO_ARGS, None)?
             .call_and("flip", NO_ARGS, None)?
             .call_and("flip", NO_ARGS, None)?

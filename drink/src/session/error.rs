@@ -36,4 +36,7 @@ pub enum SessionError {
     /// There is no registered transcoder to encode/decode messages for the called contract.
     #[error("Missing transcoder")]
     NoTranscoder,
+    /// Bundle loading and parsing has failed
+    #[error("Loading the contract bundle has failed: {0}")]
+    BundleLoadFailed(String),
 }

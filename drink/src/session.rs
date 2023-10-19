@@ -1,7 +1,8 @@
 //! This module provides a context-aware interface for interacting with contracts.
 
-use std::{fmt::Debug, mem, rc::Rc};
+use std::{fmt::Debug, mem, path::PathBuf, rc::Rc};
 
+use contract_metadata::ContractMetadata;
 pub use contract_transcode;
 use contract_transcode::ContractMessageTranscoder;
 use frame_support::weights::Weight;
@@ -90,6 +91,24 @@ pub const NO_ARGS: &[String] = &[];
 /// session.set_actor(bob());
 /// session.call("bar", NO_ARGS, None)?;
 /// # Ok(()) }
+/// ```
+///
+/// You can also work with `.contract` bundles like so:
+/// ```rust, no_run
+/// # use drink::{
+/// #   session::{ContractBundle, load_bundle, Session},
+/// #   session::NO_ARGS,
+/// #   runtime::MinimalRuntime
+/// # };
+///
+/// // Simplest way, loading a bundle from the project's directory:
+/// Session::<MinimalRuntime>::new()?
+///     .deploy_bundle_and(load_bundle!(), "new", NO_ARGS, vec![], None, &get_transcoder())?
+///
+/// // Or choosing the file explicitly:
+/// let contract = ContractBundle::load("path/to/your.contract");
+/// Session::<MinimalRuntime>::new()?
+///     .deploy_bundle_and(contract, "new", NO_ARGS, vec![], None, &get_transcoder())?
 /// ```
 pub struct Session<R: Runtime> {
     sandbox: Sandbox<R>,
@@ -240,6 +259,42 @@ impl<R: Runtime> Session<R> {
         ret
     }
 
+    /// Similar to `deploy` but takes the contract bundle as a first argument.
+    ///
+    /// You can get it with `ContractBundle::load("some/path/your.contract")` or `local_bundle!()`
+    pub fn deploy_bundle<S: AsRef<str> + Debug>(
+        &mut self,
+        contract_bundle: ContractBundle,
+        constructor: &str,
+        args: &[S],
+        salt: Vec<u8>,
+        endowment: Option<Balance>,
+    ) -> Result<AccountIdFor<R>, SessionError> {
+        self.deploy(
+            contract_bundle.bytes,
+            constructor,
+            args,
+            salt,
+            endowment,
+            &contract_bundle.transcoder,
+        )
+    }
+
+    /// Similar to `deploy_and` but takes the contract bundle as a first argument.
+    ///
+    /// You can get it with `ContractBundle::load("some/path/your.contract")` or `local_bundle!()`
+    pub fn deploy_bundle_and<S: AsRef<str> + Debug>(
+        mut self,
+        contract_bundle: ContractBundle,
+        constructor: &str,
+        args: &[S],
+        salt: Vec<u8>,
+        endowment: Option<Balance>,
+    ) -> Result<Self, SessionError> {
+        self.deploy_bundle(contract_bundle, constructor, args, salt, endowment)
+            .map(|_| self)
+    }
+
     /// Uploads a raw contract code. In case of success, returns `self`.
     pub fn upload_and(mut self, contract_bytes: Vec<u8>) -> Result<Self, SessionError> {
         self.upload(contract_bytes).map(|_| self)
@@ -256,6 +311,23 @@ impl<R: Runtime> Session<R> {
         result
             .map(|upload_result| upload_result.code_hash)
             .map_err(SessionError::UploadFailed)
+    }
+
+    /// Similar to `upload_and` but takes the contract bundle as the first argument.
+    ///
+    /// You can obtain it using `ContractBundle::load("some/path/your.contract")` or `local_bundle!()`
+    pub fn upload_bundle_and(self, contract_bundle: ContractBundle) -> Result<Self, SessionError> {
+        self.upload_and(contract_bundle.bytes)
+    }
+
+    /// Similar to `upload` but takes the contract bundle as the first argument.
+    ///
+    /// You can obtain it using `ContractBundle::load("some/path/your.contract")` or `local_bundle!()`
+    pub fn upload_bundle(
+        &mut self,
+        contract_bundle: ContractBundle,
+    ) -> Result<HashFor<R>, SessionError> {
+        self.upload(contract_bundle.bytes)
     }
 
     /// Calls a contract with a given address. In case of a successful call, returns `self`.
@@ -394,4 +466,72 @@ impl<R: Runtime> Session<R> {
     pub fn override_debug_handle(&mut self, d: TracingExt) {
         self.sandbox.override_debug_handle(d);
     }
+}
+
+/// A struct representing the result of parsing a `.contract` bundle file.
+///
+/// It can be used with the following methods of the `Session` struct:
+/// - `deploy_bundle`
+/// - `deploy_bundle_and`
+/// - `upload_bundle`
+/// - `upload_bundle_and`
+pub struct ContractBundle {
+    /// WASM blob of the contract
+    bytes: Vec<u8>,
+    /// Transcoder derived from the ABI/metadata
+    transcoder: Rc<ContractMessageTranscoder>,
+}
+
+impl ContractBundle {
+    /// Load and parse the information in a `.contract` bundle under `path`, producing a `ContractBundle` struct.
+    pub fn load<P>(path: P) -> Result<Self, SessionError>
+    where
+        P: AsRef<std::path::Path>,
+    {
+        let metadata: ContractMetadata = ContractMetadata::load(&path).map_err(|e| {
+            SessionError::BundleLoadFailed(format!("Failed to load the contract file:\n{e:?}"))
+        })?;
+
+        let ink_metadata = serde_json::from_value(serde_json::Value::Object(metadata.abi))
+            .map_err(|e| {
+                SessionError::BundleLoadFailed(format!(
+                    "Failed to parse metadata from the contract file:\n{e:?}"
+                ))
+            })?;
+
+        let bytes = metadata
+            .source
+            .wasm
+            .ok_or(SessionError::BundleLoadFailed(
+                "Failed to get the WASM blob from the contract file".to_string(),
+            ))?
+            .0;
+
+        let transcoder = Rc::new(ContractMessageTranscoder::new(ink_metadata));
+
+        Ok(Self { bytes, transcoder })
+    }
+
+    /// Load the `.contract` bundle (`bundle_file`) located in the `project_dir`` working directory.
+    ///
+    /// This is meant to be used predominantly by the `local_bundle!` macro.
+    pub fn local(project_dir: &str, bundle_file: String) -> Self {
+        let mut path = PathBuf::from(project_dir);
+        path.push("target");
+        path.push("ink");
+        path.push(bundle_file);
+        Self::load(path).expect("Loading the local bundle failed")
+    }
+}
+
+/// A convenience macro that allows you to load a bundle found in the target directory
+/// of the current project.
+#[macro_export]
+macro_rules! local_bundle {
+    () => {
+        drink::session::ContractBundle::local(
+            env!("CARGO_MANIFEST_DIR"),
+            env!("CARGO_CRATE_NAME").to_owned() + ".contract",
+        )
+    };
 }
