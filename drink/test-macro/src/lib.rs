@@ -10,13 +10,13 @@ type SynResult<T> = Result<T, syn::Error>;
 
 #[proc_macro_attribute]
 pub fn test(attr: TokenStream, item: TokenStream) -> TokenStream {
-    match test_internal(attr, item) {
+    match test_internal(attr.into(), item.into()) {
         Ok(ts) => ts.into(),
         Err(e) => e.to_compile_error().into(),
     }
 }
 
-fn test_internal(attr: TokenStream, item: TokenStream) -> SynResult<TokenStream2> {
+fn test_internal(attr: TokenStream2, item: TokenStream2) -> SynResult<TokenStream2> {
     let ir = IR::try_from((attr, item))?;
     generate_code(ir)
 }
