@@ -8,6 +8,7 @@ pub mod contract_api;
 pub mod errors;
 mod mock;
 pub mod runtime;
+#[cfg(feature = "session")]
 pub mod session;
 
 use std::{

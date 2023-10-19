@@ -10,7 +10,7 @@ version.workspace = true
 description = "Minimal sufficient architecture that allows for a fully functional ink! contract development"
 
 [dependencies]
-contract-transcode = { workspace = true }
+contract-transcode = { workspace = true, optional = true }
 frame-metadata = { workspace = true }
 frame-support = { workspace = true }
 frame-system = { workspace = true }
@@ -29,6 +29,10 @@ thiserror = { workspace = true }
 wat = { workspace = true }
 
 [features]
-# This is required for the runtime-interface to work properly in the std env.
-default = ["std"]
+default = [
+    # This is required for the runtime-interface to work properly in the std env.
+    "std",
+    "session"
+]
+session = ["contract-transcode"]
 std = []
