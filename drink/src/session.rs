@@ -96,19 +96,22 @@ pub const NO_ARGS: &[String] = &[];
 /// You can also work with `.contract` bundles like so:
 /// ```rust, no_run
 /// # use drink::{
-/// #   session::{ContractBundle, load_bundle, Session},
+/// #   local_bundle,
+/// #   session::{ContractBundle, Session},
 /// #   session::NO_ARGS,
 /// #   runtime::MinimalRuntime
 /// # };
 ///
+/// # fn main() -> Result<(), drink::session::error::SessionError> {
 /// // Simplest way, loading a bundle from the project's directory:
 /// Session::<MinimalRuntime>::new()?
-///     .deploy_bundle_and(load_bundle!(), "new", NO_ARGS, vec![], None, &get_transcoder())?
+///     .deploy_bundle_and(local_bundle!(), "new", NO_ARGS, vec![], None); /* ... */
 ///
 /// // Or choosing the file explicitly:
-/// let contract = ContractBundle::load("path/to/your.contract");
+/// let contract = ContractBundle::load("path/to/your.contract")?;
 /// Session::<MinimalRuntime>::new()?
-///     .deploy_bundle_and(contract, "new", NO_ARGS, vec![], None, &get_transcoder())?
+///     .deploy_bundle_and(contract, "new", NO_ARGS, vec![], None); /* ... */
+///  # Ok(()) }
 /// ```
 pub struct Session<R: Runtime> {
     sandbox: Sandbox<R>,
