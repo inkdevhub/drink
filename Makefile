@@ -7,7 +7,7 @@ build: ## Build the project
 	cargo build --release
 
 lint: ## Run the linter
-	cargo fmt
+	cargo +nightly fmt
 	cargo clippy --release -- -D warnings
 
 clean: ## Clean all the workspace build files
