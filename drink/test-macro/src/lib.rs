@@ -12,7 +12,8 @@ mod ir;
 
 type SynResult<T> = Result<T, syn::Error>;
 
-/// Defines a drink!-based test.
+/// Defines a drink!-based test. *WARNING: THE MACRO DOES NOTHING YET (MISSING CONTRACT BUILDING
+/// FUNCTIONALITY). TO BE ADDED WITHIN A FEW DAYS.*
 ///
 /// # Requirements
 ///
