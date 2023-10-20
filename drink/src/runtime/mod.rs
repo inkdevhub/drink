@@ -24,6 +24,7 @@ pub use pallet_contracts;
 /// Must contain at least system, balances and contracts pallets.
 pub trait Runtime:
     frame_system::Config
+    + pallet_timestamp::Config
     + pallet_balances::Config<Balance = u128>
     + pallet_contracts::Config<Currency = pallet_balances::Pallet<Self>>
 {

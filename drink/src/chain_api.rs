@@ -47,6 +47,16 @@ pub trait ChainApi<R: Runtime> {
     /// * `address` - The address of the account to query.
     fn balance(&mut self, address: &AccountIdFor<R>) -> u128;
 
+    /// Return the timestamp of the current block.
+    fn get_timestamp(&mut self) -> <R as pallet_timestamp::Config>::Moment;
+
+    /// Set the timestamp of the current block.
+    ///
+    /// # Arguments
+    ///
+    /// * `timestamp` - The new timestamp to be set.
+    fn set_timestamp(&mut self, timestamp: <R as pallet_timestamp::Config>::Moment);
+
     /// Run an action without modifying the storage.
     ///
     /// # Arguments
@@ -98,6 +108,16 @@ impl<R: Runtime> ChainApi<R> for Sandbox<R> {
     fn balance(&mut self, address: &AccountIdFor<R>) -> u128 {
         self.externalities
             .execute_with(|| pallet_balances::Pallet::<R>::free_balance(address))
+    }
+
+    fn get_timestamp(&mut self) -> <R as pallet_timestamp::Config>::Moment {
+        self.externalities
+            .execute_with(|| pallet_timestamp::Pallet::<R>::get())
+    }
+
+    fn set_timestamp(&mut self, timestamp: <R as pallet_timestamp::Config>::Moment) {
+        self.externalities
+            .execute_with(|| pallet_timestamp::Pallet::<R>::set_timestamp(timestamp));
     }
 
     fn dry_run<T>(&mut self, action: impl FnOnce(&mut Self) -> T) -> T {
@@ -155,6 +175,18 @@ mod tests {
             pallet_balances::Call::<MinimalRuntime>::transfer { dest, value },
         );
         sandbox.runtime_call(call, Some(MinimalRuntime::default_actor()).into())
+    }
+
+    #[test]
+    fn getting_and_setting_timestamp_works() {
+        let mut sandbox = Sandbox::<MinimalRuntime>::new().expect("Failed to create sandbox");
+        for timestamp in 0..10 {
+            assert_ne!(sandbox.get_timestamp(), timestamp);
+            sandbox.set_timestamp(timestamp);
+            assert_eq!(sandbox.get_timestamp(), timestamp);
+
+            sandbox.build_block().expect("Failed to build block");
+        }
     }
 
     #[test]
