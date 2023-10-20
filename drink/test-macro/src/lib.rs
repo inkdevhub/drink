@@ -23,8 +23,7 @@ type SynResult<T> = Result<T, syn::Error>;
 /// # Impact
 ///
 /// This macro will take care of building all needed contracts for the test. The building process
-/// will be executed during runtime. This means that the test will take longer to execute if the
-/// contracts are not already built.
+/// will be executed during compile time.
 ///
 /// # Example
 ///
