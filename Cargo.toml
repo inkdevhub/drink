@@ -26,7 +26,8 @@ version = "0.5.1"
 anyhow = { version = "1.0.71" }
 clap = { version = "4.3.4" }
 contract-build = { version = "3.0.1" }
-contract-transcode = { version = "3.0.1" }
+contract-metadata = { version = "3.2.0" }
+contract-transcode = { version = "3.2.0" }
 crossterm = { version = "0.26.0" }
 parity-scale-codec = { version = "3.4" }
 parity-scale-codec-derive = { version = "3.4" }
@@ -34,6 +35,8 @@ ratatui = { version = "0.21.0" }
 scale-info = { version = "2.5.0" }
 thiserror = { version = "1.0.40" }
 wat = { version = "1.0.71" }
+
+serde_json = { version = "1.0.106" }
 
 # Substrate dependencies
 

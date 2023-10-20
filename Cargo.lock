@@ -623,9 +623,9 @@ dependencies = [
 
 [[package]]
 name = "contract-metadata"
-version = "3.0.1"
+version = "3.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9c18e3c8d036bcb58c26a5c96cc97e9667c66c31c531de048cf6bc55fa4f83a7"
+checksum = "39a88f62795e84270742796456086ddeebfa4cbd4e56f02777f792192d666725"
 dependencies = [
  "anyhow",
  "impl-serde",
@@ -637,9 +637,9 @@ dependencies = [
 
 [[package]]
 name = "contract-transcode"
-version = "3.0.1"
+version = "3.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f24c67f09efbe97322841746b22cab3ffb5d26c2732347b43ad4c994fc5fbe5d"
+checksum = "91279ca8e8a05dec90febb12a9529b310018c623adaebe691d9b2e8cc115a182"
 dependencies = [
  "anyhow",
  "base58",
@@ -1017,6 +1017,7 @@ checksum = "9ea835d29036a4087793836fa931b08837ad5e957da9e23886b29586fb9b6650"
 name = "drink"
 version = "0.5.1"
 dependencies = [
+ "contract-metadata",
  "contract-transcode",
  "frame-metadata",
  "frame-support",
@@ -1028,6 +1029,7 @@ dependencies = [
  "parity-scale-codec",
  "parity-scale-codec-derive",
  "scale-info",
+ "serde_json",
  "sp-externalities",
  "sp-io",
  "sp-runtime-interface",
@@ -3239,9 +3241,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.97"
+version = "1.0.107"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bdf3bf93142acad5821c99197022e170842cdbc1c30482b98750c688c640842a"
+checksum = "6b420ce6e3d8bd882e9b243c6eed35dbc9a6110c9769e74b584e0d68d1f20c65"
 dependencies = [
  "itoa",
  "ryu",
