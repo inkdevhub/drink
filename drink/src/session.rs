@@ -17,7 +17,7 @@ use crate::{
 };
 
 mod bundle;
-pub use bundle::ContractBundle;
+pub use bundle::ContractFile;
 pub mod error;
 mod transcoding;
 
@@ -97,8 +97,8 @@ pub const NO_ARGS: &[String] = &[];
 /// You can also work with `.contract` bundles like so:
 /// ```rust, no_run
 /// # use drink::{
-/// #   local_bundle,
-/// #   session::{ContractBundle, Session},
+/// #   local_contract_file,
+/// #   session::{ContractFile, Session},
 /// #   session::NO_ARGS,
 /// #   runtime::MinimalRuntime
 /// # };
@@ -106,12 +106,12 @@ pub const NO_ARGS: &[String] = &[];
 /// # fn main() -> Result<(), drink::session::error::SessionError> {
 /// // Simplest way, loading a bundle from the project's directory:
 /// Session::<MinimalRuntime>::new()?
-///     .deploy_bundle_and(local_bundle!(), "new", NO_ARGS, vec![], None); /* ... */
+///     .deploy_contract_and(local_contract_file!(), "new", NO_ARGS, vec![], None); /* ... */
 ///
 /// // Or choosing the file explicitly:
-/// let contract = ContractBundle::load("path/to/your.contract")?;
+/// let contract = ContractFile::load("path/to/your.contract")?;
 /// Session::<MinimalRuntime>::new()?
-///     .deploy_bundle_and(contract, "new", NO_ARGS, vec![], None); /* ... */
+///     .deploy_contract_and(contract, "new", NO_ARGS, vec![], None); /* ... */
 ///  # Ok(()) }
 /// ```
 pub struct Session<R: Runtime> {
@@ -265,37 +265,37 @@ impl<R: Runtime> Session<R> {
 
     /// Similar to `deploy` but takes the contract bundle as a first argument.
     ///
-    /// You can get it with `ContractBundle::load("some/path/your.contract")` or `local_bundle!()`
-    pub fn deploy_bundle<S: AsRef<str> + Debug>(
+    /// You can get it with `ContractFile::load("some/path/your.contract")` or `local_contract_file!()`
+    pub fn deploy_contract<S: AsRef<str> + Debug>(
         &mut self,
-        contract_bundle: ContractBundle,
+        contract_file: ContractFile,
         constructor: &str,
         args: &[S],
         salt: Vec<u8>,
         endowment: Option<Balance>,
     ) -> Result<AccountIdFor<R>, SessionError> {
         self.deploy(
-            contract_bundle.bytes,
+            contract_file.wasm,
             constructor,
             args,
             salt,
             endowment,
-            &contract_bundle.transcoder,
+            &contract_file.transcoder,
         )
     }
 
     /// Similar to `deploy_and` but takes the contract bundle as a first argument.
     ///
-    /// You can get it with `ContractBundle::load("some/path/your.contract")` or `local_bundle!()`
-    pub fn deploy_bundle_and<S: AsRef<str> + Debug>(
+    /// You can get it with `ContractFile::load("some/path/your.contract")` or `local_contract_file!()`
+    pub fn deploy_contract_and<S: AsRef<str> + Debug>(
         mut self,
-        contract_bundle: ContractBundle,
+        contract_file: ContractFile,
         constructor: &str,
         args: &[S],
         salt: Vec<u8>,
         endowment: Option<Balance>,
     ) -> Result<Self, SessionError> {
-        self.deploy_bundle(contract_bundle, constructor, args, salt, endowment)
+        self.deploy_contract(contract_file, constructor, args, salt, endowment)
             .map(|_| self)
     }
 
@@ -319,19 +319,19 @@ impl<R: Runtime> Session<R> {
 
     /// Similar to `upload_and` but takes the contract bundle as the first argument.
     ///
-    /// You can obtain it using `ContractBundle::load("some/path/your.contract")` or `local_bundle!()`
-    pub fn upload_bundle_and(self, contract_bundle: ContractBundle) -> Result<Self, SessionError> {
-        self.upload_and(contract_bundle.bytes)
+    /// You can obtain it using `ContractFile::load("some/path/your.contract")` or `local_contract_file!()`
+    pub fn upload_contract_and(self, contract_file: ContractFile) -> Result<Self, SessionError> {
+        self.upload_and(contract_file.wasm)
     }
 
     /// Similar to `upload` but takes the contract bundle as the first argument.
     ///
-    /// You can obtain it using `ContractBundle::load("some/path/your.contract")` or `local_bundle!()`
-    pub fn upload_bundle(
+    /// You can obtain it using `ContractFile::load("some/path/your.contract")` or `local_contract_file!()`
+    pub fn upload_contract(
         &mut self,
-        contract_bundle: ContractBundle,
+        contract_file: ContractFile,
     ) -> Result<HashFor<R>, SessionError> {
-        self.upload(contract_bundle.bytes)
+        self.upload(contract_file.wasm)
     }
 
     /// Calls a contract with a given address. In case of a successful call, returns `self`.

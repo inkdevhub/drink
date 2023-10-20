@@ -14,15 +14,15 @@ use super::error::SessionError;
 /// - `deploy_bundle_and`
 /// - `upload_bundle`
 /// - `upload_bundle_and`
-pub struct ContractBundle {
+pub struct ContractFile {
     /// WASM blob of the contract
-    pub bytes: Vec<u8>,
+    pub wasm: Vec<u8>,
     /// Transcoder derived from the ABI/metadata
     pub transcoder: Rc<ContractMessageTranscoder>,
 }
 
-impl ContractBundle {
-    /// Load and parse the information in a `.contract` bundle under `path`, producing a `ContractBundle` struct.
+impl ContractFile {
+    /// Load and parse the information in a `.contract` bundle under `path`, producing a `ContractFile` struct.
     pub fn load<P>(path: P) -> Result<Self, SessionError>
     where
         P: AsRef<std::path::Path>,
@@ -40,25 +40,25 @@ impl ContractBundle {
 
         let transcoder = Rc::new(ContractMessageTranscoder::new(ink_metadata));
 
-        let bytes = metadata
+        let wasm = metadata
             .source
             .wasm
             .ok_or(SessionError::BundleLoadFailed(
                 "Failed to get the WASM blob from the contract file".to_string(),
             ))?
             .0;
-            
-        Ok(Self { bytes, transcoder })
+
+        Ok(Self { wasm, transcoder })
     }
 
-    /// Load the `.contract` bundle (`bundle_file`) located in the `project_dir`` working directory.
+    /// Load the `.contract` bundle (`contract_file_name`) located in the `project_dir`` working directory.
     ///
-    /// This is meant to be used predominantly by the `local_bundle!` macro.
-    pub fn local(project_dir: &str, bundle_file: String) -> Self {
+    /// This is meant to be used predominantly by the `local_contract_file!` macro.
+    pub fn local(project_dir: &str, contract_file_name: String) -> Self {
         let mut path = PathBuf::from(project_dir);
         path.push("target");
         path.push("ink");
-        path.push(bundle_file);
+        path.push(contract_file_name);
         Self::load(path).expect("Loading the local bundle failed")
     }
 }
@@ -66,9 +66,9 @@ impl ContractBundle {
 /// A convenience macro that allows you to load a bundle found in the target directory
 /// of the current project.
 #[macro_export]
-macro_rules! local_bundle {
+macro_rules! local_contract_file {
     () => {
-        drink::session::ContractBundle::local(
+        drink::session::ContractFile::local(
             env!("CARGO_MANIFEST_DIR"),
             env!("CARGO_CRATE_NAME").to_owned() + ".contract",
         )
