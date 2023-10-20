@@ -36,15 +36,15 @@ mod tests {
 
     use drink::{
         runtime::MinimalRuntime,
-        session::{ContractFile, Session, NO_ARGS},
+        session::{ContractBundle, Session, NO_ARGS},
         local_contract_file,
     };
 
     #[test]
     fn initialization() -> Result<(), Box<dyn Error>> {
-        let contract = ContractFile::load("./target/ink/flipper.contract")?;
+        let contract = ContractBundle::load("./target/ink/flipper.contract")?;
         let init_value: bool = Session::<MinimalRuntime>::new()?
-            .deploy_contract_and(contract, "new", &["true"], vec![], None)?
+            .deploy_bundle_and(contract, "new", &["true"], vec![], None)?
             .call_and("get", NO_ARGS, None)?
             .last_call_return()
             .expect("Call was successful, so there should be a return")
@@ -59,7 +59,7 @@ mod tests {
     fn flipping() -> Result<(), Box<dyn Error>> {
         let contract = local_contract_file!();
         let init_value: bool = Session::<MinimalRuntime>::new()?
-            .deploy_contract_and(contract, "new", &["true"], vec![], None)?
+            .deploy_bundle_and(contract, "new", &["true"], vec![], None)?
             .call_and("flip", NO_ARGS, None)?
             .call_and("flip", NO_ARGS, None)?
             .call_and("flip", NO_ARGS, None)?

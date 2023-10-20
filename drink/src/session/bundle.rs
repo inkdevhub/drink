@@ -14,15 +14,15 @@ use super::error::SessionError;
 /// - `deploy_bundle_and`
 /// - `upload_bundle`
 /// - `upload_bundle_and`
-pub struct ContractFile {
+pub struct ContractBundle {
     /// WASM blob of the contract
     pub wasm: Vec<u8>,
     /// Transcoder derived from the ABI/metadata
     pub transcoder: Rc<ContractMessageTranscoder>,
 }
 
-impl ContractFile {
-    /// Load and parse the information in a `.contract` bundle under `path`, producing a `ContractFile` struct.
+impl ContractBundle {
+    /// Load and parse the information in a `.contract` bundle under `path`, producing a `ContractBundle` struct.
     pub fn load<P>(path: P) -> Result<Self, SessionError>
     where
         P: AsRef<std::path::Path>,
@@ -68,7 +68,7 @@ impl ContractFile {
 #[macro_export]
 macro_rules! local_contract_file {
     () => {
-        drink::session::ContractFile::local(
+        drink::session::ContractBundle::local(
             env!("CARGO_MANIFEST_DIR"),
             env!("CARGO_CRATE_NAME").to_owned() + ".contract",
         )
