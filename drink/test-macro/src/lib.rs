@@ -17,7 +17,6 @@ type SynResult<T> = Result<T, syn::Error>;
 ///
 /// # Requirements
 ///
-/// - `drink` crate should be available in the target crate's dependencies (at the path `::drink`).
 /// - You mustn't import `drink::test` in the scope, where the macro is used. In other words, you
 /// should always use the macro only with a qualified path `#[drink::test]`.
 ///

@@ -15,11 +15,9 @@ pub fn generate_code(ir: IR) -> SynResult<TokenStream> {
     let fn_attrs = &item_fn.attrs;
 
     // Prepare the code responsible for building the contracts.
-    let manifests = ir.manifests();
-    let debug_mode = ir.compile_in_debug_mode();
-    let build_contracts = quote! {
-        ::drink::testing_utils::build_contracts(vec![ #( #manifests ),* ], #debug_mode);
-    };
+    let _manifests = ir.manifests();
+    let _debug_mode = ir.compile_in_debug_mode();
+    let build_contracts = quote! {};
 
     Ok(quote! {
         #[test]
