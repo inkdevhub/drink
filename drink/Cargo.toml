@@ -10,7 +10,7 @@ version.workspace = true
 description = "Minimal sufficient architecture that allows for a fully functional ink! contract development"
 
 [dependencies]
-contract-metadata = { workspace = true }
+contract-metadata = { workspace = true, optional = true}
 contract-transcode = { workspace = true, optional = true }
 frame-metadata = { workspace = true }
 frame-support = { workspace = true }
@@ -25,7 +25,7 @@ sp-externalities = { workspace = true }
 sp-io = { workspace = true }
 sp-runtime-interface = { workspace = true }
 
-serde_json = { workspace = true }
+serde_json = { workspace = true, optional = true }
 scale-info = { workspace = true }
 thiserror = { workspace = true }
 wat = { workspace = true }
@@ -36,5 +36,5 @@ default = [
     "std",
     "session"
 ]
-session = ["contract-transcode"]
+session = ["contract-metadata", "contract-transcode", "serde_json"]
 std = []
