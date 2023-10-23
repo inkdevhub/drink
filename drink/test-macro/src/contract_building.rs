@@ -41,7 +41,7 @@ fn get_contract_crates(metadata: &Metadata) -> Vec<&Package> {
             .packages
             .iter()
             .find(|package| package.id == id)
-            .expect(&format!("Error resolving package {id}"))
+            .unwrap_or_else(|| panic!("Error resolving package {id}"))
     };
 
     let dep_graph = metadata
@@ -67,7 +67,7 @@ fn get_contract_crates(metadata: &Metadata) -> Vec<&Package> {
 
     root.features
         .contains_key(INK_AS_DEPENDENCY_FEATURE)
-        .then(|| root)
+        .then_some(root)
         .into_iter()
         .chain(contract_deps)
         .collect()
@@ -105,8 +105,6 @@ fn build_contract_crate(pkg: &Package) {
 }
 
 fn get_manifest_path(package: &Package) -> ManifestPath {
-    ManifestPath::new(package.manifest_path.clone().into_std_path_buf()).expect(&format!(
-        "Error resolving manifest path for package {}",
-        package.name
-    ))
+    ManifestPath::new(package.manifest_path.clone().into_std_path_buf())
+        .unwrap_or_else(|_| panic!("Error resolving manifest path for package {}", package.name))
 }
