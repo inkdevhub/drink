@@ -16,14 +16,15 @@ use crate::{
     EventRecordOf, Sandbox, DEFAULT_GAS_LIMIT,
 };
 
-mod bundle;
-pub use bundle::ContractBundle;
 pub mod error;
 mod transcoding;
 
 use error::SessionError;
 
-use crate::{errors::MessageResult, mock::MockingApi, session::transcoding::TranscoderRegistry};
+use crate::{
+    bundle::ContractBundle, errors::MessageResult, mock::MockingApi,
+    session::transcoding::TranscoderRegistry,
+};
 
 type Balance = u128;
 
@@ -98,9 +99,10 @@ pub const NO_ARGS: &[String] = &[];
 /// ```rust, no_run
 /// # use drink::{
 /// #   local_contract_file,
-/// #   session::{ContractBundle, Session},
+/// #   session::Session,
 /// #   session::NO_ARGS,
-/// #   runtime::MinimalRuntime
+/// #   runtime::MinimalRuntime,
+/// #   ContractBundle,
 /// # };
 ///
 /// # fn main() -> Result<(), drink::session::error::SessionError> {

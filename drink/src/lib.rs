@@ -3,6 +3,7 @@
 
 #![warn(missing_docs)]
 
+mod bundle;
 pub mod chain_api;
 pub mod contract_api;
 pub mod errors;
@@ -16,6 +17,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
+pub use bundle::ContractBundle;
 pub use drink_test_macro::test;
 pub use errors::Error;
 use frame_support::sp_runtime::{traits::One, BuildStorage};

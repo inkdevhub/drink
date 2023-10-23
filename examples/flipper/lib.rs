@@ -37,7 +37,8 @@ mod tests {
     use drink::{
         local_contract_file,
         runtime::MinimalRuntime,
-        session::{ContractBundle, Session, NO_ARGS},
+        session::{Session, NO_ARGS},
+        ContractBundle,
     };
 
     #[drink::test]

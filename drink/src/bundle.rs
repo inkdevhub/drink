@@ -5,7 +5,7 @@ use std::{path::PathBuf, rc::Rc};
 use contract_metadata::ContractMetadata;
 use contract_transcode::ContractMessageTranscoder;
 
-use super::error::SessionError;
+use crate::{DrinkResult, Error};
 
 /// A struct representing the result of parsing a `.contract` bundle file.
 ///
@@ -23,17 +23,17 @@ pub struct ContractBundle {
 
 impl ContractBundle {
     /// Load and parse the information in a `.contract` bundle under `path`, producing a `ContractBundle` struct.
-    pub fn load<P>(path: P) -> Result<Self, SessionError>
+    pub fn load<P>(path: P) -> DrinkResult<Self>
     where
         P: AsRef<std::path::Path>,
     {
         let metadata: ContractMetadata = ContractMetadata::load(&path).map_err(|e| {
-            SessionError::BundleLoadFailed(format!("Failed to load the contract file:\n{e:?}"))
+            Error::BundleLoadFailed(format!("Failed to load the contract file:\n{e:?}"))
         })?;
 
         let ink_metadata = serde_json::from_value(serde_json::Value::Object(metadata.abi))
             .map_err(|e| {
-                SessionError::BundleLoadFailed(format!(
+                Error::BundleLoadFailed(format!(
                     "Failed to parse metadata from the contract file:\n{e:?}"
                 ))
             })?;
@@ -43,7 +43,7 @@ impl ContractBundle {
         let wasm = metadata
             .source
             .wasm
-            .ok_or(SessionError::BundleLoadFailed(
+            .ok_or(Error::BundleLoadFailed(
                 "Failed to get the WASM blob from the contract file".to_string(),
             ))?
             .0;
@@ -68,7 +68,7 @@ impl ContractBundle {
 #[macro_export]
 macro_rules! local_contract_file {
     () => {
-        drink::session::ContractBundle::local(
+        drink::ContractBundle::local(
             env!("CARGO_MANIFEST_DIR"),
             env!("CARGO_CRATE_NAME").to_owned() + ".contract",
         )
