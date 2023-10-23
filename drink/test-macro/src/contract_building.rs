@@ -1,5 +1,5 @@
 use std::{
-    collections::HashSet,
+    collections::{hash_map::Entry, HashMap},
     path::PathBuf,
     sync::{Mutex, OnceLock},
 };
@@ -16,26 +16,27 @@ const INK_AS_DEPENDENCY_FEATURE: &str = "ink-as-dependency";
 /// Stores the manifest paths of all contracts that have already been built.
 ///
 /// This prevents from building the same contract for every testcase separately.
-static CONTRACTS_BUILT: OnceLock<Mutex<HashSet<PathBuf>>> = OnceLock::new();
+static CONTRACTS_BUILT: OnceLock<Mutex<HashMap<PathBuf, PathBuf>>> = OnceLock::new();
 
 /// Build the current package with `cargo contract build --release` (if it is a contract package),
-/// as well as all its contract dependencies.
+/// as well as all its contract dependencies. Return a collection of paths to corresponding
+/// `.contract` files.
 ///
 /// A package is considered as a contract package, if it has the `ink-as-dependency` feature.
 ///
 /// A contract dependency, is a package defined in the `Cargo.toml` file with the
 /// `ink-as-dependency` feature enabled.
-pub fn build_contracts() {
+pub fn build_contracts() -> Vec<PathBuf> {
     let metadata = MetadataCommand::new()
         .exec()
         .expect("Error invoking `cargo metadata`");
 
-    for contract_crate in get_contract_crates(&metadata) {
-        build_contract_crate(contract_crate);
-    }
+    get_contract_crates(&metadata)
+        .map(build_contract_crate)
+        .collect()
 }
 
-fn get_contract_crates(metadata: &Metadata) -> Vec<&Package> {
+fn get_contract_crates(metadata: &Metadata) -> impl Iterator<Item = &Package> {
     let pkg_lookup = |id| {
         metadata
             .packages
@@ -70,38 +71,45 @@ fn get_contract_crates(metadata: &Metadata) -> Vec<&Package> {
         .then_some(root)
         .into_iter()
         .chain(contract_deps)
-        .collect()
 }
 
-fn build_contract_crate(pkg: &Package) {
+fn build_contract_crate(pkg: &Package) -> PathBuf {
     let manifest_path = get_manifest_path(pkg);
 
-    if !CONTRACTS_BUILT
-        .get_or_init(|| Mutex::new(HashSet::new()))
+    match CONTRACTS_BUILT
+        .get_or_init(|| Mutex::new(HashMap::new()))
         .lock()
         .expect("Error locking mutex")
-        .insert(manifest_path.clone().into())
+        .entry(manifest_path.clone().into())
     {
-        return;
+        Entry::Occupied(ready) => ready.get().clone(),
+        Entry::Vacant(todo) => {
+            let args = ExecuteArgs {
+                manifest_path,
+                verbosity: Verbosity::Default,
+                build_mode: BuildMode::Release,
+                features: Features::default(),
+                network: Network::Online,
+                build_artifact: BuildArtifacts::All,
+                unstable_flags: UnstableFlags::default(),
+                optimization_passes: Some(OptimizationPasses::default()),
+                keep_debug_symbols: false,
+                lint: false,
+                output_type: OutputType::HumanReadable,
+                skip_wasm_validation: false,
+                target: Target::Wasm,
+            };
+
+            let result = contract_build::execute(args).expect("Error building contract");
+            let bundle_path = result
+                .metadata_result
+                .expect("Metadata should have been generated")
+                .dest_bundle;
+
+            todo.insert(bundle_path.clone());
+            bundle_path
+        }
     }
-
-    let args = ExecuteArgs {
-        manifest_path,
-        verbosity: Verbosity::Default,
-        build_mode: BuildMode::Release,
-        features: Features::default(),
-        network: Network::Online,
-        build_artifact: BuildArtifacts::All,
-        unstable_flags: UnstableFlags::default(),
-        optimization_passes: Some(OptimizationPasses::default()),
-        keep_debug_symbols: false,
-        lint: false,
-        output_type: OutputType::HumanReadable,
-        skip_wasm_validation: false,
-        target: Target::Wasm,
-    };
-
-    contract_build::execute(args).expect("Error building contract");
 }
 
 fn get_manifest_path(package: &Package) -> ManifestPath {

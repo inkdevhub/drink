@@ -2,6 +2,7 @@
 
 #![warn(missing_docs)]
 
+mod bundle_providing;
 mod contract_building;
 
 use proc_macro::TokenStream;
@@ -17,6 +18,7 @@ type SynResult<T> = Result<T, syn::Error>;
 ///
 /// # Requirements
 ///
+/// - You must have `drink` in your crate's dependencies (and it mustn't be renamed).
 /// - You mustn't import `drink::test` in the scope, where the macro is used. In other words, you
 /// should always use the macro only with a qualified path `#[drink::test]`.
 /// - Your crate cannot be part of a cargo workspace.

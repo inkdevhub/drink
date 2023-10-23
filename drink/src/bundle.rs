@@ -22,7 +22,8 @@ pub struct ContractBundle {
 }
 
 impl ContractBundle {
-    /// Load and parse the information in a `.contract` bundle under `path`, producing a `ContractBundle` struct.
+    /// Load and parse the information in a `.contract` bundle under `path`, producing a
+    /// `ContractBundle` struct.
     pub fn load<P>(path: P) -> DrinkResult<Self>
     where
         P: AsRef<std::path::Path>,
