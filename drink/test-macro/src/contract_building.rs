@@ -16,7 +16,7 @@ const INK_AS_DEPENDENCY_FEATURE: &str = "ink-as-dependency";
 /// Stores the manifest paths of all contracts that have already been built.
 ///
 /// This prevents from building the same contract for every testcase separately.
-static CONTRACTS_BUILT: OnceLock<Mutex<HashMap<PathBuf, PathBuf>>> = OnceLock::new();
+static CONTRACTS_BUILT: OnceLock<Mutex<HashMap<PathBuf, (String, PathBuf)>>> = OnceLock::new();
 
 /// Build the current package with `cargo contract build --release` (if it is a contract package),
 /// as well as all its contract dependencies. Return a collection of paths to corresponding
@@ -26,7 +26,7 @@ static CONTRACTS_BUILT: OnceLock<Mutex<HashMap<PathBuf, PathBuf>>> = OnceLock::n
 ///
 /// A contract dependency, is a package defined in the `Cargo.toml` file with the
 /// `ink-as-dependency` feature enabled.
-pub fn build_contracts() -> Vec<PathBuf> {
+pub fn build_contracts() -> Vec<(String, PathBuf)> {
     let metadata = MetadataCommand::new()
         .exec()
         .expect("Error invoking `cargo metadata`");
@@ -73,7 +73,7 @@ fn get_contract_crates(metadata: &Metadata) -> impl Iterator<Item = &Package> {
         .chain(contract_deps)
 }
 
-fn build_contract_crate(pkg: &Package) -> PathBuf {
+fn build_contract_crate(pkg: &Package) -> (String, PathBuf) {
     let manifest_path = get_manifest_path(pkg);
 
     match CONTRACTS_BUILT
@@ -106,8 +106,9 @@ fn build_contract_crate(pkg: &Package) -> PathBuf {
                 .expect("Metadata should have been generated")
                 .dest_bundle;
 
-            todo.insert(bundle_path.clone());
-            bundle_path
+            let new_entry = (pkg.name.clone(), bundle_path.clone());
+            todo.insert(new_entry.clone());
+            new_entry
         }
     }
 }
