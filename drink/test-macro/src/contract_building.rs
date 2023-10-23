@@ -10,9 +10,10 @@ use contract_build::{
     OutputType, Target, UnstableFlags, Verbosity,
 };
 
+/// Contract package differentiator.
 const INK_AS_DEPENDENCY_FEATURE: &str = "ink-as-dependency";
 
-/// Stores the manifest paths of all contracts which have already been built.
+/// Stores the manifest paths of all contracts that have already been built.
 ///
 /// This prevents from building the same contract for every testcase separately.
 static CONTRACTS_BUILT: OnceLock<Mutex<HashSet<PathBuf>>> = OnceLock::new();
