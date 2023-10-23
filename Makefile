@@ -16,7 +16,6 @@ lint: ## Run the linter
 test_examples: ## Run tests for the examples
 	@for dir in $(EXAMPLES_PATHS); do \
 		echo "Processing $$dir" ; \
-		cargo contract build --quiet --manifest-path $$dir/Cargo.toml --release ; \
 		cargo test --quiet --manifest-path $$dir/Cargo.toml --release; \
 	done
 

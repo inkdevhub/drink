@@ -437,6 +437,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "cargo_metadata"
+version = "0.18.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2d886547e41f740c616ae73108f6eb70afe6d940c7bc697cb30f13daec073037"
+dependencies = [
+ "camino",
+ "cargo-platform",
+ "semver",
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
 name = "cassowary"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -595,7 +609,7 @@ checksum = "4637700a17e6624672cfee158db8da5d8b46a360342d2d69610e537c79335b2b"
 dependencies = [
  "anyhow",
  "blake2",
- "cargo_metadata",
+ "cargo_metadata 0.15.4",
  "clap",
  "colored",
  "contract-metadata",
@@ -1015,10 +1029,11 @@ checksum = "9ea835d29036a4087793836fa931b08837ad5e957da9e23886b29586fb9b6650"
 
 [[package]]
 name = "drink"
-version = "0.5.1"
+version = "0.5.3"
 dependencies = [
  "contract-metadata",
  "contract-transcode",
+ "drink-test-macro",
  "frame-metadata",
  "frame-support",
  "frame-system",
@@ -1039,7 +1054,7 @@ dependencies = [
 
 [[package]]
 name = "drink-cli"
-version = "0.5.1"
+version = "0.5.3"
 dependencies = [
  "anyhow",
  "clap",
@@ -1051,6 +1066,18 @@ dependencies = [
  "ratatui",
  "sp-core",
  "thiserror",
+]
+
+[[package]]
+name = "drink-test-macro"
+version = "0.5.3"
+dependencies = [
+ "cargo_metadata 0.18.1",
+ "contract-build",
+ "contract-metadata",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.32",
 ]
 
 [[package]]

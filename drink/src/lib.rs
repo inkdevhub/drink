@@ -16,6 +16,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
+pub use drink_test_macro::test;
 pub use errors::Error;
 use frame_support::sp_runtime::{traits::One, BuildStorage};
 pub use frame_support::{

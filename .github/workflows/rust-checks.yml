@@ -29,6 +29,10 @@ jobs:
           targets: wasm32-unknown-unknown
           components: clippy rustfmt
 
+      - name: Add rust-src
+        shell: bash
+        run: rustup component add rust-src
+
       - name: Run format checks
         uses: actions-rs/cargo@v1
         with:
@@ -49,12 +53,6 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
-
-      - name: Install cargo-contract
-        shell: bash
-        run: |
-          rustup component add rust-src
-          cargo install cargo-contract --version 3.2.0
 
       - name: Run tests for examples
         shell: bash

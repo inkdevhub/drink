@@ -59,7 +59,7 @@ mod tests {
         fs::read("./target/ink/mocking.wasm").expect("Failed to find or read contract file")
     }
 
-    #[test]
+    #[drink::test]
     fn call_mocked_message() -> Result<(), Box<dyn Error>> {
         let mut session = Session::<MinimalRuntime>::new()?;
 

@@ -32,15 +32,15 @@ mod flipper {
 
 #[cfg(test)]
 mod tests {
-    use std::{error::Error};
+    use std::error::Error;
 
     use drink::{
+        local_contract_file,
         runtime::MinimalRuntime,
         session::{ContractBundle, Session, NO_ARGS},
-        local_contract_file,
     };
 
-    #[test]
+    #[drink::test]
     fn initialization() -> Result<(), Box<dyn Error>> {
         let contract = ContractBundle::load("./target/ink/flipper.contract")?;
         let init_value: bool = Session::<MinimalRuntime>::new()?
@@ -55,7 +55,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[drink::test]
     fn flipping() -> Result<(), Box<dyn Error>> {
         let contract = local_contract_file!();
         let init_value: bool = Session::<MinimalRuntime>::new()?
