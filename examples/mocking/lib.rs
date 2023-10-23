@@ -37,27 +37,19 @@ mod proxy {
 
 #[cfg(test)]
 mod tests {
-    use std::{error::Error, fs, path::PathBuf, rc::Rc};
+    use std::error::Error;
 
     use drink::{
         mock_message,
         runtime::MinimalRuntime,
-        session::{contract_transcode::ContractMessageTranscoder, Session, NO_ARGS},
+        session::{Session, NO_ARGS},
         ContractMock, MockingApi,
     };
 
     use crate::CALLEE_SELECTOR;
 
-    fn transcoder() -> Rc<ContractMessageTranscoder> {
-        Rc::new(
-            ContractMessageTranscoder::load(PathBuf::from("./target/ink/mocking.json"))
-                .expect("Failed to create transcoder"),
-        )
-    }
-
-    fn bytes() -> Vec<u8> {
-        fs::read("./target/ink/mocking.wasm").expect("Failed to find or read contract file")
-    }
+    #[drink::contract_bundle_provider]
+    enum BundleProvider {}
 
     #[drink::test]
     fn call_mocked_message() -> Result<(), Box<dyn Error>> {
@@ -73,7 +65,7 @@ mod tests {
 
         // Now, we can deploy our proper contract and verify its behavior.
         let result: (u8, u8) = session
-            .deploy_and(bytes(), "new", NO_ARGS, vec![], None, &transcoder())?
+            .deploy_bundle_and(BundleProvider::local()?, "new", NO_ARGS, vec![], None)?
             .call_and("delegate_call", &[mock_address.to_string()], None)?
             .last_call_return()
             .expect("Call was successful, so there should be a return")
