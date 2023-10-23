@@ -64,6 +64,44 @@ fn test_internal(_attr: TokenStream2, item: TokenStream2) -> SynResult<TokenStre
     })
 }
 
+/// Defines a contract bundle provider.
+///
+/// # Requirements
+///
+/// - Your crate cannot be part of a cargo workspace.
+/// - Your crate must have `drink` in its dependencies (and it shouldn't be renamed).
+/// - The attributed enum must not:
+///     - be generic
+///     - have variants
+///     - have any attributes conflicting with `#[derive(Copy, Clone, PartialEq, Eq, Debug)]`
+///
+/// # Impact
+///
+/// This macro is intended to be used as an attribute of some empty enum. It will build all
+/// contracts crates (with rules identical to those of `#[drink::test]`), and populate the decorated
+/// enum with variants, one per built contract.
+///
+/// If the current crate is a contract crate, the enum will receive a method `local()` that returns
+/// the contract bundle for the current crate.
+///
+/// Besides that, the enum will receive a method `bundle(self)` that returns the contract bundle
+/// for corresponding contract variant.
+///
+/// Both methods return `DrinkResult<ContractBundle>`.
+///
+/// # Example
+///
+/// ```rust, ignore
+/// #[drink::contract_bundle_provider]
+/// enum BundleProvider {}
+///
+/// fn testcase() {
+///     Session::<MinimalRuntime>::new()?
+///         .deploy_bundle_and(BundleProvider::local()?, "new", NO_ARGS, vec![], None)
+///         .deploy_bundle_and(BundleProvider::AnotherContract.bundle()?, "new", NO_ARGS, vec![], None)
+///         .unwrap();
+/// }
+/// ```
 #[proc_macro_attribute]
 pub fn contract_bundle_provider(attr: TokenStream, item: TokenStream) -> TokenStream {
     match contract_bundle_provider_internal(attr.into(), item.into()) {
