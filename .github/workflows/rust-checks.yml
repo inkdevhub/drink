@@ -29,6 +29,10 @@ jobs:
           targets: wasm32-unknown-unknown
           components: clippy rustfmt
 
+      - name: Add rust-src
+        shell: bash
+        run: rustup component add rust-src
+
       - name: Run format checks
         uses: actions-rs/cargo@v1
         with:
