@@ -35,15 +35,16 @@ mod tests {
     use std::error::Error;
 
     use drink::{
-        local_contract_file,
         runtime::MinimalRuntime,
         session::{Session, NO_ARGS},
-        ContractBundle,
     };
+
+    #[drink::contract_bundle_provider]
+    enum BundleProvider {}
 
     #[drink::test]
     fn initialization() -> Result<(), Box<dyn Error>> {
-        let contract = ContractBundle::load("./target/ink/flipper.contract")?;
+        let contract = BundleProvider::local()?;
         let init_value: bool = Session::<MinimalRuntime>::new()?
             .deploy_bundle_and(contract, "new", &["true"], vec![], None)?
             .call_and("get", NO_ARGS, None)?
@@ -58,7 +59,7 @@ mod tests {
 
     #[drink::test]
     fn flipping() -> Result<(), Box<dyn Error>> {
-        let contract = local_contract_file!();
+        let contract = BundleProvider::Flipper.bundle()?;
         let init_value: bool = Session::<MinimalRuntime>::new()?
             .deploy_bundle_and(contract, "new", &["true"], vec![], None)?
             .call_and("flip", NO_ARGS, None)?
