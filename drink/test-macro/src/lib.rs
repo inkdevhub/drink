@@ -8,7 +8,7 @@ mod contract_building;
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
-use syn::ItemFn;
+use syn::{ItemEnum, ItemFn};
 
 use crate::contract_building::build_contracts;
 
@@ -18,7 +18,6 @@ type SynResult<T> = Result<T, syn::Error>;
 ///
 /// # Requirements
 ///
-/// - You must have `drink` in your crate's dependencies (and it mustn't be renamed).
 /// - You mustn't import `drink::test` in the scope, where the macro is used. In other words, you
 /// should always use the macro only with a qualified path `#[drink::test]`.
 /// - Your crate cannot be part of a cargo workspace.
@@ -63,4 +62,41 @@ fn test_internal(_attr: TokenStream2, item: TokenStream2) -> SynResult<TokenStre
         #[test]
         #item_fn
     })
+}
+
+#[proc_macro_attribute]
+pub fn contract_bundle_provider(attr: TokenStream, item: TokenStream) -> TokenStream {
+    match contract_bundle_provider_internal(attr.into(), item.into()) {
+        Ok(ts) => ts.into(),
+        Err(e) => e.to_compile_error().into(),
+    }
+}
+
+/// Auxiliary function to enter ?-based error propagation.
+fn contract_bundle_provider_internal(
+    _attr: TokenStream2,
+    item: TokenStream2,
+) -> SynResult<TokenStream2> {
+    let enum_item = parse_bundle_enum(item)?;
+    let bundle_registry = build_contracts();
+    Ok(bundle_registry.generate_bundle_providing(enum_item))
+}
+
+fn parse_bundle_enum(item: TokenStream2) -> SynResult<ItemEnum> {
+    let enum_item = syn::parse2::<ItemEnum>(item)?;
+
+    if !enum_item.generics.params.is_empty() {
+        return Err(syn::Error::new_spanned(
+            enum_item.generics.params,
+            "ContractBundleProvider must not be generic",
+        ));
+    }
+    if !enum_item.variants.is_empty() {
+        return Err(syn::Error::new_spanned(
+            enum_item.variants,
+            "ContractBundleProvider must not have variants",
+        ));
+    }
+
+    Ok(enum_item)
 }

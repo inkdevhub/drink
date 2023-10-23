@@ -10,6 +10,8 @@ use contract_build::{
     OutputType, Target, UnstableFlags, Verbosity,
 };
 
+use crate::bundle_providing::BundleProviderGenerator;
+
 /// Contract package differentiator.
 const INK_AS_DEPENDENCY_FEATURE: &str = "ink-as-dependency";
 
@@ -26,17 +28,22 @@ static CONTRACTS_BUILT: OnceLock<Mutex<HashMap<PathBuf, (String, PathBuf)>>> = O
 ///
 /// A contract dependency, is a package defined in the `Cargo.toml` file with the
 /// `ink-as-dependency` feature enabled.
-pub fn build_contracts() -> Vec<(String, PathBuf)> {
+pub fn build_contracts() -> BundleProviderGenerator {
     let metadata = MetadataCommand::new()
         .exec()
         .expect("Error invoking `cargo metadata`");
 
-    get_contract_crates(&metadata)
-        .map(build_contract_crate)
-        .collect()
+    let (maybe_root, contract_deps) = get_contract_crates(&metadata);
+    let maybe_root = maybe_root.map(build_contract_crate);
+    let contract_deps = contract_deps.map(build_contract_crate);
+
+    BundleProviderGenerator::new(
+        maybe_root.clone().into_iter().chain(contract_deps),
+        maybe_root.map(|(name, _)| name),
+    )
 }
 
-fn get_contract_crates(metadata: &Metadata) -> impl Iterator<Item = &Package> {
+fn get_contract_crates(metadata: &Metadata) -> (Option<&Package>, impl Iterator<Item = &Package>) {
     let pkg_lookup = |id| {
         metadata
             .packages
@@ -66,11 +73,12 @@ fn get_contract_crates(metadata: &Metadata) -> impl Iterator<Item = &Package> {
         .expect("Error resolving root package");
     let root = pkg_lookup(root.clone());
 
-    root.features
-        .contains_key(INK_AS_DEPENDENCY_FEATURE)
-        .then_some(root)
-        .into_iter()
-        .chain(contract_deps)
+    (
+        root.features
+            .contains_key(INK_AS_DEPENDENCY_FEATURE)
+            .then_some(root),
+        contract_deps,
+    )
 }
 
 fn build_contract_crate(pkg: &Package) -> (String, PathBuf) {
@@ -106,7 +114,7 @@ fn build_contract_crate(pkg: &Package) -> (String, PathBuf) {
                 .expect("Metadata should have been generated")
                 .dest_bundle;
 
-            let new_entry = (pkg.name.clone(), bundle_path.clone());
+            let new_entry = (pkg.name.clone(), bundle_path);
             todo.insert(new_entry.clone());
             new_entry
         }

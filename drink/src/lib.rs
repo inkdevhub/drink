@@ -18,7 +18,7 @@ use std::{
 };
 
 pub use bundle::ContractBundle;
-pub use drink_test_macro::test;
+pub use drink_test_macro::{contract_bundle_provider, test};
 pub use errors::Error;
 use frame_support::sp_runtime::{traits::One, BuildStorage};
 pub use frame_support::{
