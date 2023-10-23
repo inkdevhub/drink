@@ -2,28 +2,36 @@
 
 #![warn(missing_docs)]
 
+mod contract_building;
+
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
+use quote::quote;
+use syn::ItemFn;
 
-use crate::{codegen::generate_code, ir::IR};
-
-mod codegen;
-mod ir;
+use crate::contract_building::build_contracts;
 
 type SynResult<T> = Result<T, syn::Error>;
 
-/// Defines a drink!-based test. *WARNING: THE MACRO DOES NOTHING YET (MISSING CONTRACT BUILDING
-/// FUNCTIONALITY). TO BE ADDED WITHIN A FEW DAYS.*
+/// Defines a drink!-based test.
 ///
 /// # Requirements
 ///
 /// - You mustn't import `drink::test` in the scope, where the macro is used. In other words, you
 /// should always use the macro only with a qualified path `#[drink::test]`.
+/// - Your crate cannot be part of a cargo workspace.
 ///
 /// # Impact
 ///
 /// This macro will take care of building all needed contracts for the test. The building process
 /// will be executed during compile time.
+///
+/// Contracts to be built:
+///  - current cargo package if contains a `ink-as-dependency` feature
+///  - all dependencies declared in the `Cargo.toml` file with the `ink-as-dependency` feature
+/// enabled
+///
+/// Note: Depending on a non-local contract is not tested yet.
 ///
 /// # Example
 ///
@@ -36,31 +44,6 @@ type SynResult<T> = Result<T, syn::Error>;
 ///         .unwrap();
 /// }
 /// ```
-///
-/// # Macro configuration
-///
-/// ## Build mode
-///
-/// You can specify whether the contracts should be built in debug or release mode. By default,
-/// the contracts will be built in release mode. To change this, add the following to the macro
-/// usage:
-/// ```rust, ignore
-/// #[drink::test(compile_in_debug_mode)]
-/// ```
-///
-/// ## Manifests (contracts to be built)
-///
-/// You can specify, which contracts should be built for the test. *By default, `drink` will assume
-/// that the current crate is the only contract to be built.* To change this, you can specify
-/// all manifests that should be built for the test (also the current crate if this is the case).
-/// The manifests are specified as paths relative to the current crate's root. For example:
-/// ```rust, ignore
-/// #[drink::test(
-///     manifest = "./Cargo.toml",
-///     manifest = "../second-contract/Cargo.toml",
-///     manifest = "../third-contract/Cargo.toml",
-/// )]
-/// ```
 #[proc_macro_attribute]
 pub fn test(attr: TokenStream, item: TokenStream) -> TokenStream {
     match test_internal(attr.into(), item.into()) {
@@ -70,7 +53,12 @@ pub fn test(attr: TokenStream, item: TokenStream) -> TokenStream {
 }
 
 /// Auxiliary function to enter ?-based error propagation.
-fn test_internal(attr: TokenStream2, item: TokenStream2) -> SynResult<TokenStream2> {
-    let ir = IR::try_from((attr, item))?;
-    generate_code(ir)
+fn test_internal(_attr: TokenStream2, item: TokenStream2) -> SynResult<TokenStream2> {
+    let item_fn = syn::parse2::<ItemFn>(item)?;
+    build_contracts();
+
+    Ok(quote! {
+        #[test]
+        #item_fn
+    })
 }

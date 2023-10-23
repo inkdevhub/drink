@@ -13,7 +13,9 @@ description = "Procedural macro providing a `#[drink::test]` attribute for `drin
 proc-macro = true
 
 [dependencies]
-darling = { workspace = true }
+cargo_metadata = { workspace = true }
+contract-build = { workspace = true }
+contract-metadata = { workspace = true }
 proc-macro2 = { workspace = true }
 syn = { workspace = true, features = ["full"] }
 quote = { workspace = true }
