@@ -1,3 +1,9 @@
+use std::{
+    collections::HashSet,
+    path::PathBuf,
+    sync::{Mutex, OnceLock},
+};
+
 use cargo_metadata::{Metadata, MetadataCommand, Package};
 use contract_build::{
     BuildArtifacts, BuildMode, ExecuteArgs, Features, ManifestPath, Network, OptimizationPasses,
@@ -5,6 +11,11 @@ use contract_build::{
 };
 
 const INK_AS_DEPENDENCY_FEATURE: &str = "ink-as-dependency";
+
+/// Stores the manifest paths of all contracts which have already been built.
+///
+/// This prevents from building the same contract for every testcase separately.
+static CONTRACTS_BUILT: OnceLock<Mutex<HashSet<PathBuf>>> = OnceLock::new();
 
 /// Build the current package with `cargo contract build --release` (if it is a contract package),
 /// as well as all its contract dependencies.
@@ -62,8 +73,19 @@ fn get_contract_crates(metadata: &Metadata) -> Vec<&Package> {
 }
 
 fn build_contract_crate(pkg: &Package) {
+    let manifest_path = get_manifest_path(pkg);
+
+    if !CONTRACTS_BUILT
+        .get_or_init(|| Mutex::new(HashSet::new()))
+        .lock()
+        .expect("Error locking mutex")
+        .insert(manifest_path.clone().into())
+    {
+        return;
+    }
+
     let args = ExecuteArgs {
-        manifest_path: get_manifest_path(pkg),
+        manifest_path,
         verbosity: Verbosity::Default,
         build_mode: BuildMode::Release,
         features: Features::default(),
