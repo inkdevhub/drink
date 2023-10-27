@@ -145,7 +145,7 @@ mod tests {
             session.deploy_bundle(BundleProvider::local()?, "new", NO_ARGS, vec![3], None)?;
         INNER_ADDRESS.with(|a| *a.borrow_mut() = Some(inner_address.clone()));
 
-        let value = session.call_with_address(
+        let value: u32 = session.call_with_address(
             outer_address,
             "outer_call",
             &[
@@ -154,10 +154,9 @@ mod tests {
                 "7",
             ],
             None,
-        )?;
-        let value = u32::decode(&mut value.as_slice()).expect("Failed to decode return value");
+        )??;
 
-        assert_eq!(value, value);
+        assert_eq!(value, 22);
 
         Ok(())
     }
