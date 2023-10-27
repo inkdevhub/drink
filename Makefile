@@ -2,6 +2,7 @@
 
 EXAMPLES = ./examples
 EXAMPLES_PATHS := $(shell find $(EXAMPLES) -mindepth 1 -maxdepth 1 -type d)
+EXAMPLES_TARGET = ./examples/target
 
 run: ## Run the project
 	cargo run --release
@@ -14,9 +15,10 @@ lint: ## Run the linter
 	cargo clippy --release -- -D warnings
 
 test_examples: ## Run tests for the examples
+	@mkdir -p $(EXAMPLES_TARGET)
 	@for dir in $(EXAMPLES_PATHS); do \
 		echo "Processing $$dir" ; \
-		cargo test --quiet --manifest-path $$dir/Cargo.toml --release; \
+		cargo test --quiet --manifest-path $$dir/Cargo.toml --release --target-dir $(EXAMPLES_TARGET); \
 	done
 
 clean: ## Clean all the workspace build files

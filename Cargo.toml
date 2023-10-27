@@ -8,10 +8,7 @@ members = [
 ]
 
 exclude = [
-    "examples/counter",
-    "examples/flipper",
-    "examples/cross-contract-call-tracing",
-    "examples/mocking",
+    "examples/",
 ]
 
 [workspace.package]
@@ -21,7 +18,7 @@ homepage = "https://github.com/Cardinal-Cryptography/drink"
 license = "Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/Cardinal-Cryptography/drink"
-version = "0.5.3"
+version = "0.5.4"
 
 [workspace.dependencies]
 anyhow = { version = "1.0.71" }
@@ -59,5 +56,5 @@ sp-runtime-interface = { version = "19.0.0" }
 
 # Local dependencies
 
-drink = { version = "0.5.3", path = "drink" }
-drink-test-macro = { version = "0.5.3", path = "drink/test-macro" }
+drink = { version = "0.5.4", path = "drink" }
+drink-test-macro = { version = "0.5.4", path = "drink/test-macro" }
