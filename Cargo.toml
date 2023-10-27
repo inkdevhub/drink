@@ -8,10 +8,7 @@ members = [
 ]
 
 exclude = [
-    "examples/counter",
-    "examples/flipper",
-    "examples/cross-contract-call-tracing",
-    "examples/mocking",
+    "examples/",
 ]
 
 [workspace.package]
