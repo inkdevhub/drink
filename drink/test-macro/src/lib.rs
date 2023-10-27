@@ -2,7 +2,7 @@
 
 #![warn(missing_docs)]
 
-mod bundle_providing;
+mod bundle_provision;
 mod contract_building;
 
 use proc_macro::TokenStream;
@@ -117,7 +117,7 @@ fn contract_bundle_provider_internal(
 ) -> SynResult<TokenStream2> {
     let enum_item = parse_bundle_enum(item)?;
     let bundle_registry = build_contracts();
-    Ok(bundle_registry.generate_bundle_providing(enum_item))
+    Ok(bundle_registry.generate_bundle_provision(enum_item))
 }
 
 fn parse_bundle_enum(item: TokenStream2) -> SynResult<ItemEnum> {

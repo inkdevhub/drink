@@ -10,7 +10,7 @@ use contract_build::{
     OutputType, Target, UnstableFlags, Verbosity,
 };
 
-use crate::bundle_providing::BundleProviderGenerator;
+use crate::bundle_provision::BundleProviderGenerator;
 
 /// Contract package differentiator.
 const INK_AS_DEPENDENCY_FEATURE: &str = "ink-as-dependency";

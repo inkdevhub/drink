@@ -34,7 +34,7 @@ impl BundleProviderGenerator {
         }
     }
 
-    pub fn generate_bundle_providing(&self, enum_item: ItemEnum) -> TokenStream2 {
+    pub fn generate_bundle_provision(&self, enum_item: ItemEnum) -> TokenStream2 {
         let enum_name = &enum_item.ident;
         let enum_vis = &enum_item.vis;
         let enum_attrs = &enum_item.attrs;
