@@ -85,13 +85,13 @@ pub const NO_ARGS: &[String] = &[];
 /// # fn contract_bytes() -> Vec<u8> { vec![] }
 /// # fn bob() -> AccountId32 { AccountId32::new([0; 32]) }
 ///
-/// # fn main() -> Result<(), drink::session::error::SessionError> {
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 ///
 /// let mut session = Session::<MinimalRuntime>::new()?;
 /// let _address = session.deploy(contract_bytes(), "new", NO_ARGS, vec![], None, &get_transcoder())?;
-/// session.call("foo", NO_ARGS, None)?;
+/// let _result: u32 = session.call("foo", NO_ARGS, None)??;
 /// session.set_actor(bob());
-/// session.call("bar", NO_ARGS, None)?;
+/// session.call::<_, ()>("bar", NO_ARGS, None)??;
 /// # Ok(()) }
 /// ```
 ///
