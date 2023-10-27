@@ -62,30 +62,20 @@ mod contract {
 
 #[cfg(test)]
 mod tests {
-    use std::{cell::RefCell, error::Error, fs, path::PathBuf, rc::Rc};
+    use std::{cell::RefCell, error::Error};
 
     use drink::{
         runtime::{
             pallet_contracts_debugging::{TracingExt, TracingExtT},
             MinimalRuntime,
         },
-        session::{
-            contract_transcode::{ContractMessageTranscoder, Value},
-            Session, NO_ARGS,
-        },
+        session::{contract_transcode::Value, Session, NO_ARGS},
         AccountId32,
     };
     use ink::storage::traits::Storable;
 
-    fn transcoder() -> Rc<ContractMessageTranscoder> {
-        let path = PathBuf::from("target/ink/cross_contract_call_tracing.json");
-        Rc::new(ContractMessageTranscoder::load(path).expect("Failed to create transcoder"))
-    }
-
-    fn bytes() -> Vec<u8> {
-        let path = "target/ink/cross_contract_call_tracing.wasm";
-        fs::read(path).expect("Failed to find or read contract file")
-    }
+    #[drink::contract_bundle_provider]
+    enum BundleProvider {}
 
     thread_local! {
         static OUTER_ADDRESS:  RefCell<Option<AccountId32>> = RefCell::new(None);
@@ -104,7 +94,7 @@ mod tests {
         ) {
             let contract_address = AccountId32::decode(&mut contract_address.as_slice())
                 .expect("Failed to decode contract address");
-            let transcoder = transcoder();
+            let transcoder = BundleProvider::local().unwrap().transcoder;
 
             let data_decoded = if is_call {
                 transcoder.decode_contract_message(&mut input_data.as_slice())
@@ -146,13 +136,13 @@ mod tests {
         session.override_debug_handle(TracingExt(Box::new(TestDebugger {})));
 
         let outer_address =
-            session.deploy(bytes(), "new", NO_ARGS, vec![1], None, &transcoder())?;
+            session.deploy_bundle(BundleProvider::local()?, "new", NO_ARGS, vec![1], None)?;
         OUTER_ADDRESS.with(|a| *a.borrow_mut() = Some(outer_address.clone()));
         let middle_address =
-            session.deploy(bytes(), "new", NO_ARGS, vec![2], None, &transcoder())?;
+            session.deploy_bundle(BundleProvider::local()?, "new", NO_ARGS, vec![2], None)?;
         MIDDLE_ADDRESS.with(|a| *a.borrow_mut() = Some(middle_address.clone()));
         let inner_address =
-            session.deploy(bytes(), "new", NO_ARGS, vec![3], None, &transcoder())?;
+            session.deploy_bundle(BundleProvider::local()?, "new", NO_ARGS, vec![3], None)?;
         INNER_ADDRESS.with(|a| *a.borrow_mut() = Some(inner_address.clone()));
 
         let value = session.call_with_address(

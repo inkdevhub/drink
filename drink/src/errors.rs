@@ -14,6 +14,9 @@ pub enum Error {
     /// Block couldn't have been finalized.
     #[error("Failed to finalize block: {0}")]
     BlockFinalize(String),
+    /// Bundle loading and parsing has failed
+    #[error("Loading the contract bundle has failed: {0}")]
+    BundleLoadFailed(String),
 }
 
 /// Every contract message wraps its return value in `Result<T, LangResult>`. This is the error
