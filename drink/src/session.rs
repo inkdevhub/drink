@@ -85,13 +85,13 @@ pub const NO_ARGS: &[String] = &[];
 /// # fn contract_bytes() -> Vec<u8> { vec![] }
 /// # fn bob() -> AccountId32 { AccountId32::new([0; 32]) }
 ///
-/// # fn main() -> Result<(), drink::session::error::SessionError> {
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 ///
 /// let mut session = Session::<MinimalRuntime>::new()?;
 /// let _address = session.deploy(contract_bytes(), "new", NO_ARGS, vec![], None, &get_transcoder())?;
-/// session.call("foo", NO_ARGS, None)?;
+/// let _result: u32 = session.call("foo", NO_ARGS, None)??;
 /// session.set_actor(bob());
-/// session.call("bar", NO_ARGS, None)?;
+/// session.call::<_, ()>("bar", NO_ARGS, None)??;
 /// # Ok(()) }
 /// ```
 ///
@@ -343,7 +343,9 @@ impl<R: Runtime> Session<R> {
         args: &[S],
         endowment: Option<Balance>,
     ) -> Result<Self, SessionError> {
-        self.call_internal(None, message, args, endowment)
+        // We ignore result, so we can pass `()` as the message result type, which will never fail
+        // at decoding.
+        self.call_internal::<_, ()>(None, message, args, endowment)
             .map(|_| self)
     }
 
@@ -355,39 +357,41 @@ impl<R: Runtime> Session<R> {
         args: &[S],
         endowment: Option<Balance>,
     ) -> Result<Self, SessionError> {
-        self.call_internal(Some(address), message, args, endowment)
+        // We ignore result, so we can pass `()` as the message result type, which will never fail
+        // at decoding.
+        self.call_internal::<_, ()>(Some(address), message, args, endowment)
             .map(|_| self)
     }
 
-    /// Calls the last deployed contract. In case of a successful call, returns the decoded result.
-    pub fn call<S: AsRef<str> + Debug>(
+    /// Calls the last deployed contract. In case of a successful call, returns the encoded result.
+    pub fn call<S: AsRef<str> + Debug, T: Decode>(
         &mut self,
         message: &str,
         args: &[S],
         endowment: Option<Balance>,
-    ) -> Result<Vec<u8>, SessionError> {
-        self.call_internal(None, message, args, endowment)
+    ) -> Result<MessageResult<T>, SessionError> {
+        self.call_internal::<_, T>(None, message, args, endowment)
     }
 
-    /// Calls a contract with a given address. In case of a successful call, returns the decoded
+    /// Calls a contract with a given address. In case of a successful call, returns the encoded
     /// result.
-    pub fn call_with_address<S: AsRef<str> + Debug>(
+    pub fn call_with_address<S: AsRef<str> + Debug, T: Decode>(
         &mut self,
         address: AccountIdFor<R>,
         message: &str,
         args: &[S],
         endowment: Option<Balance>,
-    ) -> Result<Vec<u8>, SessionError> {
+    ) -> Result<MessageResult<T>, SessionError> {
         self.call_internal(Some(address), message, args, endowment)
     }
 
-    fn call_internal<S: AsRef<str> + Debug>(
+    fn call_internal<S: AsRef<str> + Debug, T: Decode>(
         &mut self,
         address: Option<AccountIdFor<R>>,
         message: &str,
         args: &[S],
         endowment: Option<Balance>,
-    ) -> Result<Vec<u8>, SessionError> {
+    ) -> Result<MessageResult<T>, SessionError> {
         let address = match address {
             Some(address) => address,
             None => self
@@ -419,7 +423,12 @@ impl<R: Runtime> Session<R> {
             Ok(exec_result) => {
                 let encoded = exec_result.data.clone();
                 self.call_returns.push(encoded.clone());
-                Ok(encoded)
+
+                MessageResult::<T>::decode(&mut encoded.as_slice()).map_err(|err| {
+                    SessionError::Decoding(format!(
+                        "Failed to decode the result of calling a contract: {err:?}",
+                    ))
+                })
             }
             Err(err) => Err(SessionError::CallFailed(*err)),
         };
