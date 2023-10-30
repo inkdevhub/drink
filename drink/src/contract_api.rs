@@ -1,5 +1,7 @@
 //! Contracts API.
 
+use std::ops::Not;
+
 use frame_support::weights::Weight;
 use frame_system::Config;
 use pallet_contracts::{CollectEvents, DebugInfo, Determinism};
@@ -191,10 +193,13 @@ impl<R: Runtime> ContractApi<R> for Sandbox<R> {
     }
 }
 
-/// Converts bytes to a '\n'-split string.
+/// Converts bytes to a '\n'-split string, ignoring empty lines.
 pub fn decode_debug_buffer(buffer: &[u8]) -> Vec<String> {
     let decoded = buffer.iter().map(|b| *b as char).collect::<String>();
-    decoded.split('\n').map(|s| s.to_string()).collect()
+    decoded
+        .split('\n')
+        .filter_map(|s| s.is_empty().not().then_some(s.to_string()))
+        .collect()
 }
 
 #[cfg(test)]

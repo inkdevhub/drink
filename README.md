@@ -75,10 +75,12 @@ Check our helpful and verbose examples in the [examples](examples) directory.
 
 `drink` library is continuously published to [crates.io](https://crates.io/crates/drink), so you can use it in your project with either `cargo add drink` or by adding the following line to your `Cargo.toml`:
 ```toml
-drink = { version = "0.5" }
+drink = { version = "0.6" }
 ```
 
 Full library documentation is available at: https://docs.rs/drink.
+
+**Quick start guide** is available [here](examples/quick-start-with-drink/README.md).
 
 ## As an alternative backend to ink!'s E2E testing framework
 
