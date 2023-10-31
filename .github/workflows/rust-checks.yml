@@ -18,7 +18,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CARGO_INCREMENTAL: 0
-      RUSTC_WRAPPER: sccache
     steps:
       - name: Checkout source code
         uses: actions/checkout@v3
@@ -41,10 +40,6 @@ jobs:
 
       - name: Run linter
         uses: actions-rs/cargo@v1
-        env:
-          # https://github.com/mozilla/sccache/issues/966
-          RUSTC_WRAPPER: ""
-          RUSTC_WORKSPACE_WRAPPER: sccache
         with:
           command: clippy
           args: --all-targets -- --no-deps -D warnings
