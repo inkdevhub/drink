@@ -23,7 +23,7 @@ mod proxy {
 
         /// Calls `callee` with the selector `CALLEE_SELECTOR` and forwards the result.
         #[ink(message)]
-        pub fn delegate_call(&self, callee: AccountId) -> (u8, u8) {
+        pub fn forward_call(&self, callee: AccountId) -> (u8, u8) {
             build_call::<DefaultEnvironment>()
                 .call(callee)
                 .gas_limit(0)
@@ -66,7 +66,7 @@ mod tests {
         // Now, we can deploy our proper contract and verify its behavior.
         let result: (u8, u8) = session
             .deploy_bundle_and(BundleProvider::local()?, "new", NO_ARGS, vec![], None)?
-            .call_and("delegate_call", &[mock_address.to_string()], None)?
+            .call_and("forward_call", &[mock_address.to_string()], None)?
             .last_call_return()
             .expect("Call was successful, so there should be a return")
             .expect("Call was successful");
