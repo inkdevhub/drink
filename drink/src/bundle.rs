@@ -14,6 +14,7 @@ use crate::{DrinkResult, Error};
 /// - `deploy_bundle_and`
 /// - `upload_bundle`
 /// - `upload_bundle_and`
+#[derive(Clone)]
 pub struct ContractBundle {
     /// WASM blob of the contract
     pub wasm: Vec<u8>,

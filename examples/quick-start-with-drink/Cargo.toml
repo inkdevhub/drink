@@ -1,0 +1,34 @@
+[package]
+name = "quick-start-with-drink"
+authors = ["Cardinal"]
+edition = "2021"
+homepage = "https://alephzero.org"
+repository = "https://github.com/Cardinal-Cryptography/drink"
+version = "0.1.0"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+# We use standard dependencies for an ink! smart-contract.
+
+# For debugging from contract, we enable the `ink-debug` feature of `ink` crate.
+ink = { version = "=4.2.1", default-features = false, features = ["ink-debug"] }
+scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
+scale-info = { version = "2.6", default-features = false, features = ["derive"], optional = true }
+
+[dev-dependencies]
+# For testing purposes we bring the `drink` library.
+drink = { path = "../../drink" }
+
+[features]
+default = ["std"]
+std = [
+    "ink/std",
+    "scale/std",
+    "scale-info/std",
+]
+# If the current crate defines a smart contract that we want to test, we can't forget to have `ink-as-dependency`
+# feature declared. This is how `#[drink::test]` and `#[drink::contract_bundle_provider]` discovers contracts to be
+# built.
+ink-as-dependency = []
