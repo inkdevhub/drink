@@ -5,17 +5,17 @@ We will see how to write tests for a simple smart contract and make use of `drin
 
 ## Prerequisites
 
-You only need a Rust installed (see [here](https://www.rust-lang.org/tools/install) for help).
+You only need Rust installed (see [here](https://www.rust-lang.org/tools/install) for help).
 Drink is developed and tested with stable Rust 1.70 (see [toolchain file](../../rust-toolchain.toml)).
 
 ## Dependencies
 
-You only need `drink` library brought into your project:
+You only need the `drink` library brought into your project:
 ```toml
 drink = { version = "0.6" }
 ```
 
-See [Cargo.toml](Cargo.toml) for a typical cargo setup of a single-contract projects.
+See [Cargo.toml](Cargo.toml) for a typical cargo setup of a single-contract project.
 
 ## Writing tests
 
@@ -48,7 +48,7 @@ mod tests {
     enum BundleProvider {}
 
     #[drink::test]
-    fn deploy_and_call_a_contract() -> Result<(), Box<dyn std::error::Error>> {
+    fn deploy_and_call_a_contract() -> Result<(), Box<dyn Error>> {
         let result: bool = Session::<MinimalRuntime>::new()?
             .deploy_bundle_and(BundleProvider::local(), "new", &["true"], vec![], None)?
             .call_and("flip", NO_ARGS, None)?
@@ -60,7 +60,7 @@ mod tests {
 }
 ```
 
-So, firstly you declare a bundle provider like:
+So, firstly, you declare a bundle provider like:
 ```rust
 #[drink::contract_bundle_provider]
 enum BundleProvider {}
@@ -73,13 +73,13 @@ let bundle = BundleProvider::local()?; // for the contract from the current crat
 let bundle = BundleProvider::Flipper.bundle()?; // for the contract from the `flipper` crate
 ```
 
-We mark testcase with `#[drink::test]` attribute and declare return type as `Result` so that we can use `?` operator:
+We mark each testcase with `#[drink::test]` attribute and declare return type as `Result` so that we can use the `?` operator:
 ```rust
 #[drink::test]
-fn testcase() -> Result<(), Box<dyn std::error::Error>> {
+fn testcase() -> Result<(), Box<dyn Error>> {
     // ...
 }
 ```
 
-Then, we can use `Session` API to interact with both contracts and the whole runtime.
+Then, we can use the `Session` API to interact with both contracts and the whole runtime.
 For details, check out testcases in [lib.rs](lib.rs).
