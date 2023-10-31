@@ -15,7 +15,7 @@ concurrency:
 jobs:
   main:
     name: Run check, test and lints
-    runs-on: [self-hosted, Linux, X64, large]
+    runs-on: ubuntu-latest
     env:
       CARGO_INCREMENTAL: 0
       RUSTC_WRAPPER: sccache
