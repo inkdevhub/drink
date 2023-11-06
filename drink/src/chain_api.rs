@@ -81,6 +81,11 @@ pub trait ChainApi<R: Runtime> {
 
     /// Reset the events of the current block.
     fn reset_current_block_events(&mut self);
+
+    /// Execute the given closure with the inner externallities.
+    ///
+    /// Returns the result of the given closure.
+    fn execute_with<T>(&mut self, execute: impl FnOnce() -> T) -> T;
 }
 
 impl<R: Runtime> ChainApi<R> for Sandbox<R> {
@@ -153,6 +158,10 @@ impl<R: Runtime> ChainApi<R> for Sandbox<R> {
     fn reset_current_block_events(&mut self) {
         self.externalities
             .execute_with(|| frame_system::Pallet::<R>::reset_events())
+    }
+
+    fn execute_with<T>(&mut self, execute: impl FnOnce() -> T) -> T {
+        self.externalities.execute_with(execute)
     }
 }
 
