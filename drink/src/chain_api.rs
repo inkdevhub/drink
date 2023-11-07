@@ -4,7 +4,7 @@ use frame_support::{
     sp_runtime::{traits::Dispatchable, DispatchResultWithInfo, Saturating},
     traits::{
         fungible::{Inspect, Mutate},
-        Time,
+        Time, tokens::{Preservation, Fortitude},
     },
 };
 use frame_system::pallet_prelude::BlockNumberFor;
@@ -115,8 +115,8 @@ impl<R: Runtime> ChainApi<R> for Sandbox<R> {
         self.externalities.execute_with(|| {
             <R as pallet_contracts::Config>::Currency::reducible_balance(
                 address,
-                frame_support::traits::tokens::Preservation::Expendable,
-                frame_support::traits::tokens::Fortitude::Force,
+                Preservation::Expendable,
+                Fortitude::Force,
             )
         })
     }
