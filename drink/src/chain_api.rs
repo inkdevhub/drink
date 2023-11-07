@@ -17,7 +17,6 @@ use crate::{
 /// The runtime call type for a particular runtime.
 pub type RuntimeCall<R> = <R as frame_system::Config>::RuntimeCall;
 
-
 /// Interface for basic chain operations.
 pub trait ChainApi<R: Runtime> {
     /// Return the current height of the chain.
