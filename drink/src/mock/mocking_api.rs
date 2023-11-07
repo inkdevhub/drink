@@ -6,7 +6,7 @@ use crate::{
 };
 
 /// Interface for basic mocking operations.
-pub trait MockingApi<R: Runtime> {
+pub trait MockingApi<R: pallet_contracts::Config> {
     /// Deploy `mock` as a standard contract. Returns the address of the deployed contract.
     fn deploy(&mut self, mock: ContractMock) -> AccountIdFor<R>;
 

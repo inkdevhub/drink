@@ -4,7 +4,8 @@ use frame_support::{
     sp_runtime::{traits::Dispatchable, DispatchResultWithInfo, Saturating},
     traits::{
         fungible::{Inspect, Mutate},
-        Time, tokens::{Preservation, Fortitude},
+        tokens::{Fortitude, Preservation},
+        Time,
     },
 };
 use frame_system::pallet_prelude::BlockNumberFor;
@@ -89,7 +90,7 @@ pub trait ChainApi<R: Runtime> {
     fn reset_current_block_events(&mut self);
 }
 
-impl<R: Runtime> ChainApi<R> for Sandbox<R> {
+impl<R: Runtime + pallet_contracts::Config> ChainApi<R> for Sandbox<R> {
     fn current_height(&mut self) -> BlockNumberFor<R> {
         self.externalities
             .execute_with(|| frame_system::Pallet::<R>::block_number())

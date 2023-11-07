@@ -16,7 +16,7 @@ use crate::{
 };
 
 /// Interface for contract-related operations.
-pub trait ContractApi<R: Runtime> {
+pub trait ContractApi<R: pallet_contracts::Config> {
     /// Interface for `bare_instantiate` contract call with a simultaneous upload.
     ///
     /// # Arguments

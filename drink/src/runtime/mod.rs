@@ -32,7 +32,7 @@ pub use pallet_contracts;
 
 /// A runtime to use.
 ///
-/// Must contain at least system, balances and contracts pallets.
+/// Must extend `pallet_contracts::Config` and `pallet_timestamp::Config` to manipulate time.
 pub trait Runtime:
     pallet_contracts::Config + pallet_timestamp::Config<Moment = MomentOf<Self>>
 {
