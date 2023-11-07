@@ -12,7 +12,7 @@ use parity_scale_codec::Decode as _;
 
 use crate::{
     runtime::{AccountIdFor, Runtime},
-    EventRecordOf, Sandbox,
+    BalanceOf, EventRecordOf, Sandbox,
 };
 
 /// Interface for contract-related operations.
@@ -32,13 +32,13 @@ pub trait ContractApi<R: Runtime> {
     fn deploy_contract(
         &mut self,
         contract_bytes: Vec<u8>,
-        value: u128,
+        value: BalanceOf<R>,
         data: Vec<u8>,
         salt: Vec<u8>,
         origin: AccountIdFor<R>,
         gas_limit: Weight,
-        storage_deposit_limit: Option<u128>,
-    ) -> ContractInstantiateResult<AccountIdFor<R>, u128, EventRecordOf<R>>;
+        storage_deposit_limit: Option<BalanceOf<R>>,
+    ) -> ContractInstantiateResult<AccountIdFor<R>, BalanceOf<R>, EventRecordOf<R>>;
 
     /// Interface for `bare_instantiate` contract call for a previously uploaded contract.
     ///
@@ -55,13 +55,13 @@ pub trait ContractApi<R: Runtime> {
     fn instantiate_contract(
         &mut self,
         code_hash: Vec<u8>,
-        value: u128,
+        value: BalanceOf<R>,
         data: Vec<u8>,
         salt: Vec<u8>,
         origin: AccountIdFor<R>,
         gas_limit: Weight,
-        storage_deposit_limit: Option<u128>,
-    ) -> ContractInstantiateResult<AccountIdFor<R>, u128, EventRecordOf<R>>;
+        storage_deposit_limit: Option<BalanceOf<R>>,
+    ) -> ContractInstantiateResult<AccountIdFor<R>, BalanceOf<R>, EventRecordOf<R>>;
 
     /// Interface for `bare_upload_code` contract call.
     ///
@@ -74,8 +74,8 @@ pub trait ContractApi<R: Runtime> {
         &mut self,
         contract_bytes: Vec<u8>,
         origin: AccountIdFor<R>,
-        storage_deposit_limit: Option<u128>,
-    ) -> CodeUploadResult<<R as frame_system::Config>::Hash, u128>;
+        storage_deposit_limit: Option<BalanceOf<R>>,
+    ) -> CodeUploadResult<<R as frame_system::Config>::Hash, BalanceOf<R>>;
 
     /// Interface for `bare_call` contract call.
     ///
@@ -90,25 +90,25 @@ pub trait ContractApi<R: Runtime> {
     fn call_contract(
         &mut self,
         address: AccountIdFor<R>,
-        value: u128,
+        value: BalanceOf<R>,
         data: Vec<u8>,
         origin: AccountIdFor<R>,
         gas_limit: Weight,
-        storage_deposit_limit: Option<u128>,
-    ) -> ContractExecResult<u128, EventRecordOf<R>>;
+        storage_deposit_limit: Option<BalanceOf<R>>,
+    ) -> ContractExecResult<BalanceOf<R>, EventRecordOf<R>>;
 }
 
 impl<R: Runtime> ContractApi<R> for Sandbox<R> {
     fn deploy_contract(
         &mut self,
         contract_bytes: Vec<u8>,
-        value: u128,
+        value: BalanceOf<R>,
         data: Vec<u8>,
         salt: Vec<u8>,
         origin: AccountIdFor<R>,
         gas_limit: Weight,
-        storage_deposit_limit: Option<u128>,
-    ) -> ContractInstantiateResult<AccountIdFor<R>, u128, EventRecordOf<R>> {
+        storage_deposit_limit: Option<BalanceOf<R>>,
+    ) -> ContractInstantiateResult<AccountIdFor<R>, BalanceOf<R>, EventRecordOf<R>> {
         self.externalities.execute_with(|| {
             pallet_contracts::Pallet::<R>::bare_instantiate(
                 origin,
@@ -127,13 +127,13 @@ impl<R: Runtime> ContractApi<R> for Sandbox<R> {
     fn instantiate_contract(
         &mut self,
         code_hash: Vec<u8>,
-        value: u128,
+        value: BalanceOf<R>,
         data: Vec<u8>,
         salt: Vec<u8>,
         origin: AccountIdFor<R>,
         gas_limit: Weight,
-        storage_deposit_limit: Option<u128>,
-    ) -> ContractInstantiateResult<AccountIdFor<R>, u128, EventRecordOf<R>> {
+        storage_deposit_limit: Option<BalanceOf<R>>,
+    ) -> ContractInstantiateResult<AccountIdFor<R>, BalanceOf<R>, EventRecordOf<R>> {
         let mut code_hash = &code_hash[..];
         self.externalities.execute_with(|| {
             pallet_contracts::Pallet::<R>::bare_instantiate(
@@ -156,8 +156,8 @@ impl<R: Runtime> ContractApi<R> for Sandbox<R> {
         &mut self,
         contract_bytes: Vec<u8>,
         origin: AccountIdFor<R>,
-        storage_deposit_limit: Option<u128>,
-    ) -> CodeUploadResult<<R as frame_system::Config>::Hash, u128> {
+        storage_deposit_limit: Option<BalanceOf<R>>,
+    ) -> CodeUploadResult<<R as frame_system::Config>::Hash, BalanceOf<R>> {
         self.externalities.execute_with(|| {
             pallet_contracts::Pallet::<R>::bare_upload_code(
                 origin,
@@ -171,12 +171,12 @@ impl<R: Runtime> ContractApi<R> for Sandbox<R> {
     fn call_contract(
         &mut self,
         address: AccountIdFor<R>,
-        value: u128,
+        value: BalanceOf<R>,
         data: Vec<u8>,
         origin: AccountIdFor<R>,
         gas_limit: Weight,
-        storage_deposit_limit: Option<u128>,
-    ) -> ContractExecResult<u128, EventRecordOf<R>> {
+        storage_deposit_limit: Option<BalanceOf<R>>,
+    ) -> ContractExecResult<BalanceOf<R>, EventRecordOf<R>> {
         self.externalities.execute_with(|| {
             pallet_contracts::Pallet::<R>::bare_call(
                 origin,

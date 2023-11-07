@@ -5,12 +5,23 @@ pub mod minimal;
 pub mod pallet_contracts_debugging;
 
 pub use frame_metadata::RuntimeMetadataPrefixed;
-use frame_support::sp_runtime::{traits::Dispatchable, Storage};
+use frame_support::{
+    sp_runtime::{traits::Dispatchable, Storage},
+    traits::{fungible::Inspect, Time},
+};
 use frame_system::pallet_prelude::BlockNumberFor;
 pub use minimal::MinimalRuntime;
 
 /// The type of an account identifier.
 pub type AccountIdFor<R> = <R as frame_system::Config>::AccountId;
+
+/// Generic fungible balance type.
+pub type BalanceOf<R> =
+    <<R as pallet_contracts::Config>::Currency as Inspect<AccountIdFor<R>>>::Balance;
+
+/// Generic Time type.
+pub type MomentOf<R> = <<R as pallet_contracts::Config>::Time as Time>::Moment;
+
 /// The type of a hash.
 pub type HashFor<R> = <R as frame_system::Config>::Hash;
 
@@ -23,10 +34,7 @@ pub use pallet_contracts;
 ///
 /// Must contain at least system, balances and contracts pallets.
 pub trait Runtime:
-    frame_system::Config
-    + pallet_timestamp::Config
-    + pallet_balances::Config<Balance = u128>
-    + pallet_contracts::Config<Currency = pallet_balances::Pallet<Self>>
+    pallet_contracts::Config + pallet_timestamp::Config<Moment = MomentOf<Self>>
 {
     /// Initialize the storage at the genesis block.
     fn initialize_storage(_storage: &mut Storage) -> Result<(), String> {

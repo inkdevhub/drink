@@ -2,14 +2,21 @@
 
 use frame_support::{
     sp_runtime::{traits::Dispatchable, DispatchResultWithInfo, Saturating},
-    traits::tokens::currency::Currency,
+    traits::{
+        fungible::{Inspect, Mutate},
+        Time,
+    },
 };
 use frame_system::pallet_prelude::BlockNumberFor;
 
-use crate::{runtime::AccountIdFor, DrinkResult, Error, EventRecordOf, Runtime, Sandbox};
+use crate::{
+    runtime::{AccountIdFor, BalanceOf, MomentOf},
+    DrinkResult, Error, EventRecordOf, Runtime, Sandbox,
+};
 
 /// The runtime call type for a particular runtime.
 pub type RuntimeCall<R> = <R as frame_system::Config>::RuntimeCall;
+
 
 /// Interface for basic chain operations.
 pub trait ChainApi<R: Runtime> {
@@ -38,24 +45,24 @@ pub trait ChainApi<R: Runtime> {
     ///
     /// * `address` - The address of the account to add tokens to.
     /// * `amount` - The number of tokens to add.
-    fn add_tokens(&mut self, address: AccountIdFor<R>, amount: u128);
+    fn add_tokens(&mut self, address: AccountIdFor<R>, amount: BalanceOf<R>);
 
     /// Return the balance of an account.
     ///
     /// # Arguments
     ///
     /// * `address` - The address of the account to query.
-    fn balance(&mut self, address: &AccountIdFor<R>) -> u128;
+    fn balance(&mut self, address: &AccountIdFor<R>) -> BalanceOf<R>;
 
     /// Return the timestamp of the current block.
-    fn get_timestamp(&mut self) -> <R as pallet_timestamp::Config>::Moment;
+    fn get_timestamp(&mut self) -> MomentOf<R>;
 
     /// Set the timestamp of the current block.
     ///
     /// # Arguments
     ///
     /// * `timestamp` - The new timestamp to be set.
-    fn set_timestamp(&mut self, timestamp: <R as pallet_timestamp::Config>::Moment);
+    fn set_timestamp(&mut self, timestamp: MomentOf<R>);
 
     /// Run an action without modifying the storage.
     ///
@@ -99,23 +106,28 @@ impl<R: Runtime> ChainApi<R> for Sandbox<R> {
         })
     }
 
-    fn add_tokens(&mut self, address: AccountIdFor<R>, amount: u128) {
+    fn add_tokens(&mut self, address: AccountIdFor<R>, amount: BalanceOf<R>) {
         self.externalities.execute_with(|| {
-            let _ = pallet_balances::Pallet::<R>::deposit_creating(&address, amount);
+            let _ = <R as pallet_contracts::Config>::Currency::mint_into(&address, amount);
         });
     }
 
-    fn balance(&mut self, address: &AccountIdFor<R>) -> u128 {
-        self.externalities
-            .execute_with(|| pallet_balances::Pallet::<R>::free_balance(address))
+    fn balance(&mut self, address: &AccountIdFor<R>) -> BalanceOf<R> {
+        self.externalities.execute_with(|| {
+            <R as pallet_contracts::Config>::Currency::reducible_balance(
+                address,
+                frame_support::traits::tokens::Preservation::Expendable,
+                frame_support::traits::tokens::Fortitude::Force,
+            )
+        })
     }
 
-    fn get_timestamp(&mut self) -> <R as pallet_timestamp::Config>::Moment {
+    fn get_timestamp(&mut self) -> MomentOf<R> {
         self.externalities
-            .execute_with(|| pallet_timestamp::Pallet::<R>::get())
+            .execute_with(|| <<R as pallet_contracts::Config>::Time as Time>::now())
     }
 
-    fn set_timestamp(&mut self, timestamp: <R as pallet_timestamp::Config>::Moment) {
+    fn set_timestamp(&mut self, timestamp: MomentOf<R>) {
         self.externalities
             .execute_with(|| pallet_timestamp::Pallet::<R>::set_timestamp(timestamp));
     }

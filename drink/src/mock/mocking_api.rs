@@ -24,7 +24,7 @@ impl<R: Runtime> MockingApi<R> for Sandbox<R> {
         let mock_address = self
             .deploy_contract(
                 mock_bytes,
-                0,
+                0u32.into(),
                 vec![],
                 // We have to use a different account ID for each contract.
                 vec![self.mock_counter as u8],

@@ -12,7 +12,7 @@ use crate::{
     chain_api::ChainApi,
     contract_api::ContractApi,
     pallet_contracts_debugging::TracingExt,
-    runtime::{AccountIdFor, HashFor, Runtime},
+    runtime::{AccountIdFor, BalanceOf, HashFor, Runtime},
     EventRecordOf, Sandbox, DEFAULT_GAS_LIMIT,
 };
 
@@ -25,11 +25,6 @@ use crate::{
     bundle::ContractBundle, errors::MessageResult, mock::MockingApi,
     session::transcoding::TranscoderRegistry,
 };
-
-type Balance = u128;
-
-const ZERO_TRANSFER: Balance = 0;
-const DEFAULT_STORAGE_DEPOSIT_LIMIT: Option<Balance> = None;
 
 /// Convenient value for an empty sequence of call/instantiation arguments.
 ///
@@ -124,9 +119,9 @@ pub struct Session<R: Runtime> {
 
     transcoders: TranscoderRegistry<AccountIdFor<R>>,
 
-    deploy_results: Vec<ContractInstantiateResult<AccountIdFor<R>, Balance, EventRecordOf<R>>>,
+    deploy_results: Vec<ContractInstantiateResult<AccountIdFor<R>, BalanceOf<R>, EventRecordOf<R>>>,
     deploy_returns: Vec<AccountIdFor<R>>,
-    call_results: Vec<ContractExecResult<Balance, EventRecordOf<R>>>,
+    call_results: Vec<ContractExecResult<BalanceOf<R>, EventRecordOf<R>>>,
     call_returns: Vec<Vec<u8>>,
 }
 
@@ -207,7 +202,7 @@ impl<R: Runtime> Session<R> {
         constructor: &str,
         args: &[S],
         salt: Vec<u8>,
-        endowment: Option<Balance>,
+        endowment: Option<BalanceOf<R>>,
         transcoder: &Rc<ContractMessageTranscoder>,
     ) -> Result<Self, SessionError> {
         self.deploy(
@@ -229,7 +224,7 @@ impl<R: Runtime> Session<R> {
         constructor: &str,
         args: &[S],
         salt: Vec<u8>,
-        endowment: Option<Balance>,
+        endowment: Option<BalanceOf<R>>,
         transcoder: &Rc<ContractMessageTranscoder>,
     ) -> Result<AccountIdFor<R>, SessionError> {
         let data = transcoder
@@ -238,12 +233,12 @@ impl<R: Runtime> Session<R> {
 
         let result = self.sandbox.deploy_contract(
             contract_bytes,
-            endowment.unwrap_or(ZERO_TRANSFER),
+            endowment.unwrap_or_default(),
             data,
             salt,
             self.actor.clone(),
             self.gas_limit,
-            DEFAULT_STORAGE_DEPOSIT_LIMIT,
+            None,
         );
 
         let ret = match &result.result {
@@ -274,7 +269,7 @@ impl<R: Runtime> Session<R> {
         constructor: &str,
         args: &[S],
         salt: Vec<u8>,
-        endowment: Option<Balance>,
+        endowment: Option<BalanceOf<R>>,
     ) -> Result<AccountIdFor<R>, SessionError> {
         self.deploy(
             contract_file.wasm,
@@ -295,7 +290,7 @@ impl<R: Runtime> Session<R> {
         constructor: &str,
         args: &[S],
         salt: Vec<u8>,
-        endowment: Option<Balance>,
+        endowment: Option<BalanceOf<R>>,
     ) -> Result<Self, SessionError> {
         self.deploy_bundle(contract_file, constructor, args, salt, endowment)
             .map(|_| self)
@@ -308,11 +303,9 @@ impl<R: Runtime> Session<R> {
 
     /// Uploads a raw contract code. In case of success returns the code hash.
     pub fn upload(&mut self, contract_bytes: Vec<u8>) -> Result<HashFor<R>, SessionError> {
-        let result = self.sandbox.upload_contract(
-            contract_bytes,
-            self.actor.clone(),
-            DEFAULT_STORAGE_DEPOSIT_LIMIT,
-        );
+        let result = self
+            .sandbox
+            .upload_contract(contract_bytes, self.actor.clone(), None);
 
         result
             .map(|upload_result| upload_result.code_hash)
@@ -341,7 +334,7 @@ impl<R: Runtime> Session<R> {
         mut self,
         message: &str,
         args: &[S],
-        endowment: Option<Balance>,
+        endowment: Option<BalanceOf<R>>,
     ) -> Result<Self, SessionError> {
         // We ignore result, so we can pass `()` as the message result type, which will never fail
         // at decoding.
@@ -355,7 +348,7 @@ impl<R: Runtime> Session<R> {
         address: AccountIdFor<R>,
         message: &str,
         args: &[S],
-        endowment: Option<Balance>,
+        endowment: Option<BalanceOf<R>>,
     ) -> Result<Self, SessionError> {
         // We ignore result, so we can pass `()` as the message result type, which will never fail
         // at decoding.
@@ -368,7 +361,7 @@ impl<R: Runtime> Session<R> {
         &mut self,
         message: &str,
         args: &[S],
-        endowment: Option<Balance>,
+        endowment: Option<BalanceOf<R>>,
     ) -> Result<MessageResult<T>, SessionError> {
         self.call_internal::<_, T>(None, message, args, endowment)
     }
@@ -380,7 +373,7 @@ impl<R: Runtime> Session<R> {
         address: AccountIdFor<R>,
         message: &str,
         args: &[S],
-        endowment: Option<Balance>,
+        endowment: Option<BalanceOf<R>>,
     ) -> Result<MessageResult<T>, SessionError> {
         self.call_internal(Some(address), message, args, endowment)
     }
@@ -390,7 +383,7 @@ impl<R: Runtime> Session<R> {
         address: Option<AccountIdFor<R>>,
         message: &str,
         args: &[S],
-        endowment: Option<Balance>,
+        endowment: Option<BalanceOf<R>>,
     ) -> Result<MessageResult<T>, SessionError> {
         let address = match address {
             Some(address) => address,
@@ -411,11 +404,11 @@ impl<R: Runtime> Session<R> {
 
         let result = self.sandbox.call_contract(
             address,
-            endowment.unwrap_or(ZERO_TRANSFER),
+            endowment.unwrap_or_default(),
             data,
             self.actor.clone(),
             self.gas_limit,
-            DEFAULT_STORAGE_DEPOSIT_LIMIT,
+            None,
         );
 
         let ret = match &result.result {
@@ -440,7 +433,7 @@ impl<R: Runtime> Session<R> {
     /// Returns the last result of deploying a contract.
     pub fn last_deploy_result(
         &self,
-    ) -> Option<&ContractInstantiateResult<AccountIdFor<R>, Balance, EventRecordOf<R>>> {
+    ) -> Option<&ContractInstantiateResult<AccountIdFor<R>, BalanceOf<R>, EventRecordOf<R>>> {
         self.deploy_results.last()
     }
 
@@ -455,7 +448,7 @@ impl<R: Runtime> Session<R> {
     }
 
     /// Returns the last result of calling a contract.
-    pub fn last_call_result(&self) -> Option<&ContractExecResult<Balance, EventRecordOf<R>>> {
+    pub fn last_call_result(&self) -> Option<&ContractExecResult<BalanceOf<R>, EventRecordOf<R>>> {
         self.call_results.last()
     }
 
