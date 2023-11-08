@@ -9,33 +9,86 @@ use frame_support::{
 };
 use frame_system::pallet_prelude::BlockNumberFor;
 
-use crate::{
-    runtime::{AccountIdFor, BalanceOf, MomentOf},
-    DrinkResult, Error, EventRecordOf, Runtime, Sandbox,
-};
+use crate::{runtime::AccountIdFor, DrinkResult, Error, EventRecordOf, Runtime, Sandbox};
+
+/// Generic Time type.
+pub type MomentOf<R> = <R as pallet_timestamp::Config>::Moment;
+
+/// Generic fungible balance type.
+pub type BalanceOf<R> = <R as pallet_balances::Config>::Balance;
 
 /// The runtime call type for a particular runtime.
 pub type RuntimeCall<R> = <R as frame_system::Config>::RuntimeCall;
 
-/// Interface for basic chain operations.
-pub trait ChainApi<R: Runtime> {
-    /// Return the current height of the chain.
-    fn current_height(&mut self) -> BlockNumberFor<R>;
-
+impl<R: Runtime> Sandbox<R> {
     /// Build a new empty block and return the new height.
-    fn build_block(&mut self) -> DrinkResult<BlockNumberFor<R>>;
-
+    pub fn build_block(&mut self) -> DrinkResult<BlockNumberFor<R>> {
+        self.execute_with(|| {
+            let mut current_block = frame_system::Pallet::<R>::block_number();
+            let block_hash = R::finalize_block(current_block).map_err(Error::BlockFinalize)?;
+            current_block.saturating_inc();
+            R::initialize_block(current_block, block_hash).map_err(Error::BlockInitialize)?;
+            Ok(current_block)
+        })
+    }
     /// Build `n` empty blocks and return the new height.
     ///
     /// # Arguments
     ///
     /// * `n` - The number of blocks to build.
-    fn build_blocks(&mut self, n: u32) -> DrinkResult<BlockNumberFor<R>> {
+    pub fn build_blocks(&mut self, n: u32) -> DrinkResult<BlockNumberFor<R>> {
         let mut last_block = None;
         for _ in 0..n {
             last_block = Some(self.build_block()?);
         }
-        Ok(last_block.unwrap_or_else(|| self.current_height()))
+        Ok(last_block.unwrap_or_else(|| self.block_height()))
+    }
+}
+
+impl<R: frame_system::Config> Sandbox<R> {
+    /// Return the current height of the chain.
+    pub fn block_height(&mut self) -> BlockNumberFor<R> {
+        self.execute_with(|| frame_system::Pallet::<R>::block_number())
+    }
+
+    /// Return the events of the current block so far.
+    pub fn get_current_block_events(&mut self) -> Vec<EventRecordOf<R>> {
+        self.execute_with(frame_system::Pallet::<R>::events)
+    }
+
+    /// Reset the events of the current block.
+    pub fn reset_current_block_events(&mut self) {
+        self.execute_with(frame_system::Pallet::<R>::reset_events)
+    }
+
+    /// Execute a runtime call (dispatchable).
+    ///
+    /// # Arguments
+    ///
+    /// * `call` - The runtime call to execute.
+    /// * `origin` - The origin of the call.
+    pub fn runtime_call(
+        &mut self,
+        call: RuntimeCall<R>,
+        origin: <RuntimeCall<R> as Dispatchable>::RuntimeOrigin,
+    ) -> DispatchResultWithInfo<<RuntimeCall<R> as Dispatchable>::PostInfo> {
+        self.execute_with(|| call.dispatch(origin))
+    }
+}
+
+impl<R: pallet_balances::Config> Sandbox<R> {
+    /// Add tokens to an account.
+    ///
+    /// # Arguments
+    ///
+    /// * `address` - The address of the account to add tokens to.
+    /// * `amount` - The number of tokens to add.
+    pub fn add_tokens(
+        &mut self,
+        address: AccountIdFor<R>,
+        amount: BalanceOf<R>,
+    ) -> Result<BalanceOf<R>, DispatchError> {
+        self.execute_with(|| pallet_balances::Pallet::<R>::mint_into(&address, amount))
     }
 
     /// Add tokens to an account.
@@ -44,133 +97,30 @@ pub trait ChainApi<R: Runtime> {
     ///
     /// * `address` - The address of the account to add tokens to.
     /// * `amount` - The number of tokens to add.
-    fn add_tokens(
-        &mut self,
-        address: AccountIdFor<R>,
-        amount: BalanceOf<R>,
-    ) -> Result<BalanceOf<R>, DispatchError>;
-
-    /// Return the balance of an account.
-    ///
-    /// # Arguments
-    ///
-    /// * `address` - The address of the account to query.
-    fn balance(&mut self, address: &AccountIdFor<R>) -> BalanceOf<R>;
-
-    /// Return the timestamp of the current block.
-    fn get_timestamp(&mut self) -> MomentOf<R>;
-
-    /// Set the timestamp of the current block.
-    ///
-    /// # Arguments
-    ///
-    /// * `timestamp` - The new timestamp to be set.
-    fn set_timestamp(&mut self, timestamp: MomentOf<R>);
-
-    /// Run an action without modifying the storage.
-    ///
-    /// # Arguments
-    ///
-    /// * `action` - The action to run.
-    fn dry_run<T>(&mut self, action: impl FnOnce(&mut Self) -> T) -> T;
-
-    /// Execute a runtime call (dispatchable).
-    ///
-    /// # Arguments
-    ///
-    /// * `call` - The runtime call to execute.
-    /// * `origin` - The origin of the call.
-    fn runtime_call(
-        &mut self,
-        call: RuntimeCall<R>,
-        origin: <RuntimeCall<R> as Dispatchable>::RuntimeOrigin,
-    ) -> DispatchResultWithInfo<<RuntimeCall<R> as Dispatchable>::PostInfo>;
-
-    /// Return the events of the current block so far.
-    fn get_current_block_events(&mut self) -> Vec<EventRecordOf<R>>;
-
-    /// Reset the events of the current block.
-    fn reset_current_block_events(&mut self);
-}
-
-impl<R: Runtime + pallet_contracts::Config> ChainApi<R> for Sandbox<R> {
-    fn current_height(&mut self) -> BlockNumberFor<R> {
-        self.externalities
-            .execute_with(|| frame_system::Pallet::<R>::block_number())
-    }
-
-    fn build_block(&mut self) -> DrinkResult<BlockNumberFor<R>> {
-        let mut current_block = self.current_height();
-        self.externalities.execute_with(|| {
-            let block_hash = R::finalize_block(current_block).map_err(Error::BlockFinalize)?;
-            current_block.saturating_inc();
-            R::initialize_block(current_block, block_hash).map_err(Error::BlockInitialize)?;
-            Ok(current_block)
-        })
-    }
-
-    fn add_tokens(
-        &mut self,
-        address: AccountIdFor<R>,
-        amount: BalanceOf<R>,
-    ) -> Result<BalanceOf<R>, DispatchError> {
-        self.externalities
-            .execute_with(|| <R as pallet_contracts::Config>::Currency::mint_into(&address, amount))
-    }
-
-    fn balance(&mut self, address: &AccountIdFor<R>) -> BalanceOf<R> {
-        self.externalities.execute_with(|| {
-            <R as pallet_contracts::Config>::Currency::reducible_balance(
+    pub fn balance(&mut self, address: &AccountIdFor<R>) -> BalanceOf<R> {
+        self.execute_with(|| {
+            pallet_balances::Pallet::<R>::reducible_balance(
                 address,
                 Preservation::Expendable,
                 Fortitude::Force,
             )
         })
     }
+}
 
-    fn get_timestamp(&mut self) -> MomentOf<R> {
-        self.externalities
-            .execute_with(pallet_timestamp::Pallet::<R>::get)
+impl<R: pallet_timestamp::Config> Sandbox<R> {
+    /// Return the timestamp of the current block.
+    pub fn get_timestamp(&mut self) -> MomentOf<R> {
+        self.execute_with(pallet_timestamp::Pallet::<R>::get)
     }
 
-    fn set_timestamp(&mut self, timestamp: MomentOf<R>) {
-        self.externalities
-            .execute_with(|| pallet_timestamp::Pallet::<R>::set_timestamp(timestamp));
-    }
-
-    fn dry_run<T>(&mut self, action: impl FnOnce(&mut Self) -> T) -> T {
-        // Make a backup of the backend.
-        let backend_backup = self.externalities.as_backend();
-
-        // Run the action, potentially modifying storage. Ensure, that there are no pending changes
-        // that would affect the reverted backend.
-        let result = action(self);
-        self.externalities
-            .commit_all()
-            .expect("Failed to commit changes");
-
-        // Restore the backend.
-        self.externalities.backend = backend_backup;
-
-        result
-    }
-
-    fn runtime_call(
-        &mut self,
-        call: RuntimeCall<R>,
-        origin: <RuntimeCall<R> as Dispatchable>::RuntimeOrigin,
-    ) -> DispatchResultWithInfo<<RuntimeCall<R> as Dispatchable>::PostInfo> {
-        self.externalities.execute_with(|| call.dispatch(origin))
-    }
-
-    fn get_current_block_events(&mut self) -> Vec<EventRecordOf<R>> {
-        self.externalities
-            .execute_with(|| frame_system::Pallet::<R>::events())
-    }
-
-    fn reset_current_block_events(&mut self) {
-        self.externalities
-            .execute_with(|| frame_system::Pallet::<R>::reset_events())
+    /// Set the timestamp of the current block.
+    ///
+    /// # Arguments
+    ///
+    /// * `timestamp` - The new timestamp to be set.
+    pub fn set_timestamp(&mut self, timestamp: MomentOf<R>) {
+        self.execute_with(|| pallet_timestamp::Pallet::<R>::set_timestamp(timestamp))
     }
 }
 
@@ -179,7 +129,7 @@ mod tests {
     use frame_support::sp_runtime::traits::Dispatchable;
 
     use crate::{
-        chain_api::{ChainApi, DispatchResultWithInfo, RuntimeCall},
+        chain_api::{DispatchResultWithInfo, RuntimeCall},
         runtime::{minimal::RuntimeEvent, MinimalRuntime, Runtime},
         AccountId32, Sandbox,
     };
@@ -189,10 +139,12 @@ mod tests {
         dest: AccountId32,
         value: u128,
     ) -> DispatchResultWithInfo<<RuntimeCall<MinimalRuntime> as Dispatchable>::PostInfo> {
-        let call = RuntimeCall::<MinimalRuntime>::Balances(
-            pallet_balances::Call::<MinimalRuntime>::transfer { dest, value },
-        );
-        sandbox.runtime_call(call, Some(MinimalRuntime::default_actor()).into())
+        sandbox.execute_with(|| {
+            RuntimeCall::<MinimalRuntime>::Balances(
+                pallet_balances::Call::<MinimalRuntime>::transfer { dest, value },
+            )
+            .dispatch(Some(MinimalRuntime::default_actor()).into())
+        })
     }
 
     #[test]

@@ -5,7 +5,7 @@ use std::env;
 
 use anyhow::Result;
 use clap::Parser;
-use drink::{chain_api::ChainApi, Weight};
+use drink::Weight;
 use sp_core::crypto::AccountId32;
 
 use crate::{app_state::AppState, cli::CliCommand};
@@ -69,7 +69,7 @@ pub fn execute(app_state: &mut AppState) -> Result<()> {
 fn build_blocks(app_state: &mut AppState, count: u32) {
     app_state.chain_info.block_height = app_state
         .session
-        .chain_api()
+        .sandbox()
         .build_blocks(count)
         .expect("Failed to build block - chain is broken");
 
@@ -79,7 +79,7 @@ fn build_blocks(app_state: &mut AppState, count: u32) {
 fn add_tokens(app_state: &mut AppState, recipient: AccountId32, value: u128) -> Result<()> {
     app_state
         .session
-        .chain_api()
+        .sandbox()
         .add_tokens(recipient.clone(), value)
         .map_err(|err| anyhow::format_err!("Failed to add token: {err:?}"))?;
     app_state.print(&format!("{value} tokens added to {recipient}",));

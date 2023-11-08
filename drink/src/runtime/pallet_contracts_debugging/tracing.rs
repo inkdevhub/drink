@@ -4,9 +4,9 @@ use pallet_contracts::{
 };
 use pallet_contracts_primitives::ExecReturnValue;
 
-use crate::runtime::{pallet_contracts_debugging::DrinkDebug, AccountIdFor, Runtime};
+use crate::runtime::{pallet_contracts_debugging::DrinkDebug, AccountIdFor};
 
-impl<R: Runtime> Tracing<R> for DrinkDebug {
+impl<R: pallet_contracts::Config> Tracing<R> for DrinkDebug {
     type CallSpan = DrinkCallSpan<AccountIdFor<R>>;
 
     fn new_call_span(

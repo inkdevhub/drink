@@ -1,5 +1,4 @@
 use crate::{
-    contract_api::ContractApi,
     mock::ContractMock,
     runtime::{AccountIdFor, Runtime},
     Sandbox, DEFAULT_GAS_LIMIT,
@@ -15,7 +14,7 @@ pub trait MockingApi<R: pallet_contracts::Config> {
     fn mock_existing_contract(&mut self, mock: ContractMock, address: AccountIdFor<R>);
 }
 
-impl<R: Runtime> MockingApi<R> for Sandbox<R> {
+impl<R: Runtime + pallet_contracts::Config> MockingApi<R> for Sandbox<R> {
     fn deploy(&mut self, mock: ContractMock) -> AccountIdFor<R> {
         // We have to deploy some contract. We use a dummy contract for that. Thanks to that, we
         // ensure that the pallet will treat our mock just as a regular contract, until we actually

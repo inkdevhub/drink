@@ -3,10 +3,10 @@ use parity_scale_codec::{Decode, Encode};
 
 use crate::runtime::{
     pallet_contracts_debugging::{runtime::contract_call_debugger, DrinkDebug},
-    AccountIdFor, Runtime,
+    AccountIdFor,
 };
 
-impl<R: Runtime> CallInterceptor<R> for DrinkDebug {
+impl<R: pallet_contracts::Config> CallInterceptor<R> for DrinkDebug {
     fn intercept_call(
         contract_address: &AccountIdFor<R>,
         entry_point: &ExportedFunction,

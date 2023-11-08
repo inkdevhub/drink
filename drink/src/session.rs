@@ -4,15 +4,13 @@ use std::{fmt::Debug, mem, rc::Rc};
 
 pub use contract_transcode;
 use contract_transcode::ContractMessageTranscoder;
-use frame_support::weights::Weight;
+use frame_support::{traits::fungible::Inspect, weights::Weight};
 use pallet_contracts_primitives::{ContractExecResult, ContractInstantiateResult};
 use parity_scale_codec::Decode;
 
 use crate::{
-    chain_api::ChainApi,
-    contract_api::ContractApi,
     pallet_contracts_debugging::TracingExt,
-    runtime::{AccountIdFor, BalanceOf, HashFor, Runtime},
+    runtime::{AccountIdFor, HashFor, Runtime},
     EventRecordOf, Sandbox, DEFAULT_GAS_LIMIT,
 };
 
@@ -22,9 +20,11 @@ mod transcoding;
 use error::SessionError;
 
 use crate::{
-    bundle::ContractBundle, errors::MessageResult, mock::MockingApi,
-    session::transcoding::TranscoderRegistry,
+    bundle::ContractBundle, errors::MessageResult, session::transcoding::TranscoderRegistry,
 };
+
+type BalanceOf<R> =
+    <<R as pallet_contracts::Config>::Currency as Inspect<AccountIdFor<R>>>::Balance;
 
 /// Convenient value for an empty sequence of call/instantiation arguments.
 ///
@@ -111,7 +111,7 @@ pub const NO_ARGS: &[String] = &[];
 ///     .deploy_bundle_and(contract, "new", NO_ARGS, vec![], None); /* ... */
 ///  # Ok(()) }
 /// ```
-pub struct Session<R: Runtime> {
+pub struct Session<R: Runtime + pallet_contracts::Config> {
     sandbox: Sandbox<R>,
 
     actor: AccountIdFor<R>,
@@ -125,7 +125,7 @@ pub struct Session<R: Runtime> {
     call_returns: Vec<Vec<u8>>,
 }
 
-impl<R: Runtime> Session<R> {
+impl<R: Runtime + pallet_contracts::Config> Session<R> {
     /// Creates a new `Session`.
     pub fn new() -> Result<Self, SessionError> {
         Ok(Self {
@@ -180,17 +180,7 @@ impl<R: Runtime> Session<R> {
     }
 
     /// Returns a reference for basic chain API.
-    pub fn chain_api(&mut self) -> &mut impl ChainApi<R> {
-        &mut self.sandbox
-    }
-
-    /// Returns a reference for basic contracts API.
-    pub fn contracts_api(&mut self) -> &mut impl ContractApi<R> {
-        &mut self.sandbox
-    }
-
-    /// Returns a reference for mocking API.
-    pub fn mocking_api(&mut self) -> &mut impl MockingApi<R> {
+    pub fn sandbox(&mut self) -> &mut Sandbox<R> {
         &mut self.sandbox
     }
 
