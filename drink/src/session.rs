@@ -179,7 +179,7 @@ impl<R: Runtime + pallet_contracts::Config> Session<R> {
         self.transcoders.register(contract_address, transcoder);
     }
 
-    /// Returns a reference for basic chain API.
+    /// The underlying `Sandbox` instance.
     pub fn sandbox(&mut self) -> &mut Sandbox<R> {
         &mut self.sandbox
     }
