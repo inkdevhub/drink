@@ -1,11 +1,10 @@
 //! Basic chain API.
 
 use frame_support::{
-    sp_runtime::{traits::Dispatchable, DispatchResultWithInfo, Saturating},
+    sp_runtime::{traits::Dispatchable, DispatchError, DispatchResultWithInfo, Saturating},
     traits::{
         fungible::{Inspect, Mutate},
         tokens::{Fortitude, Preservation},
-        Time,
     },
 };
 use frame_system::pallet_prelude::BlockNumberFor;
@@ -45,7 +44,11 @@ pub trait ChainApi<R: Runtime> {
     ///
     /// * `address` - The address of the account to add tokens to.
     /// * `amount` - The number of tokens to add.
-    fn add_tokens(&mut self, address: AccountIdFor<R>, amount: BalanceOf<R>);
+    fn add_tokens(
+        &mut self,
+        address: AccountIdFor<R>,
+        amount: BalanceOf<R>,
+    ) -> Result<BalanceOf<R>, DispatchError>;
 
     /// Return the balance of an account.
     ///
@@ -106,10 +109,13 @@ impl<R: Runtime + pallet_contracts::Config> ChainApi<R> for Sandbox<R> {
         })
     }
 
-    fn add_tokens(&mut self, address: AccountIdFor<R>, amount: BalanceOf<R>) {
-        self.externalities.execute_with(|| {
-            let _ = <R as pallet_contracts::Config>::Currency::mint_into(&address, amount);
-        });
+    fn add_tokens(
+        &mut self,
+        address: AccountIdFor<R>,
+        amount: BalanceOf<R>,
+    ) -> Result<BalanceOf<R>, DispatchError> {
+        self.externalities
+            .execute_with(|| <R as pallet_contracts::Config>::Currency::mint_into(&address, amount))
     }
 
     fn balance(&mut self, address: &AccountIdFor<R>) -> BalanceOf<R> {
@@ -124,7 +130,7 @@ impl<R: Runtime + pallet_contracts::Config> ChainApi<R> for Sandbox<R> {
 
     fn get_timestamp(&mut self) -> MomentOf<R> {
         self.externalities
-            .execute_with(|| <<R as pallet_contracts::Config>::Time as Time>::now())
+            .execute_with(pallet_timestamp::Pallet::<R>::get)
     }
 
     fn set_timestamp(&mut self, timestamp: MomentOf<R>) {
@@ -208,7 +214,7 @@ mod tests {
         let initial_balance = sandbox.balance(&actor);
 
         sandbox.dry_run(|runtime| {
-            runtime.add_tokens(actor.clone(), 100);
+            runtime.add_tokens(actor.clone(), 100).unwrap();
             assert_eq!(runtime.balance(&actor), initial_balance + 100);
         });
 

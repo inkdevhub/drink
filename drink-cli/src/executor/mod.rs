@@ -41,7 +41,7 @@ pub fn execute(app_state: &mut AppState) -> Result<()> {
         }
 
         CliCommand::NextBlock { count } => build_blocks(app_state, count),
-        CliCommand::AddTokens { recipient, value } => add_tokens(app_state, recipient, value),
+        CliCommand::AddTokens { recipient, value } => add_tokens(app_state, recipient, value)?,
         CliCommand::SetActor { actor } => {
             app_state.chain_info.actor = actor;
             app_state.print("Actor was set");
@@ -76,10 +76,12 @@ fn build_blocks(app_state: &mut AppState, count: u32) {
     app_state.print(&format!("{count} blocks built"));
 }
 
-fn add_tokens(app_state: &mut AppState, recipient: AccountId32, value: u128) {
+fn add_tokens(app_state: &mut AppState, recipient: AccountId32, value: u128) -> Result<()> {
     app_state
         .session
         .chain_api()
-        .add_tokens(recipient.clone(), value);
+        .add_tokens(recipient.clone(), value)
+        .map_err(|err| anyhow::format_err!("Failed to add token: {err:?}"))?;
     app_state.print(&format!("{value} tokens added to {recipient}",));
+    Ok(())
 }
