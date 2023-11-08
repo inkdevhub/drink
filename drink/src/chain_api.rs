@@ -41,13 +41,13 @@ impl<R: Runtime> Sandbox<R> {
         for _ in 0..n {
             last_block = Some(self.build_block()?);
         }
-        Ok(last_block.unwrap_or_else(|| self.block_height()))
+        Ok(last_block.unwrap_or_else(|| self.current_height()))
     }
 }
 
 impl<R: frame_system::Config> Sandbox<R> {
     /// Return the current height of the chain.
-    pub fn block_height(&mut self) -> BlockNumberFor<R> {
+    pub fn current_height(&mut self) -> BlockNumberFor<R> {
         self.execute_with(|| frame_system::Pallet::<R>::block_number())
     }
 
