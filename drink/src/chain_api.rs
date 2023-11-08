@@ -2,10 +2,7 @@
 
 use frame_support::{
     sp_runtime::{traits::Dispatchable, DispatchError, DispatchResultWithInfo, Saturating},
-    traits::{
-        fungible::{Inspect, Mutate},
-        tokens::{Fortitude, Preservation},
-    },
+    traits::fungible::Mutate,
 };
 use frame_system::pallet_prelude::BlockNumberFor;
 
@@ -98,13 +95,7 @@ impl<R: pallet_balances::Config> Sandbox<R> {
     /// * `address` - The address of the account to add tokens to.
     /// * `amount` - The number of tokens to add.
     pub fn balance(&mut self, address: &AccountIdFor<R>) -> BalanceOf<R> {
-        self.execute_with(|| {
-            pallet_balances::Pallet::<R>::reducible_balance(
-                address,
-                Preservation::Expendable,
-                Fortitude::Force,
-            )
-        })
+        self.execute_with(|| pallet_balances::Pallet::<R>::free_balance(address))
     }
 }
 
