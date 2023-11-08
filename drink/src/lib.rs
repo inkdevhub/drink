@@ -12,10 +12,7 @@ pub mod runtime;
 #[cfg(feature = "session")]
 pub mod session;
 
-use std::{
-    marker::PhantomData,
-    sync::{Arc, Mutex},
-};
+use std::sync::{Arc, Mutex};
 
 pub use bundle::ContractBundle;
 pub use drink_test_macro::{contract_bundle_provider, test};
@@ -54,7 +51,6 @@ pub struct Sandbox<R: Runtime> {
     externalities: TestExternalities,
     mock_registry: Arc<Mutex<MockRegistry<AccountIdFor<R>>>>,
     mock_counter: usize,
-    _phantom: PhantomData<R>,
 }
 
 /// Default gas limit.
@@ -78,7 +74,6 @@ impl<R: Runtime> Sandbox<R> {
             externalities: TestExternalities::new(storage),
             mock_registry: Arc::new(Mutex::new(MockRegistry::new())),
             mock_counter: 0,
-            _phantom: PhantomData,
         };
 
         sandbox
