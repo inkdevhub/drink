@@ -53,3 +53,7 @@ pub trait Runtime: frame_system::Config {
         account: AccountIdFor<Self>,
     ) -> <<Self as frame_system::Config>::RuntimeCall as Dispatchable>::RuntimeOrigin;
 }
+
+/// Convenient umbrella trait for `Runtime + pallet_contracts::Config`
+pub trait RuntimeWithContracts: Runtime + pallet_contracts::Config {}
+impl<T: Runtime + pallet_contracts::Config> RuntimeWithContracts for T {}

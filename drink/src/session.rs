@@ -10,7 +10,7 @@ use parity_scale_codec::Decode;
 
 use crate::{
     pallet_contracts_debugging::TracingExt,
-    runtime::{AccountIdFor, HashFor, Runtime},
+    runtime::{AccountIdFor, HashFor, RuntimeWithContracts},
     EventRecordOf, Sandbox, DEFAULT_GAS_LIMIT,
 };
 
@@ -111,7 +111,7 @@ pub const NO_ARGS: &[String] = &[];
 ///     .deploy_bundle_and(contract, "new", NO_ARGS, vec![], None); /* ... */
 ///  # Ok(()) }
 /// ```
-pub struct Session<R: Runtime + pallet_contracts::Config> {
+pub struct Session<R: RuntimeWithContracts> {
     sandbox: Sandbox<R>,
 
     actor: AccountIdFor<R>,
@@ -125,7 +125,7 @@ pub struct Session<R: Runtime + pallet_contracts::Config> {
     call_returns: Vec<Vec<u8>>,
 }
 
-impl<R: Runtime + pallet_contracts::Config> Session<R> {
+impl<R: RuntimeWithContracts> Session<R> {
     /// Creates a new `Session`.
     pub fn new() -> Result<Self, SessionError> {
         Ok(Self {
