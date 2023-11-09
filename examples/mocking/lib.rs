@@ -43,7 +43,7 @@ mod tests {
         mock_message,
         runtime::MinimalRuntime,
         session::{Session, NO_ARGS},
-        ContractMock, MockingApi,
+        ContractMock,
     };
 
     use crate::CALLEE_SELECTOR;
