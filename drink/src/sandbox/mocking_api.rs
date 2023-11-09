@@ -1,11 +1,11 @@
 //! Mocking API for the sandbox.
 use crate::{
     mock::ContractMock,
-    runtime::{AccountIdFor, Runtime},
+    runtime::{AccountIdFor, RuntimeWithContracts},
     Sandbox, DEFAULT_GAS_LIMIT,
 };
 
-impl<R: Runtime + pallet_contracts::Config> Sandbox<R> {
+impl<R: RuntimeWithContracts> Sandbox<R> {
     /// Deploy `mock` as a standard contract. Returns the address of the deployed contract.
     pub fn deploy(&mut self, mock: ContractMock) -> AccountIdFor<R> {
         // We have to deploy some contract. We use a dummy contract for that. Thanks to that, we
