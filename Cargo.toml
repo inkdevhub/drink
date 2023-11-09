@@ -56,5 +56,5 @@ sp-runtime-interface = { version = "19.0.0" }
 
 # Local dependencies
 
-drink = { version = "0.6.0", path = "drink" }
-drink-test-macro = { version = "0.6.0", path = "drink/test-macro" }
+drink = { version = "0.7.0", path = "drink" }
+drink-test-macro = { version = "0.7.0", path = "drink/test-macro" }
