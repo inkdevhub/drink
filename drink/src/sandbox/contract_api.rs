@@ -1,5 +1,4 @@
-//! Contracts API.
-
+//! Contracts API for the sandbox.
 use std::ops::Not;
 
 use frame_support::{traits::fungible::Inspect, weights::Weight};
@@ -198,7 +197,7 @@ mod tests {
         let mut sandbox = Sandbox::<MinimalRuntime>::new().unwrap();
         let wasm_binary = compile_module("dummy");
 
-        let events_before = sandbox.get_current_block_events();
+        let events_before = sandbox.events();
         assert!(events_before.is_empty());
 
         let result = sandbox.deploy_contract(
@@ -250,7 +249,7 @@ mod tests {
             .expect("Contract should be deployed")
             .account_id;
 
-        sandbox.reset_current_block_events();
+        sandbox.reset_events();
 
         let result = sandbox.call_contract(
             contract_address.clone(),

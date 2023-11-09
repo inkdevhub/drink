@@ -80,7 +80,7 @@ fn add_tokens(app_state: &mut AppState, recipient: AccountId32, value: u128) -> 
     app_state
         .session
         .sandbox()
-        .add_tokens(recipient.clone(), value)
+        .mint_into(recipient.clone(), value)
         .map_err(|err| anyhow::format_err!("Failed to add token: {err:?}"))?;
     app_state.print(&format!("{value} tokens added to {recipient}",));
     Ok(())

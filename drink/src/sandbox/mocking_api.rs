@@ -1,21 +1,13 @@
+//! Mocking API for the sandbox.
 use crate::{
     mock::ContractMock,
     runtime::{AccountIdFor, Runtime},
     Sandbox, DEFAULT_GAS_LIMIT,
 };
 
-/// Interface for basic mocking operations.
-pub trait MockingApi<R: pallet_contracts::Config> {
+impl<R: Runtime + pallet_contracts::Config> Sandbox<R> {
     /// Deploy `mock` as a standard contract. Returns the address of the deployed contract.
-    fn deploy(&mut self, mock: ContractMock) -> AccountIdFor<R>;
-
-    /// Mock part of an existing contract. In particular, allows to override real behavior of
-    /// deployed contract's messages.
-    fn mock_existing_contract(&mut self, mock: ContractMock, address: AccountIdFor<R>);
-}
-
-impl<R: Runtime + pallet_contracts::Config> MockingApi<R> for Sandbox<R> {
-    fn deploy(&mut self, mock: ContractMock) -> AccountIdFor<R> {
+    pub fn deploy(&mut self, mock: ContractMock) -> AccountIdFor<R> {
         // We have to deploy some contract. We use a dummy contract for that. Thanks to that, we
         // ensure that the pallet will treat our mock just as a regular contract, until we actually
         // call it.
@@ -44,7 +36,9 @@ impl<R: Runtime + pallet_contracts::Config> MockingApi<R> for Sandbox<R> {
         mock_address
     }
 
-    fn mock_existing_contract(&mut self, _mock: ContractMock, _address: AccountIdFor<R>) {
+    /// Mock part of an existing contract. In particular, allows to override real behavior of
+    /// deployed contract's messages.
+    pub fn mock_existing_contract(&mut self, _mock: ContractMock, _address: AccountIdFor<R>) {
         todo!("soon")
     }
 }

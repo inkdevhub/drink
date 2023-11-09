@@ -1,12 +1,10 @@
 mod contract;
 mod error;
-mod mocking_api;
 
 use std::collections::BTreeMap;
 
 pub use contract::{mock_message, ContractMock, MessageMock, Selector};
 use error::MockingError;
-pub use mocking_api::MockingApi;
 
 /// Untyped result of a mocked call.
 pub type MockedCallResult = Result<Vec<u8>, MockingError>;

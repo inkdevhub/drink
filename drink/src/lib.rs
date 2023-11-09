@@ -4,11 +4,11 @@
 #![warn(missing_docs)]
 
 mod bundle;
-pub mod chain_api;
-pub mod contract_api;
 pub mod errors;
 mod mock;
 pub mod runtime;
+pub mod sandbox;
+pub use sandbox::*;
 #[cfg(feature = "session")]
 pub mod session;
 
@@ -17,27 +17,27 @@ use std::sync::{Arc, Mutex};
 pub use bundle::ContractBundle;
 pub use drink_test_macro::{contract_bundle_provider, test};
 pub use errors::Error;
-use frame_support::sp_runtime::{traits::One, BuildStorage};
 pub use frame_support::{
     sp_runtime::{AccountId32, DispatchError},
     weights::Weight,
 };
-use frame_system::{pallet_prelude::BlockNumberFor, EventRecord, GenesisConfig};
-pub use mock::{mock_message, ContractMock, MessageMock, MockedCallResult, MockingApi, Selector};
+use frame_system::EventRecord;
+pub use mock::{mock_message, ContractMock, MessageMock, MockedCallResult, Selector};
 use pallet_contracts::debug::ExecResult;
 use pallet_contracts_primitives::{ExecReturnValue, ReturnFlags};
 use parity_scale_codec::{Decode, Encode};
-use sp_io::TestExternalities;
 
 use crate::{
     errors::MessageResult,
     mock::MockRegistry,
-    pallet_contracts_debugging::{InterceptingExt, TracingExt},
-    runtime::{
-        pallet_contracts_debugging::{InterceptingExtT, NoopExt},
-        *,
-    },
+    runtime::{pallet_contracts_debugging::InterceptingExtT, *},
 };
+
+/// Alias for `frame-system`'s `RuntimeCall` type.
+pub type RuntimeCall<R> = <R as frame_system::Config>::RuntimeCall;
+
+/// Alias for `pallet-balances`'s Balance type.
+pub type BalanceOf<R> = <R as pallet_balances::Config>::Balance;
 
 /// Main result type for the drink crate.
 pub type DrinkResult<T> = std::result::Result<T, Error>;
@@ -46,98 +46,8 @@ pub type DrinkResult<T> = std::result::Result<T, Error>;
 pub type EventRecordOf<T> =
     EventRecord<<T as frame_system::Config>::RuntimeEvent, <T as frame_system::Config>::Hash>;
 
-/// A sandboxed runtime.
-pub struct Sandbox<R: frame_system::Config> {
-    externalities: TestExternalities,
-    mock_registry: Arc<Mutex<MockRegistry<AccountIdFor<R>>>>,
-    mock_counter: usize,
-}
-
 /// Default gas limit.
 pub const DEFAULT_GAS_LIMIT: Weight = Weight::from_parts(100_000_000_000, 3 * 1024 * 1024);
-
-impl<R: Runtime> Sandbox<R> {
-    /// Creates a new sandbox.
-    ///
-    /// Returns an error if the storage could not be initialized.
-    ///
-    /// The storage is initialized with a genesis block with a single account `R::default_actor()` with
-    /// `INITIAL_BALANCE`.
-    pub fn new() -> DrinkResult<Self> {
-        let mut storage = GenesisConfig::<R>::default()
-            .build_storage()
-            .map_err(Error::StorageBuilding)?;
-
-        R::initialize_storage(&mut storage).map_err(Error::StorageBuilding)?;
-
-        let mut sandbox = Self {
-            externalities: TestExternalities::new(storage),
-            mock_registry: Arc::new(Mutex::new(MockRegistry::new())),
-            mock_counter: 0,
-        };
-
-        sandbox
-            .externalities
-            // We start the chain from the 1st block, so that events are collected (they are not
-            // recorded for the genesis block...).
-            .execute_with(|| R::initialize_block(BlockNumberFor::<R>::one(), Default::default()))
-            .map_err(Error::BlockInitialize)?;
-
-        // We register a noop debug extension by default.
-        sandbox.override_debug_handle(TracingExt(Box::new(NoopExt {})));
-
-        sandbox.setup_mock_extension();
-
-        Ok(sandbox)
-    }
-}
-
-impl<R: frame_system::Config> Sandbox<R> {
-    /// Execute the given closure with the inner externallities.
-    ///
-    /// Returns the result of the given closure.
-    pub fn execute_with<T>(&mut self, execute: impl FnOnce() -> T) -> T {
-        self.externalities.execute_with(execute)
-    }
-
-    /// Run an action without modifying the storage.
-    ///
-    /// # Arguments
-    ///
-    /// * `action` - The action to run.
-    pub fn dry_run<T>(&mut self, action: impl FnOnce(&mut Self) -> T) -> T {
-        // Make a backup of the backend.
-        let backend_backup = self.externalities.as_backend();
-
-        // Run the action, potentially modifying storage. Ensure, that there are no pending changes
-        // that would affect the reverted backend.
-        let result = action(self);
-        self.externalities
-            .commit_all()
-            .expect("Failed to commit changes");
-
-        // Restore the backend.
-        self.externalities.backend = backend_backup;
-
-        result
-    }
-
-    /// Overrides the debug extension.
-    ///
-    /// By default, a new `Sandbox` instance is created with a noop debug extension. This method
-    /// allows to override it with a custom debug extension.
-    pub fn override_debug_handle(&mut self, d: TracingExt) {
-        self.externalities.register_extension(d);
-    }
-
-    /// Registers the extension for intercepting calls to contracts.
-    fn setup_mock_extension(&mut self) {
-        self.externalities
-            .register_extension(InterceptingExt(Box::new(MockingExtension {
-                mock_registry: Arc::clone(&self.mock_registry),
-            })));
-    }
-}
 
 /// Runtime extension enabling contract call interception.
 struct MockingExtension<AccountId: Ord> {
