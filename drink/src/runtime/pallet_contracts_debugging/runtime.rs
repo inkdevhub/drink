@@ -17,9 +17,9 @@ pub trait ContractCallDebugger {
         input_data: Vec<u8>,
         result: Vec<u8>,
     ) {
-        self.extension::<TracingExt>()
-            .expect("Failed to find `DebugExt` extension")
-            .after_call(contract_address, is_call, input_data, result);
+        if let Some(ext) = self.extension::<TracingExt>() {
+            ext.after_call(contract_address, is_call, input_data, result);
+        }
     }
 
     fn intercept_call(
@@ -27,10 +27,9 @@ pub trait ContractCallDebugger {
         contract_address: Vec<u8>,
         is_call: bool,
         input_data: Vec<u8>,
-    ) -> Vec<u8> {
+    ) -> Option<Vec<u8>> {
         self.extension::<InterceptingExt>()
-            .expect("Failed to find `InterceptingExt` extension")
-            .intercept_call(contract_address, is_call, input_data)
+            .map(|ext| ext.intercept_call(contract_address, is_call, input_data))
     }
 }
 
@@ -74,6 +73,6 @@ decl_extension! {
 }
 
 /// The simplest extension - uses default implementation.
-pub struct NoopExt {}
+pub struct NoopExt;
 impl TracingExtT for NoopExt {}
 impl InterceptingExtT for NoopExt {}

@@ -1,35 +1,40 @@
 //! This module provides a context-aware interface for interacting with contracts.
 
-use std::{fmt::Debug, mem, rc::Rc};
+use std::{
+    fmt::Debug,
+    mem,
+    rc::Rc,
+    sync::{Arc, Mutex},
+};
 
 pub use contract_transcode;
 use contract_transcode::ContractMessageTranscoder;
-use frame_support::weights::Weight;
+use frame_support::{traits::fungible::Inspect, weights::Weight};
 use pallet_contracts_primitives::{ContractExecResult, ContractInstantiateResult};
 use parity_scale_codec::Decode;
 
 use crate::{
-    chain_api::ChainApi,
-    contract_api::ContractApi,
-    pallet_contracts_debugging::TracingExt,
-    runtime::{AccountIdFor, HashFor, Runtime},
-    EventRecordOf, Sandbox, DEFAULT_GAS_LIMIT,
+    mock::MockRegistry,
+    runtime::{
+        pallet_contracts_debugging::{InterceptingExt, TracingExt},
+        AccountIdFor, HashFor, RuntimeWithContracts,
+    },
+    EventRecordOf, MockingExtension, Sandbox, DEFAULT_GAS_LIMIT,
 };
 
 pub mod error;
+pub mod mocking_api;
 mod transcoding;
 
 use error::SessionError;
 
+use self::mocking_api::MockingApi;
 use crate::{
-    bundle::ContractBundle, errors::MessageResult, mock::MockingApi,
-    session::transcoding::TranscoderRegistry,
+    bundle::ContractBundle, errors::MessageResult, session::transcoding::TranscoderRegistry,
 };
 
-type Balance = u128;
-
-const ZERO_TRANSFER: Balance = 0;
-const DEFAULT_STORAGE_DEPOSIT_LIMIT: Option<Balance> = None;
+type BalanceOf<R> =
+    <<R as pallet_contracts::Config>::Currency as Inspect<AccountIdFor<R>>>::Balance;
 
 /// Convenient value for an empty sequence of call/instantiation arguments.
 ///
@@ -116,7 +121,7 @@ pub const NO_ARGS: &[String] = &[];
 ///     .deploy_bundle_and(contract, "new", NO_ARGS, vec![], None); /* ... */
 ///  # Ok(()) }
 /// ```
-pub struct Session<R: Runtime> {
+pub struct Session<R: RuntimeWithContracts> {
     sandbox: Sandbox<R>,
 
     actor: AccountIdFor<R>,
@@ -124,17 +129,25 @@ pub struct Session<R: Runtime> {
 
     transcoders: TranscoderRegistry<AccountIdFor<R>>,
 
-    deploy_results: Vec<ContractInstantiateResult<AccountIdFor<R>, Balance, EventRecordOf<R>>>,
+    deploy_results: Vec<ContractInstantiateResult<AccountIdFor<R>, BalanceOf<R>, EventRecordOf<R>>>,
     deploy_returns: Vec<AccountIdFor<R>>,
-    call_results: Vec<ContractExecResult<Balance, EventRecordOf<R>>>,
+    call_results: Vec<ContractExecResult<BalanceOf<R>, EventRecordOf<R>>>,
     call_returns: Vec<Vec<u8>>,
+    mocks: Arc<Mutex<MockRegistry<AccountIdFor<R>>>>,
 }
 
-impl<R: Runtime> Session<R> {
+impl<R: RuntimeWithContracts> Session<R> {
     /// Creates a new `Session`.
     pub fn new() -> Result<Self, SessionError> {
+        let mocks = Arc::new(Mutex::new(MockRegistry::new()));
+        let mut sandbox = Sandbox::new().map_err(SessionError::Drink)?;
+        sandbox.register_extension(InterceptingExt(Box::new(MockingExtension {
+            mock_registry: Arc::clone(&mocks),
+        })));
+
         Ok(Self {
-            sandbox: Sandbox::new().map_err(SessionError::Drink)?,
+            sandbox,
+            mocks,
             actor: R::default_actor(),
             gas_limit: DEFAULT_GAS_LIMIT,
             transcoders: TranscoderRegistry::new(),
@@ -184,19 +197,14 @@ impl<R: Runtime> Session<R> {
         self.transcoders.register(contract_address, transcoder);
     }
 
-    /// Returns a reference for basic chain API.
-    pub fn chain_api(&mut self) -> &mut impl ChainApi<R> {
-        &mut self.sandbox
-    }
-
-    /// Returns a reference for basic contracts API.
-    pub fn contracts_api(&mut self) -> &mut impl ContractApi<R> {
+    /// The underlying `Sandbox` instance.
+    pub fn sandbox(&mut self) -> &mut Sandbox<R> {
         &mut self.sandbox
     }
 
     /// Returns a reference for mocking API.
     pub fn mocking_api(&mut self) -> &mut impl MockingApi<R> {
-        &mut self.sandbox
+        self
     }
 
     /// Deploys a contract with a given constructor, arguments, salt and endowment. In case of
@@ -207,7 +215,7 @@ impl<R: Runtime> Session<R> {
         constructor: &str,
         args: &[S],
         salt: Vec<u8>,
-        endowment: Option<Balance>,
+        endowment: Option<BalanceOf<R>>,
         transcoder: &Rc<ContractMessageTranscoder>,
     ) -> Result<Self, SessionError> {
         self.deploy(
@@ -229,7 +237,7 @@ impl<R: Runtime> Session<R> {
         constructor: &str,
         args: &[S],
         salt: Vec<u8>,
-        endowment: Option<Balance>,
+        endowment: Option<BalanceOf<R>>,
         transcoder: &Rc<ContractMessageTranscoder>,
     ) -> Result<AccountIdFor<R>, SessionError> {
         let data = transcoder
@@ -238,12 +246,12 @@ impl<R: Runtime> Session<R> {
 
         let result = self.sandbox.deploy_contract(
             contract_bytes,
-            endowment.unwrap_or(ZERO_TRANSFER),
+            endowment.unwrap_or_default(),
             data,
             salt,
             self.actor.clone(),
             self.gas_limit,
-            DEFAULT_STORAGE_DEPOSIT_LIMIT,
+            None,
         );
 
         let ret = match &result.result {
@@ -274,7 +282,7 @@ impl<R: Runtime> Session<R> {
         constructor: &str,
         args: &[S],
         salt: Vec<u8>,
-        endowment: Option<Balance>,
+        endowment: Option<BalanceOf<R>>,
     ) -> Result<AccountIdFor<R>, SessionError> {
         self.deploy(
             contract_file.wasm,
@@ -295,7 +303,7 @@ impl<R: Runtime> Session<R> {
         constructor: &str,
         args: &[S],
         salt: Vec<u8>,
-        endowment: Option<Balance>,
+        endowment: Option<BalanceOf<R>>,
     ) -> Result<Self, SessionError> {
         self.deploy_bundle(contract_file, constructor, args, salt, endowment)
             .map(|_| self)
@@ -308,11 +316,9 @@ impl<R: Runtime> Session<R> {
 
     /// Uploads a raw contract code. In case of success returns the code hash.
     pub fn upload(&mut self, contract_bytes: Vec<u8>) -> Result<HashFor<R>, SessionError> {
-        let result = self.sandbox.upload_contract(
-            contract_bytes,
-            self.actor.clone(),
-            DEFAULT_STORAGE_DEPOSIT_LIMIT,
-        );
+        let result = self
+            .sandbox
+            .upload_contract(contract_bytes, self.actor.clone(), None);
 
         result
             .map(|upload_result| upload_result.code_hash)
@@ -341,7 +347,7 @@ impl<R: Runtime> Session<R> {
         mut self,
         message: &str,
         args: &[S],
-        endowment: Option<Balance>,
+        endowment: Option<BalanceOf<R>>,
     ) -> Result<Self, SessionError> {
         // We ignore result, so we can pass `()` as the message result type, which will never fail
         // at decoding.
@@ -355,7 +361,7 @@ impl<R: Runtime> Session<R> {
         address: AccountIdFor<R>,
         message: &str,
         args: &[S],
-        endowment: Option<Balance>,
+        endowment: Option<BalanceOf<R>>,
     ) -> Result<Self, SessionError> {
         // We ignore result, so we can pass `()` as the message result type, which will never fail
         // at decoding.
@@ -368,7 +374,7 @@ impl<R: Runtime> Session<R> {
         &mut self,
         message: &str,
         args: &[S],
-        endowment: Option<Balance>,
+        endowment: Option<BalanceOf<R>>,
     ) -> Result<MessageResult<T>, SessionError> {
         self.call_internal::<_, T>(None, message, args, endowment)
     }
@@ -380,7 +386,7 @@ impl<R: Runtime> Session<R> {
         address: AccountIdFor<R>,
         message: &str,
         args: &[S],
-        endowment: Option<Balance>,
+        endowment: Option<BalanceOf<R>>,
     ) -> Result<MessageResult<T>, SessionError> {
         self.call_internal(Some(address), message, args, endowment)
     }
@@ -390,7 +396,7 @@ impl<R: Runtime> Session<R> {
         address: Option<AccountIdFor<R>>,
         message: &str,
         args: &[S],
-        endowment: Option<Balance>,
+        endowment: Option<BalanceOf<R>>,
     ) -> Result<MessageResult<T>, SessionError> {
         let address = match address {
             Some(address) => address,
@@ -411,11 +417,11 @@ impl<R: Runtime> Session<R> {
 
         let result = self.sandbox.call_contract(
             address,
-            endowment.unwrap_or(ZERO_TRANSFER),
+            endowment.unwrap_or_default(),
             data,
             self.actor.clone(),
             self.gas_limit,
-            DEFAULT_STORAGE_DEPOSIT_LIMIT,
+            None,
         );
 
         let ret = match &result.result {
@@ -440,7 +446,7 @@ impl<R: Runtime> Session<R> {
     /// Returns the last result of deploying a contract.
     pub fn last_deploy_result(
         &self,
-    ) -> Option<&ContractInstantiateResult<AccountIdFor<R>, Balance, EventRecordOf<R>>> {
+    ) -> Option<&ContractInstantiateResult<AccountIdFor<R>, BalanceOf<R>, EventRecordOf<R>>> {
         self.deploy_results.last()
     }
 
@@ -455,7 +461,7 @@ impl<R: Runtime> Session<R> {
     }
 
     /// Returns the last result of calling a contract.
-    pub fn last_call_result(&self) -> Option<&ContractExecResult<Balance, EventRecordOf<R>>> {
+    pub fn last_call_result(&self) -> Option<&ContractExecResult<BalanceOf<R>, EventRecordOf<R>>> {
         self.call_results.last()
     }
 
@@ -474,11 +480,8 @@ impl<R: Runtime> Session<R> {
         MessageResult::decode(&mut raw.as_slice()).ok()
     }
 
-    /// Overrides the debug extension.
-    ///
-    /// By default, a new `Session` instance will use a noop debug extension. This method allows to
-    /// override it with a custom debug extension.
-    pub fn override_debug_handle(&mut self, d: TracingExt) {
-        self.sandbox.override_debug_handle(d);
+    /// Set the tracing extension
+    pub fn set_tracing_extension(&mut self, d: TracingExt) {
+        self.sandbox.register_extension(d);
     }
 }

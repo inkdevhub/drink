@@ -5,7 +5,7 @@ use std::env;
 
 use anyhow::Result;
 use clap::Parser;
-use drink::{chain_api::ChainApi, Weight};
+use drink::Weight;
 use sp_core::crypto::AccountId32;
 
 use crate::{app_state::AppState, cli::CliCommand};
@@ -41,7 +41,7 @@ pub fn execute(app_state: &mut AppState) -> Result<()> {
         }
 
         CliCommand::NextBlock { count } => build_blocks(app_state, count),
-        CliCommand::AddTokens { recipient, value } => add_tokens(app_state, recipient, value),
+        CliCommand::AddTokens { recipient, value } => add_tokens(app_state, recipient, value)?,
         CliCommand::SetActor { actor } => {
             app_state.chain_info.actor = actor;
             app_state.print("Actor was set");
@@ -69,17 +69,19 @@ pub fn execute(app_state: &mut AppState) -> Result<()> {
 fn build_blocks(app_state: &mut AppState, count: u32) {
     app_state.chain_info.block_height = app_state
         .session
-        .chain_api()
+        .sandbox()
         .build_blocks(count)
         .expect("Failed to build block - chain is broken");
 
     app_state.print(&format!("{count} blocks built"));
 }
 
-fn add_tokens(app_state: &mut AppState, recipient: AccountId32, value: u128) {
+fn add_tokens(app_state: &mut AppState, recipient: AccountId32, value: u128) -> Result<()> {
     app_state
         .session
-        .chain_api()
-        .add_tokens(recipient.clone(), value);
+        .sandbox()
+        .mint_into(recipient.clone(), value)
+        .map_err(|err| anyhow::format_err!("Failed to add token: {err:?}"))?;
     app_state.print(&format!("{value} tokens added to {recipient}",));
+    Ok(())
 }

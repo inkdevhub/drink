@@ -42,8 +42,8 @@ mod tests {
     use drink::{
         mock_message,
         runtime::MinimalRuntime,
-        session::{Session, NO_ARGS},
-        ContractMock, MockingApi,
+        session::{mocking_api::MockingApi, Session, NO_ARGS},
+        ContractMock,
     };
 
     use crate::CALLEE_SELECTOR;

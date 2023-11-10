@@ -11,6 +11,7 @@ pub use minimal::MinimalRuntime;
 
 /// The type of an account identifier.
 pub type AccountIdFor<R> = <R as frame_system::Config>::AccountId;
+
 /// The type of a hash.
 pub type HashFor<R> = <R as frame_system::Config>::Hash;
 
@@ -20,14 +21,7 @@ pub use pallet_balances;
 pub use pallet_contracts;
 
 /// A runtime to use.
-///
-/// Must contain at least system, balances and contracts pallets.
-pub trait Runtime:
-    frame_system::Config
-    + pallet_timestamp::Config
-    + pallet_balances::Config<Balance = u128>
-    + pallet_contracts::Config<Currency = pallet_balances::Pallet<Self>>
-{
+pub trait Runtime: frame_system::Config {
     /// Initialize the storage at the genesis block.
     fn initialize_storage(_storage: &mut Storage) -> Result<(), String> {
         Ok(())
@@ -59,3 +53,7 @@ pub trait Runtime:
         account: AccountIdFor<Self>,
     ) -> <<Self as frame_system::Config>::RuntimeCall as Dispatchable>::RuntimeOrigin;
 }
+
+/// Convenient umbrella trait for `Runtime + pallet_contracts::Config`
+pub trait RuntimeWithContracts: Runtime + pallet_contracts::Config {}
+impl<T: Runtime + pallet_contracts::Config> RuntimeWithContracts for T {}
