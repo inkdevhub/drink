@@ -126,6 +126,7 @@ impl<R: pallet_contracts::Config> Sandbox<R> {
     /// * `origin` - The sender of the contract call.
     /// * `gas_limit` - The gas limit for the contract call.
     /// * `storage_deposit_limit` - The storage deposit limit for the contract call.
+    #[allow(clippy::too_many_arguments)]
     pub fn call_contract(
         &mut self,
         address: AccountIdFor<R>,
