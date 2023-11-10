@@ -1,7 +1,5 @@
 //! Basic chain API.
 
-use std::sync::{Arc, Mutex};
-
 use frame_support::sp_runtime::{
     traits::{One, Saturating},
     BuildStorage,
@@ -10,12 +8,7 @@ use frame_system::{pallet_prelude::BlockNumberFor, GenesisConfig};
 use sp_io::TestExternalities;
 
 use super::Sandbox;
-use crate::{
-    mock::MockRegistry,
-    pallet_contracts_debugging::TracingExt,
-    runtime::{pallet_contracts_debugging::NoopExt, *},
-    DrinkResult, Error, Runtime,
-};
+use crate::{DrinkResult, Error, Runtime};
 
 impl<R: Runtime> Sandbox<R> {
     /// Creates a new sandbox.
@@ -33,8 +26,7 @@ impl<R: Runtime> Sandbox<R> {
 
         let mut sandbox = Self {
             externalities: TestExternalities::new(storage),
-            mock_registry: Arc::new(Mutex::new(MockRegistry::new())),
-            mock_counter: 0,
+            _phantom: Default::default(),
         };
 
         sandbox
@@ -43,11 +35,6 @@ impl<R: Runtime> Sandbox<R> {
             // recorded for the genesis block...).
             .execute_with(|| R::initialize_block(BlockNumberFor::<R>::one(), Default::default()))
             .map_err(Error::BlockInitialize)?;
-
-        // We register a noop debug extension by default.
-        sandbox.override_debug_handle(TracingExt(Box::new(NoopExt {})));
-
-        sandbox.setup_mock_extension();
 
         Ok(sandbox)
     }

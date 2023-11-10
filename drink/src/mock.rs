@@ -12,6 +12,7 @@ pub type MockedCallResult = Result<Vec<u8>, MockingError>;
 /// A registry of mocked contracts.
 pub(crate) struct MockRegistry<AccountId: Ord> {
     mocked_contracts: BTreeMap<AccountId, ContractMock>,
+    nonce: u8,
 }
 
 impl<AccountId: Ord> MockRegistry<AccountId> {
@@ -19,7 +20,14 @@ impl<AccountId: Ord> MockRegistry<AccountId> {
     pub fn new() -> Self {
         Self {
             mocked_contracts: BTreeMap::new(),
+            nonce: 0u8,
         }
+    }
+
+    /// Returns the salt for the next contract.
+    pub fn salt(&mut self) -> Vec<u8> {
+        self.nonce += 1;
+        vec![self.nonce]
     }
 
     /// Registers `mock` for `address`. Returns the previous mock, if any.

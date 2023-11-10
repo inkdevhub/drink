@@ -42,7 +42,7 @@ mod tests {
     use drink::{
         mock_message,
         runtime::MinimalRuntime,
-        session::{Session, NO_ARGS},
+        session::{mocking_api::MockingApi, Session, NO_ARGS},
         ContractMock,
     };
 
@@ -61,7 +61,7 @@ mod tests {
             ContractMock::new().with_message(CALLEE_SELECTOR, mock_message(|()| RETURN_VALUE));
 
         // Secondly, we deploy it, similarly to a standard deployment action.
-        let mock_address = session.sandbox().deploy(mocked_contract);
+        let mock_address = session.mocking_api().deploy(mocked_contract);
 
         // Now, we can deploy our proper contract and verify its behavior.
         let result: (u8, u8) = session

@@ -14,12 +14,13 @@ impl<R: pallet_contracts::Config> CallInterceptor<R> for DrinkDebug {
     ) -> Option<ExecResult> {
         // Pass the data to the runtime interface. The data must be encoded (only simple types are
         // supported).
-        let intercepting_result = contract_call_debugger::intercept_call(
+        contract_call_debugger::intercept_call(
             contract_address.encode(),
             matches!(*entry_point, ExportedFunction::Call),
             input_data.to_vec(),
-        );
-
-        Decode::decode(&mut intercepting_result.as_slice()).expect("Decoding should succeed")
+        )
+        .and_then(|intercepting_result| {
+            Decode::decode(&mut intercepting_result.as_slice()).expect("Decoding should succeed")
+        })
     }
 }

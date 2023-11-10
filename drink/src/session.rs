@@ -1,6 +1,11 @@
 //! This module provides a context-aware interface for interacting with contracts.
 
-use std::{fmt::Debug, mem, rc::Rc};
+use std::{
+    fmt::Debug,
+    mem,
+    rc::Rc,
+    sync::{Arc, Mutex},
+};
 
 pub use contract_transcode;
 use contract_transcode::ContractMessageTranscoder;
@@ -9,16 +14,21 @@ use pallet_contracts_primitives::{ContractExecResult, ContractInstantiateResult}
 use parity_scale_codec::Decode;
 
 use crate::{
-    pallet_contracts_debugging::TracingExt,
-    runtime::{AccountIdFor, HashFor, RuntimeWithContracts},
-    EventRecordOf, Sandbox, DEFAULT_GAS_LIMIT,
+    mock::MockRegistry,
+    runtime::{
+        pallet_contracts_debugging::{InterceptingExt, TracingExt},
+        AccountIdFor, HashFor, RuntimeWithContracts,
+    },
+    EventRecordOf, MockingExtension, Sandbox, DEFAULT_GAS_LIMIT,
 };
 
 pub mod error;
+pub mod mocking_api;
 mod transcoding;
 
 use error::SessionError;
 
+use self::mocking_api::MockingApi;
 use crate::{
     bundle::ContractBundle, errors::MessageResult, session::transcoding::TranscoderRegistry,
 };
@@ -123,13 +133,21 @@ pub struct Session<R: RuntimeWithContracts> {
     deploy_returns: Vec<AccountIdFor<R>>,
     call_results: Vec<ContractExecResult<BalanceOf<R>, EventRecordOf<R>>>,
     call_returns: Vec<Vec<u8>>,
+    mocks: Arc<Mutex<MockRegistry<AccountIdFor<R>>>>,
 }
 
 impl<R: RuntimeWithContracts> Session<R> {
     /// Creates a new `Session`.
     pub fn new() -> Result<Self, SessionError> {
+        let mocks = Arc::new(Mutex::new(MockRegistry::new()));
+        let mut sandbox = Sandbox::new().map_err(SessionError::Drink)?;
+        sandbox.register_extension(InterceptingExt(Box::new(MockingExtension {
+            mock_registry: Arc::clone(&mocks),
+        })));
+
         Ok(Self {
-            sandbox: Sandbox::new().map_err(SessionError::Drink)?,
+            sandbox,
+            mocks,
             actor: R::default_actor(),
             gas_limit: DEFAULT_GAS_LIMIT,
             transcoders: TranscoderRegistry::new(),
@@ -182,6 +200,11 @@ impl<R: RuntimeWithContracts> Session<R> {
     /// The underlying `Sandbox` instance.
     pub fn sandbox(&mut self) -> &mut Sandbox<R> {
         &mut self.sandbox
+    }
+
+    /// Returns a reference for mocking API.
+    pub fn mocking_api(&mut self) -> &mut impl MockingApi<R> {
+        self
     }
 
     /// Deploys a contract with a given constructor, arguments, salt and endowment. In case of
@@ -457,11 +480,8 @@ impl<R: RuntimeWithContracts> Session<R> {
         MessageResult::decode(&mut raw.as_slice()).ok()
     }
 
-    /// Overrides the debug extension.
-    ///
-    /// By default, a new `Session` instance will use a noop debug extension. This method allows to
-    /// override it with a custom debug extension.
-    pub fn override_debug_handle(&mut self, d: TracingExt) {
-        self.sandbox.override_debug_handle(d);
+    /// Set the tracing extension
+    pub fn set_tracing_extension(&mut self, d: TracingExt) {
+        self.sandbox.register_extension(d);
     }
 }

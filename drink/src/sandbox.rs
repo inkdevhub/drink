@@ -2,27 +2,19 @@
 
 pub mod balance_api;
 pub mod contract_api;
-pub mod mocking_api;
 pub mod runtime_api;
 pub mod system_api;
 pub mod timestamp_api;
 
-use std::sync::{Arc, Mutex};
+use std::any::Any;
 
+use sp_externalities::Extension;
 use sp_io::TestExternalities;
-
-use crate::{
-    mock::MockRegistry,
-    pallet_contracts_debugging::{InterceptingExt, TracingExt},
-    runtime::*,
-    MockingExtension,
-};
 
 /// A sandboxed runtime.
 pub struct Sandbox<R: frame_system::Config> {
     externalities: TestExternalities,
-    mock_registry: Arc<Mutex<MockRegistry<AccountIdFor<R>>>>,
-    mock_counter: usize,
+    _phantom: std::marker::PhantomData<R>,
 }
 
 impl<R: frame_system::Config> Sandbox<R> {
@@ -55,19 +47,8 @@ impl<R: frame_system::Config> Sandbox<R> {
         result
     }
 
-    /// Overrides the debug extension.
-    ///
-    /// By default, a new `Sandbox` instance is created with a noop debug extension. This method
-    /// allows to override it with a custom debug extension.
-    pub fn override_debug_handle(&mut self, d: TracingExt) {
-        self.externalities.register_extension(d);
-    }
-
-    /// Registers the extension for intercepting calls to contracts.
-    fn setup_mock_extension(&mut self) {
-        self.externalities
-            .register_extension(InterceptingExt(Box::new(MockingExtension {
-                mock_registry: Arc::clone(&self.mock_registry),
-            })));
+    /// Registers an extension.
+    pub fn register_extension<E: Any + Extension>(&mut self, ext: E) {
+        self.externalities.register_extension(ext);
     }
 }
