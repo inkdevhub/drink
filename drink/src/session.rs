@@ -10,6 +10,7 @@ use std::{
 pub use contract_transcode;
 use contract_transcode::ContractMessageTranscoder;
 use frame_support::{traits::fungible::Inspect, weights::Weight};
+use pallet_contracts::Determinism;
 use pallet_contracts_primitives::{ContractExecResult, ContractInstantiateResult};
 use parity_scale_codec::Decode;
 
@@ -126,6 +127,7 @@ pub struct Session<R: RuntimeWithContracts> {
 
     actor: AccountIdFor<R>,
     gas_limit: Weight,
+    determinism: Determinism,
 
     transcoders: TranscoderRegistry<AccountIdFor<R>>,
 
@@ -150,6 +152,7 @@ impl<R: RuntimeWithContracts> Session<R> {
             mocks,
             actor: R::default_actor(),
             gas_limit: DEFAULT_GAS_LIMIT,
+            determinism: Determinism::Enforced,
             transcoders: TranscoderRegistry::new(),
             deploy_results: vec![],
             deploy_returns: vec![],
@@ -176,6 +179,19 @@ impl<R: RuntimeWithContracts> Session<R> {
     /// Sets a new gas limit and returns the old one.
     pub fn set_gas_limit(&mut self, gas_limit: Weight) -> Weight {
         mem::replace(&mut self.gas_limit, gas_limit)
+    }
+
+    /// Sets a new determinism policy and returns updated `self`.
+    pub fn with_determinism(self, determinism: Determinism) -> Self {
+        Self {
+            determinism,
+            ..self
+        }
+    }
+
+    /// Sets a new determinism policy and returns the old one.
+    pub fn set_determinism(&mut self, determinism: Determinism) -> Determinism {
+        mem::replace(&mut self.determinism, determinism)
     }
 
     /// Register a transcoder for a particular contract and returns updated `self`.
@@ -316,9 +332,12 @@ impl<R: RuntimeWithContracts> Session<R> {
 
     /// Uploads a raw contract code. In case of success returns the code hash.
     pub fn upload(&mut self, contract_bytes: Vec<u8>) -> Result<HashFor<R>, SessionError> {
-        let result = self
-            .sandbox
-            .upload_contract(contract_bytes, self.actor.clone(), None);
+        let result = self.sandbox.upload_contract(
+            contract_bytes,
+            self.actor.clone(),
+            None,
+            self.determinism,
+        );
 
         result
             .map(|upload_result| upload_result.code_hash)
@@ -422,6 +441,7 @@ impl<R: RuntimeWithContracts> Session<R> {
             self.actor.clone(),
             self.gas_limit,
             None,
+            self.determinism,
         );
 
         let ret = match &result.result {

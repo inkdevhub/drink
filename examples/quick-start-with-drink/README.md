@@ -12,7 +12,7 @@ Drink is developed and tested with stable Rust 1.70 (see [toolchain file](../../
 
 You only need the `drink` library brought into your project:
 ```toml
-drink = { version = "0.6" }
+drink = { version = "0.8" }
 ```
 
 See [Cargo.toml](Cargo.toml) for a typical cargo setup of a single-contract project.
