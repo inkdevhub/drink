@@ -125,7 +125,8 @@ fn find_wasm_blob(cwd: &Path) -> Option<(String, PathBuf)> {
     let Some(file) = entries
         .into_iter()
         .filter_map(|e| e.ok())
-        .find(|e| e.path().extension().unwrap_or_default() == "wasm") else {
+        .find(|e| e.path().extension().unwrap_or_default() == "wasm")
+    else {
         return None;
     };
 

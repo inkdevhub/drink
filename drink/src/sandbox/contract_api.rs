@@ -104,13 +104,14 @@ impl<R: pallet_contracts::Config> Sandbox<R> {
         contract_bytes: Vec<u8>,
         origin: AccountIdFor<R>,
         storage_deposit_limit: Option<BalanceOf<R>>,
+        determinism: Determinism,
     ) -> CodeUploadResult<<R as frame_system::Config>::Hash, BalanceOf<R>> {
         self.externalities.execute_with(|| {
             pallet_contracts::Pallet::<R>::bare_upload_code(
                 origin,
                 contract_bytes,
                 storage_deposit_limit,
-                Determinism::Enforced,
+                determinism,
             )
         })
     }
@@ -125,6 +126,7 @@ impl<R: pallet_contracts::Config> Sandbox<R> {
     /// * `origin` - The sender of the contract call.
     /// * `gas_limit` - The gas limit for the contract call.
     /// * `storage_deposit_limit` - The storage deposit limit for the contract call.
+    #[allow(clippy::too_many_arguments)]
     pub fn call_contract(
         &mut self,
         address: AccountIdFor<R>,
@@ -133,6 +135,7 @@ impl<R: pallet_contracts::Config> Sandbox<R> {
         origin: AccountIdFor<R>,
         gas_limit: Weight,
         storage_deposit_limit: Option<BalanceOf<R>>,
+        determinism: Determinism,
     ) -> ContractExecResult<BalanceOf<R>, EventRecordOf<R>> {
         self.externalities.execute_with(|| {
             pallet_contracts::Pallet::<R>::bare_call(
@@ -144,7 +147,7 @@ impl<R: pallet_contracts::Config> Sandbox<R> {
                 data,
                 DebugInfo::UnsafeDebug,
                 CollectEvents::UnsafeCollect,
-                Determinism::Enforced,
+                determinism,
             )
         })
     }
@@ -186,7 +189,12 @@ mod tests {
         let wasm_binary = compile_module("dummy");
         let hash = <<MinimalRuntime as frame_system::Config>::Hashing>::hash(&wasm_binary);
 
-        let result = sandbox.upload_contract(wasm_binary, MinimalRuntime::default_actor(), None);
+        let result = sandbox.upload_contract(
+            wasm_binary,
+            MinimalRuntime::default_actor(),
+            None,
+            Determinism::Enforced,
+        );
 
         assert!(result.is_ok());
         assert_eq!(hash, result.unwrap().code_hash);
@@ -258,12 +266,13 @@ mod tests {
             actor.clone(),
             DEFAULT_GAS_LIMIT,
             None,
+            Determinism::Enforced,
         );
         assert!(result.result.is_ok());
         assert!(!result.result.unwrap().did_revert());
 
         let events = result.events.expect("Drink should collect events");
-        assert!(events.len() == 2);
+        assert_eq!(events.len(), 2);
 
         assert_eq!(
             events[0].event,
