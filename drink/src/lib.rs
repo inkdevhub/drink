@@ -26,6 +26,8 @@ pub use mock::{mock_message, ContractMock, MessageMock, MockedCallResult, Select
 use pallet_contracts::debug::ExecResult;
 use pallet_contracts_primitives::{ExecReturnValue, ReturnFlags};
 use parity_scale_codec::{Decode, Encode};
+/// Export pallets that are used in the minimal runtime.
+pub use {frame_support, frame_system, pallet_balances, pallet_contracts, pallet_timestamp};
 
 use crate::{
     errors::MessageResult,

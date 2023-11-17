@@ -2,10 +2,7 @@
 use frame_support::{sp_runtime::DispatchError, traits::fungible::Mutate};
 
 use super::Sandbox;
-use crate::{
-    runtime::{AccountIdFor, *},
-    BalanceOf,
-};
+use crate::{runtime::AccountIdFor, BalanceOf};
 
 impl<R: pallet_balances::Config> Sandbox<R> {
     /// Mint tokens to an account.

@@ -1,5 +1,6 @@
 #![allow(missing_docs)] // `construct_macro` doesn't allow doc comments for the runtime type.
 
+#[macro_export]
 macro_rules! create_minimal_runtime {
     ($name:ident) => {
         create_minimal_runtime!($name, ());
@@ -11,6 +12,7 @@ mod construct_runtime {
 
     // ------------ Bring some common types into the scope -----------------------------------------
     use $crate::frame_support::{
+        construct_runtime,
         parameter_types,
         sp_runtime::{
             testing::H256,
@@ -23,7 +25,7 @@ mod construct_runtime {
     use $crate::runtime::pallet_contracts_debugging::DrinkDebug;
 
     // ------------ Define the runtime type as a collection of pallets -----------------------------
-    $crate::frame_support::construct_runtime!(
+    construct_runtime!(
         pub enum $name {
             System: $crate::frame_system,
             Balances: $crate::pallet_balances,
@@ -33,7 +35,7 @@ mod construct_runtime {
     );
 
     // ------------ Configure pallet system --------------------------------------------------------
-    impl frame_system::Config for $name {
+    impl $crate::frame_system::Config for $name {
         type BaseCallFilter = $crate::frame_support::traits::Everything;
         type BlockWeights = ();
         type BlockLength = ();
@@ -60,7 +62,7 @@ mod construct_runtime {
     }
 
     // ------------ Configure pallet balances ------------------------------------------------------
-    impl pallet_balances::Config for $name {
+    impl $crate::pallet_balances::Config for $name {
         type RuntimeEvent = RuntimeEvent;
         type WeightInfo = ();
         type Balance = u128;
@@ -77,7 +79,7 @@ mod construct_runtime {
     }
 
     // ------------ Configure pallet timestamp -----------------------------------------------------
-    impl pallet_timestamp::Config for $name {
+    impl $crate::pallet_timestamp::Config for $name {
         type Moment = u64;
         type OnTimestampSet = ();
         type MinimumPeriod = ConstU64<1>;
@@ -109,7 +111,7 @@ mod construct_runtime {
         pub MaxDelegateDependencies: u32 = 32;
     }
 
-    impl pallet_contracts::Config for $name {
+    impl $crate::pallet_contracts::Config for $name {
         type Time = Timestamp;
         type Randomness = SandboxRandomness;
         type Currency = Balances;
