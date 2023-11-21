@@ -15,7 +15,7 @@ concurrency:
 jobs:
   main:
     name: Run check, test and lints
-    runs-on: ubuntu-latest
+    runs-on: drink-runner
     env:
       CARGO_INCREMENTAL: 0
     steps:
