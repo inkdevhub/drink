@@ -15,11 +15,6 @@ pub type AccountIdFor<R> = <R as frame_system::Config>::AccountId;
 /// The type of a hash.
 pub type HashFor<R> = <R as frame_system::Config>::Hash;
 
-/// Export pallets that are used in the runtime.
-pub use frame_system;
-pub use pallet_balances;
-pub use pallet_contracts;
-
 /// A runtime to use.
 pub trait Runtime: frame_system::Config {
     /// Initialize the storage at the genesis block.
