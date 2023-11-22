@@ -63,6 +63,9 @@ mod tests {
             .expect("Failed to remove a contract");
     }
 
+    /// This is just a dummy contract code, that does nothing. It is written in WAT, a text format
+    /// for WebAssembly. We need to have some valid contract bytes in order for `upload_contract`
+    /// to succeed.
     const CONTRACT: &str = r#"
     (module
 	(import "seal0" "seal_deposit_event" (func $seal_deposit_event (param i32 i32 i32 i32)))

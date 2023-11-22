@@ -20,3 +20,5 @@ You can always switch from `Session` to `Sandbox` with:
     ...
     let sandbox = session.sandbox(); // `sandbox` has type `&mut Sandbox<Runtime>`
 ```
+
+A rule of thumb is: if you are working with contracts, use `Session`, otherwise use `Sandbox`.
