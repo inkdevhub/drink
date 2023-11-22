@@ -166,6 +166,11 @@ impl<R: RuntimeWithContracts> Session<R> {
         Self { actor, ..self }
     }
 
+    /// Returns currently set actor.
+    pub fn get_actor(&self) -> AccountIdFor<R> {
+        self.actor.clone()
+    }
+
     /// Sets a new actor and returns the old one.
     pub fn set_actor(&mut self, actor: AccountIdFor<R>) -> AccountIdFor<R> {
         mem::replace(&mut self.actor, actor)
@@ -179,6 +184,11 @@ impl<R: RuntimeWithContracts> Session<R> {
     /// Sets a new gas limit and returns the old one.
     pub fn set_gas_limit(&mut self, gas_limit: Weight) -> Weight {
         mem::replace(&mut self.gas_limit, gas_limit)
+    }
+
+    /// Returns currently set gas limit.
+    pub fn get_gas_limit(&self) -> Weight {
+        self.gas_limit
     }
 
     /// Sets a new determinism policy and returns updated `self`.
