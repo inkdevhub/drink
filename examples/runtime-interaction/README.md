@@ -2,7 +2,7 @@
 
 This example shows how we can easily send transactions to a blockchain, just like with `subxt` or a similar client.
 
-This way we can leverage `drink!` to a library for a full-scope runtime simulation engine.
+This way we can leverage `drink!` to a full-scope runtime simulation engine.
 
 ## Running
 
