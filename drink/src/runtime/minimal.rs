@@ -1,5 +1,9 @@
 #![allow(missing_docs)] // `construct_macro` doesn't allow doc comments for the runtime type.
 
+/// Macro creating a minimal runtime with the given name. Optionally can take a chain extension
+/// type as a second argument.
+///
+/// The new macro will automatically implement `drink::Runtime`.
 #[macro_export]
 macro_rules! create_minimal_runtime {
     ($name:ident) => {
@@ -138,81 +142,84 @@ mod construct_runtime {
         type RuntimeHoldReason = RuntimeHoldReason;
         type Environment = ();
     }
+
+// ------------ Implement `drink::Runtime` trait ---------------------------------------------------
+
+    use std::time::SystemTime;
+
+    use $crate::frame_support::{
+        sp_runtime::{traits::Dispatchable, BuildStorage, Storage},
+        traits::Hooks,
+    };
+
+    use $crate::runtime::{AccountIdFor, Runtime, RuntimeMetadataPrefixed};
+
+
+    /// Default initial balance for the default account.
+    pub const INITIAL_BALANCE: u128 = 1_000_000_000_000_000;
+
+    impl Runtime for $name {
+        fn initialize_storage(storage: &mut Storage) -> Result<(), String> {
+            $crate::pallet_balances::GenesisConfig::<Self> {
+                balances: vec![(Self::default_actor(), INITIAL_BALANCE)],
+            }
+            .assimilate_storage(storage)
+        }
+
+        fn initialize_block(
+            height: $crate::frame_system::pallet_prelude::BlockNumberFor<Self>,
+            parent_hash: H256,
+        ) -> Result<(), String> {
+            System::reset_events();
+            System::initialize(&height, &parent_hash, &Default::default());
+
+            Balances::on_initialize(height);
+            Timestamp::set_timestamp(
+                SystemTime::now()
+                    .duration_since(SystemTime::UNIX_EPOCH)
+                    .expect("Time went backwards")
+                    .as_secs(),
+            );
+            Timestamp::on_initialize(height);
+            Contracts::on_initialize(height);
+
+            System::note_finished_initialize();
+
+            Ok(())
+        }
+
+        fn finalize_block(
+            height: $crate::frame_system::pallet_prelude::BlockNumberFor<Self>,
+        ) -> Result<H256, String> {
+            Contracts::on_finalize(height);
+            Timestamp::on_finalize(height);
+            Balances::on_finalize(height);
+
+            Ok(System::finalize().hash())
+        }
+
+        fn default_actor() -> AccountIdFor<Self> {
+            AccountId32::new([1u8; 32])
+        }
+
+        fn get_metadata() -> RuntimeMetadataPrefixed {
+            Self::metadata()
+        }
+
+        fn convert_account_to_origin(
+            account: AccountIdFor<Self>,
+        ) -> <<Self as $crate::frame_system::Config>::RuntimeCall as Dispatchable>::RuntimeOrigin {
+            Some(account).into()
+        }
+    }
 }
 
 // ------------ Export runtime type itself, pallets and useful types from the auxiliary module -----
 pub use construct_runtime::{
     $name, Balances, Contracts, PalletInfo, RuntimeCall, RuntimeEvent, RuntimeHoldReason,
-    RuntimeOrigin, System, Timestamp,
+    RuntimeOrigin, System, Timestamp, INITIAL_BALANCE,
 };
     };
 }
 
 create_minimal_runtime!(MinimalRuntime);
-
-use std::time::SystemTime;
-
-use frame_support::{
-    sp_runtime::{testing::H256, traits::Dispatchable, AccountId32, BuildStorage, Storage},
-    traits::Hooks,
-};
-
-use crate::{AccountIdFor, Runtime, RuntimeMetadataPrefixed};
-
-/// Default initial balance for the default account.
-pub const INITIAL_BALANCE: u128 = 1_000_000_000_000_000;
-
-impl Runtime for MinimalRuntime {
-    fn initialize_storage(storage: &mut Storage) -> Result<(), String> {
-        pallet_balances::GenesisConfig::<Self> {
-            balances: vec![(Self::default_actor(), INITIAL_BALANCE)],
-        }
-        .assimilate_storage(storage)
-    }
-
-    fn initialize_block(
-        height: frame_system::pallet_prelude::BlockNumberFor<Self>,
-        parent_hash: H256,
-    ) -> Result<(), String> {
-        System::reset_events();
-        System::initialize(&height, &parent_hash, &Default::default());
-
-        Balances::on_initialize(height);
-        Timestamp::set_timestamp(
-            SystemTime::now()
-                .duration_since(SystemTime::UNIX_EPOCH)
-                .expect("Time went backwards")
-                .as_secs(),
-        );
-        Timestamp::on_initialize(height);
-        Contracts::on_initialize(height);
-
-        System::note_finished_initialize();
-
-        Ok(())
-    }
-
-    fn finalize_block(
-        height: frame_system::pallet_prelude::BlockNumberFor<Self>,
-    ) -> Result<H256, String> {
-        Contracts::on_finalize(height);
-        Timestamp::on_finalize(height);
-        Balances::on_finalize(height);
-
-        Ok(System::finalize().hash())
-    }
-
-    fn default_actor() -> AccountIdFor<Self> {
-        AccountId32::new([1u8; 32])
-    }
-
-    fn get_metadata() -> RuntimeMetadataPrefixed {
-        Self::metadata()
-    }
-
-    fn convert_account_to_origin(
-        account: AccountIdFor<Self>,
-    ) -> <<Self as frame_system::Config>::RuntimeCall as Dispatchable>::RuntimeOrigin {
-        Some(account).into()
-    }
-}
