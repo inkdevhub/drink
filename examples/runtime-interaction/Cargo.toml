@@ -1,0 +1,16 @@
+[package]
+name = "runtime-interaction"
+authors = ["Cardinal"]
+edition = "2021"
+homepage = "https://alephzero.org"
+repository = "https://github.com/Cardinal-Cryptography/drink"
+version = "0.1.0"
+
+[lib]
+path = "lib.rs"
+
+[dev-dependencies]
+drink = { path = "../../drink" }
+
+# This is only needed to get some valid contract code to test against.
+wat = "1.0.81"
