@@ -3,6 +3,8 @@ use drink::pallet_contracts::chain_extension::{
 };
 use scale::Encode;
 
+use crate::CHAIN_EXTENSION_RETURN_VALUE;
+
 /// Simple chain extension that provides some mocked data.
 #[derive(Default)]
 pub struct StakingExtension;
@@ -15,9 +17,9 @@ impl<Runtime: ContractsConfig> ChainExtension<Runtime> for StakingExtension {
         // Ensure that the contract called extension method with id `41`.
         assert_eq!(env.func_id(), 41);
 
-        // Write `100` as the result of the extension call.
+        // Write fixed result of the extension call into the return buffer.
         env.buf_in_buf_out()
-            .write(&100.encode(), false, None)
+            .write(&CHAIN_EXTENSION_RETURN_VALUE.encode(), false, None)
             .expect("Failed to write result");
 
         // Return `Converging(0)` to indicate that the extension call has finished successfully.
