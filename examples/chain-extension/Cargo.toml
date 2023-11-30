@@ -1,0 +1,33 @@
+[package]
+name = "chain-extension"
+authors = ["Cardinal", "Aleph Zero Foundation"]
+edition = "2021"
+homepage = "https://alephzero.org"
+repository = "https://github.com/Cardinal-Cryptography/drink"
+version = "0.1.0"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+ink = { version = "=4.2.1", default-features = false }
+
+scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
+scale-info = { version = "2.6", default-features = false, features = ["derive"], optional = true }
+
+[dev-dependencies]
+drink = { path = "../../drink" }
+
+# If you are creating a custom runtime with `drink::create_minimal_runtime!` macro, unfortunately you need to
+# include these two dependencies manually. Versions should match the ones in `Cargo.toml` of the `drink` crate.
+frame-support = "23.0.0"
+frame-system = "23.0.0"
+
+[features]
+default = ["std"]
+std = [
+    "ink/std",
+    "scale/std",
+    "scale-info/std",
+]
+ink-as-dependency = []
