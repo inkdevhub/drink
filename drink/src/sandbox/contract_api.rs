@@ -168,7 +168,10 @@ mod tests {
     use pallet_contracts::Origin;
 
     use super::*;
-    use crate::{minimal::RuntimeEvent, runtime::Runtime, MinimalRuntime, DEFAULT_GAS_LIMIT};
+    use crate::{
+        minimal::RuntimeEvent, runtime::Runtime, session::NO_SALT, MinimalRuntime,
+        DEFAULT_GAS_LIMIT,
+    };
 
     fn compile_module(contract_name: &str) -> Vec<u8> {
         let path = [
@@ -212,7 +215,7 @@ mod tests {
             wasm_binary,
             0,
             vec![],
-            vec![],
+            NO_SALT,
             MinimalRuntime::default_actor(),
             DEFAULT_GAS_LIMIT,
             None,
@@ -246,7 +249,7 @@ mod tests {
             wasm_binary,
             0,
             vec![],
-            vec![],
+            NO_SALT,
             actor.clone(),
             DEFAULT_GAS_LIMIT,
             None,
