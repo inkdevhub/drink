@@ -6,7 +6,7 @@ pub trait StakingExtension {
     type ErrorCode = StakingExtensionErrorCode;
 
     /// Returns the number of the validators.
-    #[ink(extension = 41)]
+    #[ink(extension = 41, handle_status = false)]
     fn get_num_of_validators() -> u32;
 }
 

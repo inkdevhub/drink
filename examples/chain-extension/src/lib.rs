@@ -27,7 +27,7 @@ mod contract_calling_chain_extension {
 
         #[ink(message)]
         pub fn call_ce(&self) -> u32 {
-            self.env().extension().get_num_of_validators().unwrap()
+            self.env().extension().get_num_of_validators()
         }
     }
 }
