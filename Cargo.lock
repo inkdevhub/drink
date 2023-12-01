@@ -648,9 +648,9 @@ checksum = "21a53c0a4d288377e7415b53dcfc3c04da5cdc2cc95c8d5ac178b58f0b861ad6"
 
 [[package]]
 name = "contract-build"
-version = "4.0.0-rc"
+version = "4.0.0-rc.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fc10c39e389cddaff829c4aab303f39e957e55712505426154f14aa2b6bf2daf"
+checksum = "d4998e19b98b55fb9c1b5f1c93bb1678ab64c96eb9216b4a10fdb9a521717fcf"
 dependencies = [
  "anyhow",
  "blake2",
@@ -688,9 +688,9 @@ dependencies = [
 
 [[package]]
 name = "contract-metadata"
-version = "4.0.0-rc"
+version = "4.0.0-rc.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "94f780521dfe73c11db9328ed66acaab9ab0ff4cd917b7571c0711c864ef944e"
+checksum = "44f0ed28c6af5080a0cf0e4b943fc7eeb42731aee2e2154735b8c5ddd19cc412"
 dependencies = [
  "anyhow",
  "impl-serde",
@@ -702,9 +702,9 @@ dependencies = [
 
 [[package]]
 name = "contract-transcode"
-version = "4.0.0-rc"
+version = "4.0.0-rc.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "85d6da4ed75fe352c7945716e4a6edef25ddbecca350c54ca10d8d09b9234614"
+checksum = "af5ec69b9877e7565a9bb95040358149637714d0a422f67be9eff5a42c1ee86e"
 dependencies = [
  "anyhow",
  "base58",
@@ -1107,7 +1107,7 @@ checksum = "9ea835d29036a4087793836fa931b08837ad5e957da9e23886b29586fb9b6650"
 
 [[package]]
 name = "drink"
-version = "0.8.3"
+version = "0.8.5"
 dependencies = [
  "contract-metadata",
  "contract-transcode",
@@ -1132,7 +1132,7 @@ dependencies = [
 
 [[package]]
 name = "drink-cli"
-version = "0.8.3"
+version = "0.8.5"
 dependencies = [
  "anyhow",
  "clap",
@@ -1148,7 +1148,7 @@ dependencies = [
 
 [[package]]
 name = "drink-test-macro"
-version = "0.8.3"
+version = "0.8.5"
 dependencies = [
  "cargo_metadata",
  "contract-build",
