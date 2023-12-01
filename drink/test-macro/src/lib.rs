@@ -41,7 +41,7 @@ type SynResult<T> = Result<T, syn::Error>;
 /// fn testcase() {
 ///     Session::<MinimalRuntime>::new()
 ///         .unwrap()
-///         .deploy(bytes(), "new", NO_ARGS, vec![], None, &transcoder())
+///         .deploy(bytes(), "new", NO_ARGS, NO_SALT, NO_ENDOWMENT, &transcoder())
 ///         .unwrap();
 /// }
 /// ```
@@ -97,8 +97,8 @@ fn test_internal(_attr: TokenStream2, item: TokenStream2) -> SynResult<TokenStre
 ///
 /// fn testcase() {
 ///     Session::<MinimalRuntime>::new()?
-///         .deploy_bundle_and(BundleProvider::local()?, "new", NO_ARGS, vec![], None)
-///         .deploy_bundle_and(BundleProvider::AnotherContract.bundle()?, "new", NO_ARGS, vec![], None)
+///         .deploy_bundle_and(BundleProvider::local()?, "new", NO_ARGS, NO_SALT, NO_ENDOWMENT)
+///         .deploy_bundle_and(BundleProvider::AnotherContract.bundle()?, "new", NO_ARGS, NO_SALT, NO_ENDOWMENT)
 ///         .unwrap();
 /// }
 /// ```

@@ -32,7 +32,8 @@ use error::SessionError;
 
 use self::mocking_api::MockingApi;
 use crate::{
-    bundle::ContractBundle, errors::MessageResult, session::transcoding::TranscoderRegistry,
+    bundle::ContractBundle, errors::MessageResult, runtime::MinimalRuntime,
+    session::transcoding::TranscoderRegistry,
 };
 
 type BalanceOf<R> =
@@ -43,6 +44,12 @@ type BalanceOf<R> =
 /// Without it, you would have to specify explicitly a compatible type, like:
 /// `session.call::<String>(.., &[], ..)`.
 pub const NO_ARGS: &[String] = &[];
+/// Convenient value for an empty salt.
+pub const NO_SALT: Vec<u8> = vec![];
+/// Convenient value for no endowment.
+///
+/// Compatible with any runtime with `u128` as the balance type.
+pub const NO_ENDOWMENT: Option<BalanceOf<MinimalRuntime>> = None;
 
 /// Wrapper around `Sandbox` that provides a convenient API for interacting with multiple contracts.
 ///
@@ -56,7 +63,7 @@ pub const NO_ARGS: &[String] = &[];
 /// # use drink::{
 /// #   session::Session,
 /// #   AccountId32,
-/// #   session::NO_ARGS,
+/// #   session::{NO_ARGS, NO_SALT, NO_ENDOWMENT},
 /// #   runtime::MinimalRuntime
 /// # };
 /// #
@@ -69,10 +76,10 @@ pub const NO_ARGS: &[String] = &[];
 /// # fn main() -> Result<(), drink::session::error::SessionError> {
 ///
 /// Session::<MinimalRuntime>::new()?
-///     .deploy_and(contract_bytes(), "new", NO_ARGS, vec![], None, &get_transcoder())?
-///     .call_and("foo", NO_ARGS, None)?
+///     .deploy_and(contract_bytes(), "new", NO_ARGS, NO_SALT, NO_ENDOWMENT, &get_transcoder())?
+///     .call_and("foo", NO_ARGS, NO_ENDOWMENT)?
 ///     .with_actor(bob())
-///     .call_and("bar", NO_ARGS, None)?;
+///     .call_and("bar", NO_ARGS, NO_ENDOWMENT)?;
 /// # Ok(()) }
 /// ```
 ///
@@ -84,7 +91,7 @@ pub const NO_ARGS: &[String] = &[];
 /// #   session::Session,
 /// #   AccountId32,
 /// #   runtime::MinimalRuntime,
-/// #   session::NO_ARGS
+/// #   session::{NO_ARGS, NO_ENDOWMENT, NO_SALT}
 /// # };
 /// # fn get_transcoder() -> Rc<ContractMessageTranscoder> {
 /// #   Rc::new(ContractMessageTranscoder::load("").unwrap())
@@ -95,10 +102,10 @@ pub const NO_ARGS: &[String] = &[];
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 ///
 /// let mut session = Session::<MinimalRuntime>::new()?;
-/// let _address = session.deploy(contract_bytes(), "new", NO_ARGS, vec![], None, &get_transcoder())?;
-/// let _result: u32 = session.call("foo", NO_ARGS, None)??;
+/// let _address = session.deploy(contract_bytes(), "new", NO_ARGS, NO_SALT, NO_ENDOWMENT, &get_transcoder())?;
+/// let _result: u32 = session.call("foo", NO_ARGS, NO_ENDOWMENT)??;
 /// session.set_actor(bob());
-/// session.call::<_, ()>("bar", NO_ARGS, None)??;
+/// session.call::<_, ()>("bar", NO_ARGS, NO_ENDOWMENT)??;
 /// # Ok(()) }
 /// ```
 ///
@@ -107,7 +114,7 @@ pub const NO_ARGS: &[String] = &[];
 /// # use drink::{
 /// #   local_contract_file,
 /// #   session::Session,
-/// #   session::NO_ARGS,
+/// #   session::{NO_ARGS, NO_SALT, NO_ENDOWMENT},
 /// #   runtime::MinimalRuntime,
 /// #   ContractBundle,
 /// # };
@@ -115,12 +122,12 @@ pub const NO_ARGS: &[String] = &[];
 /// # fn main() -> Result<(), drink::session::error::SessionError> {
 /// // Simplest way, loading a bundle from the project's directory:
 /// Session::<MinimalRuntime>::new()?
-///     .deploy_bundle_and(local_contract_file!(), "new", NO_ARGS, vec![], None)?; /* ... */
+///     .deploy_bundle_and(local_contract_file!(), "new", NO_ARGS, NO_SALT, NO_ENDOWMENT)?; /* ... */
 ///
 /// // Or choosing the file explicitly:
 /// let contract = ContractBundle::load("path/to/your.contract")?;
 /// Session::<MinimalRuntime>::new()?
-///     .deploy_bundle_and(contract, "new", NO_ARGS, vec![], None)?; /* ... */
+///     .deploy_bundle_and(contract, "new", NO_ARGS, NO_SALT, NO_ENDOWMENT)?; /* ... */
 ///  # Ok(()) }
 /// ```
 pub struct Session<R: RuntimeWithContracts> {

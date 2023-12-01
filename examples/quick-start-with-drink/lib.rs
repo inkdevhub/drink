@@ -45,7 +45,7 @@ mod tests {
     use drink::{
         contract_api::decode_debug_buffer,
         runtime::MinimalRuntime,
-        session::{Session, NO_ARGS},
+        session::{Session, NO_ARGS, NO_ENDOWMENT, NO_SALT},
     };
 
     /// `drink` automatically discovers all the contract projects that your tests will need. For
@@ -92,9 +92,9 @@ mod tests {
             // The constructor arguments (as stringish objects).
             &["true"],
             // Salt for the contract address derivation.
-            vec![],
+            NO_SALT,
             // Initial endowment (the amount of tokens that we want to transfer to the contract).
-            None,
+            NO_ENDOWMENT,
         )?;
 
         // Once the contract is instantiated, we can call the `flip` method on the contract.
@@ -105,7 +105,7 @@ mod tests {
             // constant, which spares us from typing `&[]`.
             NO_ARGS,
             // Endowment (the amount of tokens that we want to transfer to the contract).
-            None,
+            NO_ENDOWMENT,
         )??;
 
         // Finally, we can call the `get` method on the contract and ensure that the value has been
@@ -114,7 +114,7 @@ mod tests {
         // `Session::call` returns a `Result<MessageResult<T>, SessionError>`, where `T` is the
         // type of the message result. In this case, the `get` message returns a `bool`, and we have
         // to explicitly hint the compiler about it.
-        let result: bool = session.call("get", NO_ARGS, None)??;
+        let result: bool = session.call("get", NO_ARGS, NO_ENDOWMENT)??;
         assert_eq!(result, false);
 
         Ok(())
@@ -125,7 +125,13 @@ mod tests {
     fn get_debug_logs() -> Result<(), Box<dyn std::error::Error>> {
         // We create a session object as usual and deploy the contract bundle.
         let mut session = Session::<MinimalRuntime>::new()?;
-        session.deploy_bundle(BundleProvider::local()?, "new", &["true"], vec![], None)?;
+        session.deploy_bundle(
+            BundleProvider::local()?,
+            "new",
+            &["true"],
+            NO_SALT,
+            NO_ENDOWMENT,
+        )?;
 
         // `deploy_bundle` returns just a contract address. If we are interested in more details
         // about last operation (either deploy or call), we can use the `last_deploy_result`
@@ -155,19 +161,20 @@ mod tests {
         // derived contract addresses are different. We can do this by providing using different
         // arguments for the constructor or by providing a different salt.
         let first_address =
-            session.deploy_bundle(bundle.clone(), "new", &["true"], vec![], None)?;
+            session.deploy_bundle(bundle.clone(), "new", &["true"], NO_SALT, NO_ENDOWMENT)?;
         let _second_address =
-            session.deploy_bundle(bundle.clone(), "new", &["true"], vec![0], None)?;
-        let _third_address = session.deploy_bundle(bundle, "new", &["false"], vec![], None)?;
+            session.deploy_bundle(bundle.clone(), "new", &["true"], vec![0], NO_ENDOWMENT)?;
+        let _third_address =
+            session.deploy_bundle(bundle, "new", &["false"], NO_SALT, NO_ENDOWMENT)?;
 
         // By default, when we run `session.call`, `drink` will interact with the last deployed
         // contract.
-        let value_at_third_contract: bool = session.call("get", NO_ARGS, None)??;
+        let value_at_third_contract: bool = session.call("get", NO_ARGS, NO_ENDOWMENT)??;
         assert_eq!(value_at_third_contract, false);
 
         // However, we can also call a specific contract by providing its address.
         let value_at_first_contract: bool =
-            session.call_with_address(first_address, "get", NO_ARGS, None)??;
+            session.call_with_address(first_address, "get", NO_ARGS, NO_ENDOWMENT)??;
         assert_eq!(value_at_first_contract, true);
 
         Ok(())
