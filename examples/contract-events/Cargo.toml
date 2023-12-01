@@ -1,0 +1,28 @@
+[package]
+name = "contract-events"
+authors = ["Cardinal"]
+edition = "2021"
+homepage = "https://alephzero.org"
+repository = "https://github.com/Cardinal-Cryptography/drink"
+version = "0.1.0"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+ink = { version = "=4.2.1", default-features = false, features = ["ink-debug"] }
+
+scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
+scale-info = { version = "2.6", default-features = false, features = ["derive"], optional = true }
+
+[dev-dependencies]
+drink = { path = "../../drink" }
+
+[features]
+default = ["std"]
+std = [
+    "ink/std",
+    "scale/std",
+    "scale-info/std",
+]
+ink-as-dependency = []
