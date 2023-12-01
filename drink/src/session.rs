@@ -229,6 +229,11 @@ impl<R: RuntimeWithContracts> Session<R> {
         &mut self.sandbox
     }
 
+    /// Returns a reference to the record of the session.
+    pub fn record(&self) -> &Record<R> {
+        &self.record
+    }
+
     /// Returns a reference for mocking API.
     pub fn mocking_api(&mut self) -> &mut impl MockingApi<R> {
         self

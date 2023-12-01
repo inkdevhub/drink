@@ -1,4 +1,7 @@
-use parity_scale_codec::Decode;
+use std::rc::Rc;
+
+use contract_transcode::{ContractMessageTranscoder, Value};
+use parity_scale_codec::{Decode, Encode};
 
 use crate::{
     errors::MessageResult,
@@ -192,6 +195,21 @@ impl EventBatch<MinimalRuntime> {
                     pallet_contracts::Event::<MinimalRuntime>::ContractEmitted { data, .. },
                 ) => Some(data.as_slice()),
                 _ => None,
+            })
+            .collect()
+    }
+
+    /// The same as `contract_events`, but decodes the events using the given transcoder.
+    pub fn contract_events_decoded(
+        &self,
+        transcoder: &Rc<ContractMessageTranscoder>,
+    ) -> Vec<Value> {
+        self.contract_events()
+            .into_iter()
+            .map(|data| {
+                transcoder
+                    .decode_contract_event(&mut data.encode().as_slice())
+                    .expect("Failed to decode contract event")
             })
             .collect()
     }

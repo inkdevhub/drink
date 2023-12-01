@@ -49,19 +49,17 @@ mod tests {
     fn we_can_inspect_emitted_events() -> Result<(), Box<dyn Error>> {
         let bundle = BundleProvider::local()?;
 
-        let events = Session::<MinimalRuntime>::new()?
-            .deploy_bundle_and(bundle, "new", &["false"], vec![], None)?
-            .call_and("flip", NO_ARGS, None)?
-            .last_call_result()
-            .expect("Call was successful, so there should be a return")
-            .events
-            .as_ref()
-            .expect("Drink is collecting events")
-            .clone();
+        let mut session = Session::<MinimalRuntime>::new()?;
+        session.deploy_bundle(bundle.clone(), "new", &["false"], vec![], None)?;
+        session.call("flip", NO_ARGS, None)??;
 
-        for event in events {
-            println!("Event: {:?}", event);
-        }
+        let record = session.record();
+        let contract_events = record
+            .last_event_batch()
+            .contract_events_decoded(&bundle.transcoder);
+
+        assert_eq!(contract_events.len(), 1);
+        println!("flip_event: {:?}", &contract_events[0]);
 
         Ok(())
     }

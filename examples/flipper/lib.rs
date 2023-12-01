@@ -48,8 +48,8 @@ mod tests {
         let init_value: bool = Session::<MinimalRuntime>::new()?
             .deploy_bundle_and(contract, "new", &["true"], NO_SALT, NO_ENDOWMENT)?
             .call_and("get", NO_ARGS, NO_ENDOWMENT)?
-            .last_call_return()
-            .expect("Call was successful, so there should be a return")
+            .record()
+            .last_call_return_decoded()?
             .expect("Call was successful");
 
         assert_eq!(init_value, true);
@@ -66,8 +66,8 @@ mod tests {
             .call_and("flip", NO_ARGS, NO_ENDOWMENT)?
             .call_and("flip", NO_ARGS, NO_ENDOWMENT)?
             .call_and("get", NO_ARGS, NO_ENDOWMENT)?
-            .last_call_return()
-            .expect("Call was successful, so there should be a return")
+            .record()
+            .last_call_return_decoded()?
             .expect("Call was successful");
 
         assert_eq!(init_value, false);
