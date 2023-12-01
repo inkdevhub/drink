@@ -264,6 +264,7 @@ impl<R: RuntimeWithContracts> Session<R> {
             .encode(constructor, args)
             .map_err(|err| SessionError::Encoding(err.to_string()))?;
 
+        self.record.start_recording_events(&mut self.sandbox);
         let result = self.sandbox.deploy_contract(
             contract_bytes,
             endowment.unwrap_or_default(),
@@ -273,6 +274,7 @@ impl<R: RuntimeWithContracts> Session<R> {
             self.gas_limit,
             None,
         );
+        self.record.stop_recording_events(&mut self.sandbox);
 
         let ret = match &result.result {
             Ok(exec_result) if exec_result.result.did_revert() => {
@@ -439,6 +441,7 @@ impl<R: RuntimeWithContracts> Session<R> {
             .encode(message, args)
             .map_err(|err| SessionError::Encoding(err.to_string()))?;
 
+        self.record.start_recording_events(&mut self.sandbox);
         let result = self.sandbox.call_contract(
             address,
             endowment.unwrap_or_default(),
@@ -448,6 +451,7 @@ impl<R: RuntimeWithContracts> Session<R> {
             None,
             self.determinism,
         );
+        self.record.stop_recording_events(&mut self.sandbox);
 
         let ret = match &result.result {
             Ok(exec_result) if exec_result.did_revert() => Err(SessionError::CallReverted),
