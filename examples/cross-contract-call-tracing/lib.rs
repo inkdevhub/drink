@@ -69,7 +69,7 @@ mod tests {
             pallet_contracts_debugging::{TracingExt, TracingExtT},
             MinimalRuntime,
         },
-        session::{contract_transcode::Value, Session, NO_ARGS},
+        session::{contract_transcode::Value, Session, NO_ARGS, NO_ENDOWMENT},
         AccountId32,
     };
     use ink::storage::traits::Storable;
@@ -135,14 +135,29 @@ mod tests {
         let mut session = Session::<MinimalRuntime>::new()?;
         session.set_tracing_extension(TracingExt(Box::new(TestDebugger {})));
 
-        let outer_address =
-            session.deploy_bundle(BundleProvider::local()?, "new", NO_ARGS, vec![1], None)?;
+        let outer_address = session.deploy_bundle(
+            BundleProvider::local()?,
+            "new",
+            NO_ARGS,
+            vec![1],
+            NO_ENDOWMENT,
+        )?;
         OUTER_ADDRESS.with(|a| *a.borrow_mut() = Some(outer_address.clone()));
-        let middle_address =
-            session.deploy_bundle(BundleProvider::local()?, "new", NO_ARGS, vec![2], None)?;
+        let middle_address = session.deploy_bundle(
+            BundleProvider::local()?,
+            "new",
+            NO_ARGS,
+            vec![2],
+            NO_ENDOWMENT,
+        )?;
         MIDDLE_ADDRESS.with(|a| *a.borrow_mut() = Some(middle_address.clone()));
-        let inner_address =
-            session.deploy_bundle(BundleProvider::local()?, "new", NO_ARGS, vec![3], None)?;
+        let inner_address = session.deploy_bundle(
+            BundleProvider::local()?,
+            "new",
+            NO_ARGS,
+            vec![3],
+            NO_ENDOWMENT,
+        )?;
         INNER_ADDRESS.with(|a| *a.borrow_mut() = Some(inner_address.clone()));
 
         let value: u32 = session.call_with_address(
@@ -153,7 +168,7 @@ mod tests {
                 &*inner_address.to_string(),
                 "7",
             ],
-            None,
+            NO_ENDOWMENT,
         )??;
 
         assert_eq!(value, 22);

@@ -36,7 +36,7 @@ mod tests {
 
     use drink::{
         runtime::MinimalRuntime,
-        session::{Session, NO_ARGS},
+        session::{Session, NO_ARGS, NO_ENDOWMENT, NO_SALT},
     };
 
     #[drink::contract_bundle_provider]
@@ -46,8 +46,8 @@ mod tests {
     fn initialization() -> Result<(), Box<dyn Error>> {
         let contract = BundleProvider::local()?;
         let init_value: bool = Session::<MinimalRuntime>::new()?
-            .deploy_bundle_and(contract, "new", &["true"], vec![], None)?
-            .call_and("get", NO_ARGS, None)?
+            .deploy_bundle_and(contract, "new", &["true"], NO_SALT, NO_ENDOWMENT)?
+            .call_and("get", NO_ARGS, NO_ENDOWMENT)?
             .last_call_return()
             .expect("Call was successful, so there should be a return")
             .expect("Call was successful");
@@ -61,11 +61,11 @@ mod tests {
     fn flipping() -> Result<(), Box<dyn Error>> {
         let contract = BundleProvider::Flipper.bundle()?;
         let init_value: bool = Session::<MinimalRuntime>::new()?
-            .deploy_bundle_and(contract, "new", &["true"], vec![], None)?
-            .call_and("flip", NO_ARGS, None)?
-            .call_and("flip", NO_ARGS, None)?
-            .call_and("flip", NO_ARGS, None)?
-            .call_and("get", NO_ARGS, None)?
+            .deploy_bundle_and(contract, "new", &["true"], NO_SALT, NO_ENDOWMENT)?
+            .call_and("flip", NO_ARGS, NO_ENDOWMENT)?
+            .call_and("flip", NO_ARGS, NO_ENDOWMENT)?
+            .call_and("flip", NO_ARGS, NO_ENDOWMENT)?
+            .call_and("get", NO_ARGS, NO_ENDOWMENT)?
             .last_call_return()
             .expect("Call was successful, so there should be a return")
             .expect("Call was successful");
