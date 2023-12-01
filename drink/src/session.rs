@@ -25,6 +25,7 @@ use crate::{
 
 pub mod error;
 pub mod mocking_api;
+mod record;
 mod transcoding;
 
 use error::SessionError;
