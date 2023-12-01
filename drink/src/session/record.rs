@@ -1,6 +1,9 @@
+use parity_scale_codec::Decode;
+
 use crate::{
+    errors::MessageResult,
     runtime::{minimal::RuntimeEvent, AccountIdFor, MinimalRuntime, RuntimeWithContracts},
-    session::BalanceOf,
+    session::{error::SessionError, BalanceOf},
     EventRecordOf, Sandbox,
 };
 
@@ -19,7 +22,6 @@ type ContractExecResult<R> =
 /// By `result` we mean the full result (enriched with some context information) of the contract
 /// interaction, like `ContractExecResult`. By `return` we mean the return value of the contract
 /// execution, like a value returned from a message or the address of a newly instantiated contract.
-#[derive(Default)]
 pub struct Record<R: RuntimeWithContracts> {
     /// The results of contract instantiation.
     deploy_results: Vec<ContractInstantiateResult<R>>,
@@ -35,7 +37,27 @@ pub struct Record<R: RuntimeWithContracts> {
     /// The events emitted by the contracts.
     event_batches: Vec<EventBatch<R>>,
 
+    /// Because `drink` normally doesn't have a continuous block production, everything implicitly
+    /// happens within a single block (unless user explicitly trigger a new block). This means that
+    /// all runtime events (from consecutive transactions) are stacked up in a common buffer.
+    /// `Record` is capable of recording only the events that happened during a single transaction
+    /// by remembering the number of events that were already in the buffer before the transaction
+    /// started. However, this is must be explicitly enabled by calling `start_recording_events`
+    /// before the transaction and `stop_recording_events` after the transaction.
     block_events_so_far: Option<usize>,
+}
+
+impl<R: RuntimeWithContracts> Default for Record<R> {
+    fn default() -> Self {
+        Self {
+            deploy_results: Vec::new(),
+            deploy_returns: Vec::new(),
+            call_results: Vec::new(),
+            call_returns: Vec::new(),
+            event_batches: Vec::new(),
+            block_events_so_far: None,
+        }
+    }
 }
 
 // API for `Session` to record results and events related to contract interaction.
@@ -77,58 +99,91 @@ impl<R: RuntimeWithContracts> Record<R> {
 
 // API for the end user.
 impl<R: RuntimeWithContracts> Record<R> {
+    /// Returns all the results of contract instantiations that happened during the session.
     pub fn deploy_results(&self) -> &[ContractInstantiateResult<R>] {
         &self.deploy_results
     }
 
+    /// Returns the last result of contract instantiation that happened during the session. Panics
+    /// if there were no contract instantiations.
     pub fn last_deploy_result(&self) -> &ContractInstantiateResult<R> {
         self.deploy_results.last().expect("No deploy results")
     }
 
+    /// Returns all the return values of contract instantiations that happened during the session.
     pub fn deploy_returns(&self) -> &[AccountIdFor<R>] {
         &self.deploy_returns
     }
 
+    /// Returns the last return value of contract instantiation that happened during the session.
+    /// Panics if there were no contract instantiations.
     pub fn last_deploy_return(&self) -> &AccountIdFor<R> {
         self.deploy_returns.last().expect("No deploy returns")
     }
 
+    /// Returns all the results of contract calls that happened during the session.
     pub fn call_results(&self) -> &[ContractExecResult<R>] {
         &self.call_results
     }
 
+    /// Returns the last result of contract call that happened during the session. Panics if there
+    /// were no contract calls.
     pub fn last_call_result(&self) -> &ContractExecResult<R> {
         self.call_results.last().expect("No call results")
     }
 
+    /// Returns all the (encoded) return values of contract calls that happened during the session.
     pub fn call_returns(&self) -> &[Vec<u8>] {
         &self.call_returns
     }
 
+    /// Returns the last (encoded) return value of contract call that happened during the session.
+    /// Panics if there were no contract calls.
     pub fn last_call_return(&self) -> &[u8] {
         self.call_returns.last().expect("No call returns")
     }
 
+    /// Returns the last (decoded) return value of contract call that happened during the session.
+    /// Panics if there were no contract calls.
+    pub fn last_call_return_decoded<T: Decode>(&self) -> Result<MessageResult<T>, SessionError> {
+        let mut raw = self.last_call_return();
+        MessageResult::decode(&mut raw).map_err(|err| {
+            SessionError::Decoding(format!(
+                "Failed to decode the result of calling a contract: {err:?}"
+            ))
+        })
+    }
+
+    /// Returns all the event batches that were recorded for contract interactions during the
+    /// session.
     pub fn event_batches(&self) -> &[EventBatch<R>] {
         &self.event_batches
     }
 
+    /// Returns the last event batch that was recorded for contract interactions during the session.
+    /// Panics if there were no event batches.
     pub fn last_event_batch(&self) -> &EventBatch<R> {
         self.event_batches.last().expect("No event batches")
     }
 }
 
+/// A batch of runtime events that were emitted during a single contract interaction.
 pub struct EventBatch<R: frame_system::Config> {
     events: Vec<EventRecordOf<R>>,
 }
 
 impl<R: frame_system::Config> EventBatch<R> {
+    /// Returns all the events that were emitted during the contract interaction.
     pub fn all_events(&self) -> &[EventRecordOf<R>] {
         &self.events
     }
 }
 
 impl EventBatch<MinimalRuntime> {
+    /// Returns all the contract events that were emitted during the contract interaction.
+    ///
+    /// We have to match against static enum variant, and thus (at least for now) we support only
+    /// `MinimalRuntime`.
     pub fn contract_events(&self) -> Vec<&[u8]> {
         self.events
             .iter()

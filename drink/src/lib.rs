@@ -3,6 +3,8 @@
 
 #![warn(missing_docs)]
 
+extern crate core;
+
 mod bundle;
 pub mod errors;
 mod mock;

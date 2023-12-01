@@ -11,8 +11,8 @@ pub use contract_transcode;
 use contract_transcode::ContractMessageTranscoder;
 use frame_support::{traits::fungible::Inspect, weights::Weight};
 use pallet_contracts::Determinism;
-use pallet_contracts_primitives::{ContractExecResult, ContractInstantiateResult};
 use parity_scale_codec::Decode;
+pub use record::Record;
 
 use crate::{
     mock::MockRegistry,
@@ -20,7 +20,7 @@ use crate::{
         pallet_contracts_debugging::{InterceptingExt, TracingExt},
         AccountIdFor, HashFor, RuntimeWithContracts,
     },
-    EventRecordOf, MockingExtension, Sandbox, DEFAULT_GAS_LIMIT,
+    MockingExtension, Sandbox, DEFAULT_GAS_LIMIT,
 };
 
 pub mod error;
@@ -115,12 +115,12 @@ pub const NO_ARGS: &[String] = &[];
 /// # fn main() -> Result<(), drink::session::error::SessionError> {
 /// // Simplest way, loading a bundle from the project's directory:
 /// Session::<MinimalRuntime>::new()?
-///     .deploy_bundle_and(local_contract_file!(), "new", NO_ARGS, vec![], None); /* ... */
+///     .deploy_bundle_and(local_contract_file!(), "new", NO_ARGS, vec![], None)?; /* ... */
 ///
 /// // Or choosing the file explicitly:
 /// let contract = ContractBundle::load("path/to/your.contract")?;
 /// Session::<MinimalRuntime>::new()?
-///     .deploy_bundle_and(contract, "new", NO_ARGS, vec![], None); /* ... */
+///     .deploy_bundle_and(contract, "new", NO_ARGS, vec![], None)?; /* ... */
 ///  # Ok(()) }
 /// ```
 pub struct Session<R: RuntimeWithContracts> {
@@ -131,11 +131,7 @@ pub struct Session<R: RuntimeWithContracts> {
     determinism: Determinism,
 
     transcoders: TranscoderRegistry<AccountIdFor<R>>,
-
-    deploy_results: Vec<ContractInstantiateResult<AccountIdFor<R>, BalanceOf<R>, EventRecordOf<R>>>,
-    deploy_returns: Vec<AccountIdFor<R>>,
-    call_results: Vec<ContractExecResult<BalanceOf<R>, EventRecordOf<R>>>,
-    call_returns: Vec<Vec<u8>>,
+    record: Record<R>,
     mocks: Arc<Mutex<MockRegistry<AccountIdFor<R>>>>,
 }
 
@@ -155,10 +151,7 @@ impl<R: RuntimeWithContracts> Session<R> {
             gas_limit: DEFAULT_GAS_LIMIT,
             determinism: Determinism::Enforced,
             transcoders: TranscoderRegistry::new(),
-            deploy_results: vec![],
-            deploy_returns: vec![],
-            call_results: vec![],
-            call_returns: vec![],
+            record: Default::default(),
         })
     }
 
@@ -287,7 +280,7 @@ impl<R: RuntimeWithContracts> Session<R> {
             }
             Ok(exec_result) => {
                 let address = exec_result.account_id.clone();
-                self.deploy_returns.push(address.clone());
+                self.record.push_deploy_return(address.clone());
 
                 self.transcoders.register(address.clone(), transcoder);
 
@@ -296,7 +289,7 @@ impl<R: RuntimeWithContracts> Session<R> {
             Err(err) => Err(SessionError::DeploymentFailed(*err)),
         };
 
-        self.deploy_results.push(result);
+        self.record.push_deploy_result(result);
         ret
     }
 
@@ -431,7 +424,8 @@ impl<R: RuntimeWithContracts> Session<R> {
         let address = match address {
             Some(address) => address,
             None => self
-                .deploy_returns
+                .record
+                .deploy_returns()
                 .last()
                 .ok_or(SessionError::NoContract)?
                 .clone(),
@@ -458,57 +452,14 @@ impl<R: RuntimeWithContracts> Session<R> {
         let ret = match &result.result {
             Ok(exec_result) if exec_result.did_revert() => Err(SessionError::CallReverted),
             Ok(exec_result) => {
-                let encoded = exec_result.data.clone();
-                self.call_returns.push(encoded.clone());
-
-                MessageResult::<T>::decode(&mut encoded.as_slice()).map_err(|err| {
-                    SessionError::Decoding(format!(
-                        "Failed to decode the result of calling a contract: {err:?}",
-                    ))
-                })
+                self.record.push_call_return(exec_result.data.clone());
+                self.record.last_call_return_decoded::<T>()
             }
             Err(err) => Err(SessionError::CallFailed(*err)),
         };
 
-        self.call_results.push(result);
+        self.record.push_call_result(result);
         ret
-    }
-
-    /// Returns the last result of deploying a contract.
-    pub fn last_deploy_result(
-        &self,
-    ) -> Option<&ContractInstantiateResult<AccountIdFor<R>, BalanceOf<R>, EventRecordOf<R>>> {
-        self.deploy_results.last()
-    }
-
-    /// Returns the address of the last deployed contract.
-    pub fn last_deploy_return(&self) -> Option<AccountIdFor<R>> {
-        self.deploy_returns.last().cloned()
-    }
-
-    /// Returns the addresses of all deployed contracts in the order of deploying.
-    pub fn deployed_contracts(&self) -> Vec<AccountIdFor<R>> {
-        self.deploy_returns.clone()
-    }
-
-    /// Returns the last result of calling a contract.
-    pub fn last_call_result(&self) -> Option<&ContractExecResult<BalanceOf<R>, EventRecordOf<R>>> {
-        self.call_results.last()
-    }
-
-    /// Returns the last value (in the encoded form) returned from calling a contract.
-    ///
-    /// Returns `None` if there has been no call yet.
-    pub fn last_call_raw_return(&self) -> Option<Vec<u8>> {
-        self.call_returns.last().cloned()
-    }
-
-    /// Returns the last value (in the decoded form) returned from calling a contract.
-    ///
-    /// Returns `None` if there has been no call yet, or if decoding failed.
-    pub fn last_call_return<T: Decode>(&self) -> Option<MessageResult<T>> {
-        let raw = self.last_call_raw_return()?;
-        MessageResult::decode(&mut raw.as_slice()).ok()
     }
 
     /// Set the tracing extension
