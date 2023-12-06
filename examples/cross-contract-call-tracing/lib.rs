@@ -53,8 +53,8 @@ mod contract {
         #[ink(message)]
         pub fn inner_call(&self, arg: u32) -> u32 {
             match arg % 2 {
-                0 => arg / 2,
-                _ => 3 * arg + 1,
+                0 => arg.checked_div(2).unwrap(),
+                _ => 3_u32.saturating_mul(arg).saturating_add(1),
             }
         }
     }
@@ -117,7 +117,7 @@ mod tests {
                 };
 
                 transcoder
-                    .decode_return(call_name, &mut result.as_slice())
+                    .decode_message_return(call_name, &mut result.as_slice())
                     .unwrap()
             } else {
                 Value::Unit
