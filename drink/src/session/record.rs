@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use contract_transcode::{ContractMessageTranscoder, Value};
-use parity_scale_codec::{Decode, Encode};
+use parity_scale_codec::Decode;
 
 use crate::{
     errors::MessageResult,
@@ -185,6 +185,9 @@ impl<R: frame_system::Config> EventBatch<R> {
 impl EventBatch<MinimalRuntime> {
     /// Returns all the contract events that were emitted during the contract interaction.
     ///
+    /// **WARNING**: This method will return all the events that were emitted by ANY contract. If your
+    /// call triggered multiple contracts, you will have to filter the events yourself.
+    ///
     /// We have to match against static enum variant, and thus (at least for now) we support only
     /// `MinimalRuntime`.
     pub fn contract_events(&self) -> Vec<&[u8]> {
@@ -200,16 +203,41 @@ impl EventBatch<MinimalRuntime> {
     }
 
     /// The same as `contract_events`, but decodes the events using the given transcoder.
+    ///
+    /// **WARNING**: This method will try to decode all the events that were emitted by ANY
+    /// contract. This means that some contract events might either fail to decode or be decoded
+    /// incorrectly (to some rubbish). In the former case, they will be skipped, but with the latter
+    /// case, you will have to filter the events yourself.
+    ///
+    /// **WARNING 2**: This method will ignore anonymous events.
     pub fn contract_events_decoded(
         &self,
         transcoder: &Rc<ContractMessageTranscoder>,
     ) -> Vec<Value> {
+        let signature_topics = transcoder
+            .metadata()
+            .spec()
+            .events()
+            .iter()
+            .filter_map(|event| event.signature_topic())
+            .map(|sig| sig.as_bytes().try_into().unwrap())
+            .collect::<Vec<[u8; 32]>>();
+
+        println!("signature_topics: {:?}", signature_topics);
+
         self.contract_events()
             .into_iter()
-            .map(|data| {
-                transcoder
-                    .decode_contract_event(&mut data.encode().as_slice())
-                    .expect("Failed to decode contract event")
+            .filter_map(|mut data| {
+                println!("data: {:?}", data);
+                for signature_topic in &signature_topics {
+                    match transcoder.decode_contract_event(&signature_topic.into(), &mut data) {
+                        Ok(decoded) => return Some(decoded),
+                        Err(err) => {
+                            println!("err: {:?}", err);
+                        }
+                    }
+                }
+                None
             })
             .collect()
     }
