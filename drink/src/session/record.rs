@@ -223,18 +223,14 @@ impl EventBatch<MinimalRuntime> {
             .map(|sig| sig.as_bytes().try_into().unwrap())
             .collect::<Vec<[u8; 32]>>();
 
-        println!("signature_topics: {:?}", signature_topics);
-
         self.contract_events()
             .into_iter()
             .filter_map(|mut data| {
-                println!("data: {:?}", data);
                 for signature_topic in &signature_topics {
-                    match transcoder.decode_contract_event(&signature_topic.into(), &mut data) {
-                        Ok(decoded) => return Some(decoded),
-                        Err(err) => {
-                            println!("err: {:?}", err);
-                        }
+                    if let Ok(decoded) =
+                        transcoder.decode_contract_event(&signature_topic.into(), &mut data)
+                    {
+                        return Some(decoded);
                     }
                 }
                 None
