@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use contract_transcode::{ContractMessageTranscoder, Value};
-use parity_scale_codec::Decode;
+use parity_scale_codec::{Decode, Encode};
 
 use crate::{
     errors::MessageResult,
@@ -225,10 +225,13 @@ impl EventBatch<MinimalRuntime> {
 
         self.contract_events()
             .into_iter()
-            .filter_map(|mut data| {
+            .filter_map(|data| {
                 for signature_topic in &signature_topics {
-                    if let Ok(decoded) =
-                        transcoder.decode_contract_event(&signature_topic.into(), &mut data)
+                    if let Ok(decoded) = transcoder
+                        // We have to `encode` the data because `decode_contract_event` is targeted
+                        // at decoding the data from the runtime, and not directly from the contract
+                        // events.
+                        .decode_contract_event(&signature_topic.into(), &mut &*data.encode())
                     {
                         return Some(decoded);
                     }
