@@ -93,7 +93,7 @@ pub fn deploy(app_state: &mut AppState, constructor: String, args: Vec<String>, 
         Err(err) => app_state.print_error(&format!("Failed to deploy contract\n{err}")),
     }
 
-    if let Some(info) = app_state.session.last_deploy_result() {
+    if let Some(info) = app_state.session.record().deploy_results().last() {
         app_state.print(&format_contract_action(info));
     }
 }
@@ -113,7 +113,7 @@ pub fn call(app_state: &mut AppState, message: String, args: Vec<String>) {
         Err(err) => app_state.print_error(&format!("Failed to call contract\n{err}")),
     };
 
-    if let Some(info) = app_state.session.last_call_result() {
+    if let Some(info) = app_state.session.record().call_results().last() {
         app_state.print(&format_contract_action(info))
     }
 }

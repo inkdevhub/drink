@@ -67,8 +67,8 @@ mod tests {
         let result: (u8, u8) = session
             .deploy_bundle_and(BundleProvider::local()?, "new", NO_ARGS, NO_SALT, None)?
             .call_and("forward_call", &[mock_address.to_string()], NO_ENDOWMENT)?
-            .last_call_return()
-            .expect("Call was successful, so there should be a return")
+            .record()
+            .last_call_return_decoded()?
             .expect("Call was successful");
         assert_eq!(result, RETURN_VALUE);
 

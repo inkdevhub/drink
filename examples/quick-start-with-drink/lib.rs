@@ -134,16 +134,13 @@ mod tests {
         )?;
 
         // `deploy_bundle` returns just a contract address. If we are interested in more details
-        // about last operation (either deploy or call), we can use the `last_deploy_result`
-        // (or analogously `last_call_result`) method, which will provide us with a full report
-        // from the last contract interaction.
+        // about last operation (either deploy or call), we can get a `Record` object and use its
+        // `last_deploy_result` (or analogously `last_call_result`) method, which will provide us
+        // with a full report from the last contract interaction.
         //
         // In particular, we can get the decoded debug buffer from the contract. The buffer is
         // just a vector of bytes, which we can decode using the `decode_debug_buffer` function.
-        let decoded_buffer = &session
-            .last_deploy_result()
-            .expect("The deployment succeeded, so there should be a result available")
-            .debug_message;
+        let decoded_buffer = &session.record().last_deploy_result().debug_message;
         let encoded_buffer = decode_debug_buffer(decoded_buffer);
 
         assert_eq!(encoded_buffer, vec!["Initializing contract with: `true`"]);
