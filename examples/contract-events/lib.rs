@@ -43,9 +43,7 @@ mod tests {
     enum BundleProvider {}
 
     #[drink::test]
-    fn we_can_inspect_emitted_events(
-        mut session: Session<MinimalRuntime>,
-    ) -> Result<(), Box<dyn Error>> {
+    fn we_can_inspect_emitted_events(mut session: Session) -> Result<(), Box<dyn Error>> {
         let bundle = BundleProvider::local()?;
 
         // Firstly, we deploy the contract and call its `flip` method.

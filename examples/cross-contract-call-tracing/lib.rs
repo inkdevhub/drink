@@ -128,7 +128,7 @@ mod tests {
     }
 
     #[drink::test]
-    fn test(mut session: Session<MinimalRuntime>) -> Result<(), Box<dyn Error>> {
+    fn test(mut session: Session) -> Result<(), Box<dyn Error>> {
         session.set_tracing_extension(TracingExt(Box::new(TestDebugger {})));
 
         let outer_address = session.deploy_bundle(

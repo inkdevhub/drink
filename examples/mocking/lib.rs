@@ -51,7 +51,7 @@ mod tests {
     enum BundleProvider {}
 
     #[drink::test]
-    fn call_mocked_message(mut session: Session<MinimalRuntime>) -> Result<(), Box<dyn Error>> {
+    fn call_mocked_message(mut session: Session) -> Result<(), Box<dyn Error>> {
         // Firstly, we create the mocked contract.
         const RETURN_VALUE: (u8, u8) = (4, 1);
         let mocked_contract =

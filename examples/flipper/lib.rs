@@ -40,7 +40,7 @@ mod tests {
     enum BundleProvider {}
 
     #[drink::test]
-    fn initialization(mut session: Session<MinimalRuntime>) -> Result<(), Box<dyn Error>> {
+    fn initialization(mut session: Session) -> Result<(), Box<dyn Error>> {
         let contract = BundleProvider::local()?;
         let init_value: bool = session
             .deploy_bundle_and(contract, "new", &["true"], NO_SALT, NO_ENDOWMENT)?
@@ -55,7 +55,7 @@ mod tests {
     }
 
     #[drink::test]
-    fn flipping(mut session: Session<MinimalRuntime>) -> Result<(), Box<dyn Error>> {
+    fn flipping(mut session: Session) -> Result<(), Box<dyn Error>> {
         let contract = BundleProvider::Flipper.bundle()?;
         let init_value: bool = session
             .deploy_bundle_and(contract, "new", &["true"], NO_SALT, NO_ENDOWMENT)?
