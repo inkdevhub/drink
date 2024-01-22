@@ -41,7 +41,6 @@ mod tests {
 
     use drink::{
         mock_message,
-        runtime::MinimalRuntime,
         session::{mocking_api::MockingApi, Session, NO_ARGS, NO_ENDOWMENT, NO_SALT},
         ContractMock,
     };
@@ -52,9 +51,7 @@ mod tests {
     enum BundleProvider {}
 
     #[drink::test]
-    fn call_mocked_message() -> Result<(), Box<dyn Error>> {
-        let mut session = Session::<MinimalRuntime>::new()?;
-
+    fn call_mocked_message(mut session: Session<MinimalRuntime>) -> Result<(), Box<dyn Error>> {
         // Firstly, we create the mocked contract.
         const RETURN_VALUE: (u8, u8) = (4, 1);
         let mocked_contract =

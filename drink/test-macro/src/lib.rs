@@ -73,7 +73,6 @@ fn test_internal(_attr: TokenStream2, item: TokenStream2) -> SynResult<TokenStre
     let fn_name = item_fn.sig.ident;
     let fn_async = item_fn.sig.asyncness;
     let fn_generics = item_fn.sig.generics;
-    let fn_inputs = item_fn.sig.inputs;
     let fn_output = item_fn.sig.output;
     let fn_const = item_fn.sig.constness;
     let fn_unsafety = item_fn.sig.unsafety;
@@ -81,7 +80,7 @@ fn test_internal(_attr: TokenStream2, item: TokenStream2) -> SynResult<TokenStre
     Ok(quote! {
         #[test]
         #(#fn_attrs)*
-        #fn_vis #fn_async #fn_const #fn_unsafety fn #fn_name #fn_generics (#fn_inputs) #fn_output {
+        #fn_vis #fn_async #fn_const #fn_unsafety fn #fn_name #fn_generics () #fn_output {
             let mut session = Session::<::drink::runtime::MinimalRuntime>::new().expect("Failed to create a session");
             #fn_block
         }

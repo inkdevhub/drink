@@ -65,10 +65,7 @@ mod tests {
     use std::{cell::RefCell, error::Error};
 
     use drink::{
-        runtime::{
-            pallet_contracts_debugging::{TracingExt, TracingExtT},
-            MinimalRuntime,
-        },
+        runtime::pallet_contracts_debugging::{TracingExt, TracingExtT},
         session::{contract_transcode::Value, Session, NO_ARGS, NO_ENDOWMENT},
         AccountId32,
     };
@@ -131,8 +128,7 @@ mod tests {
     }
 
     #[drink::test]
-    fn test() -> Result<(), Box<dyn Error>> {
-        let mut session = Session::<MinimalRuntime>::new()?;
+    fn test(mut session: Session<MinimalRuntime>) -> Result<(), Box<dyn Error>> {
         session.set_tracing_extension(TracingExt(Box::new(TestDebugger {})));
 
         let outer_address = session.deploy_bundle(
