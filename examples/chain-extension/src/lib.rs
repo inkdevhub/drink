@@ -51,7 +51,7 @@ mod tests {
     );
 
     /// Test that we can call chain extension from ink! contract and get a correct result.
-    #[drink::test]
+    #[drink::test(runtime = RuntimeWithCE)]
     fn we_can_test_chain_extension(
         mut session: Session<RuntimeWithCE>,
     ) -> Result<(), Box<dyn std::error::Error>> {

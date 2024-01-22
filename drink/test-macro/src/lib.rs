@@ -5,6 +5,7 @@
 mod bundle_provision;
 mod contract_building;
 
+use darling::{ast::NestedMeta, FromMeta};
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
@@ -62,9 +63,16 @@ pub fn test(attr: TokenStream, item: TokenStream) -> TokenStream {
     }
 }
 
+#[derive(FromMeta)]
+struct TestAttributes {
+    runtime: Option<syn::Path>,
+}
+
 /// Auxiliary function to enter ?-based error propagation.
-fn test_internal(_attr: TokenStream2, item: TokenStream2) -> SynResult<TokenStream2> {
+fn test_internal(attr: TokenStream2, item: TokenStream2) -> SynResult<TokenStream2> {
     let item_fn = syn::parse2::<ItemFn>(item)?;
+    let macro_args = TestAttributes::from_list(&NestedMeta::parse_meta_list(attr.into())?)?;
+
     build_contracts();
 
     let fn_vis = item_fn.vis;
@@ -77,11 +85,15 @@ fn test_internal(_attr: TokenStream2, item: TokenStream2) -> SynResult<TokenStre
     let fn_const = item_fn.sig.constness;
     let fn_unsafety = item_fn.sig.unsafety;
 
+    let runtime = macro_args
+        .runtime
+        .unwrap_or(syn::parse2(quote! { ::drink::runtime::MinimalRuntime })?);
+
     Ok(quote! {
         #[test]
         #(#fn_attrs)*
         #fn_vis #fn_async #fn_const #fn_unsafety fn #fn_name #fn_generics () #fn_output {
-            let mut session = Session::<::drink::runtime::MinimalRuntime>::new().expect("Failed to create a session");
+            let mut session = Session::<#runtime>::new().expect("Failed to create a session");
             #fn_block
         }
     })

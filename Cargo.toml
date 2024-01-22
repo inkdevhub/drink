@@ -29,6 +29,7 @@ contract-metadata = { version = "4.0.0-rc.1" }
 contract-transcode = { version = "4.0.0-rc.1" }
 convert_case = { version = "0.6.0" }
 crossterm = { version = "0.26.0" }
+darling = { version = "0.20.3" }
 parity-scale-codec = { version = "3.4" }
 parity-scale-codec-derive = { version = "3.4" }
 proc-macro2 = { version = "1" }
