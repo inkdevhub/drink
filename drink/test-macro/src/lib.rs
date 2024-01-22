@@ -5,6 +5,7 @@
 mod bundle_provision;
 mod contract_building;
 
+use darling::{ast::NestedMeta, FromMeta};
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
@@ -18,6 +19,7 @@ type SynResult<T> = Result<T, syn::Error>;
 ///
 /// # Requirements
 ///
+/// - Your crate must have `drink` in its dependencies (and it shouldn't be renamed).
 /// - You mustn't import `drink::test` in the scope, where the macro is used. In other words, you
 /// should always use the macro only with a qualified path `#[drink::test]`.
 /// - Your crate cannot be part of a cargo workspace.
@@ -34,14 +36,22 @@ type SynResult<T> = Result<T, syn::Error>;
 ///
 /// Note: Depending on a non-local contract is not tested yet.
 ///
+/// # Creating a session object
+///
+/// The macro will also create a new mutable session object and pass it to the decorated function by value. You can
+/// configure which runtime should be used (by specifying a path to a type implementing
+/// `drink::runtime::RuntimeWithContracts` trait. Thus, your testcase function should accept a single argument:
+/// `mut session: Session<_>`.
+///
+/// By default, the macro will use `drink::runtime::MinimalRuntime`.
+///
 /// # Example
 ///
 /// ```rust, ignore
 /// #[drink::test]
-/// fn testcase() {
-///     Session::<MinimalRuntime>::new()
-///         .unwrap()
-///         .deploy(bytes(), "new", NO_ARGS, NO_SALT, NO_ENDOWMENT, &transcoder())
+/// fn testcase(mut session: Session<MinimalRuntime>) {
+///     session
+///         .deploy_bundle(&get_bundle(), "new", NO_ARGS, NO_SALT, NO_ENDOWMENT)
 ///         .unwrap();
 /// }
 /// ```
@@ -53,14 +63,39 @@ pub fn test(attr: TokenStream, item: TokenStream) -> TokenStream {
     }
 }
 
+#[derive(FromMeta)]
+struct TestAttributes {
+    runtime: Option<syn::Path>,
+}
+
 /// Auxiliary function to enter ?-based error propagation.
-fn test_internal(_attr: TokenStream2, item: TokenStream2) -> SynResult<TokenStream2> {
+fn test_internal(attr: TokenStream2, item: TokenStream2) -> SynResult<TokenStream2> {
     let item_fn = syn::parse2::<ItemFn>(item)?;
+    let macro_args = TestAttributes::from_list(&NestedMeta::parse_meta_list(attr)?)?;
+
     build_contracts();
+
+    let fn_vis = item_fn.vis;
+    let fn_attrs = item_fn.attrs;
+    let fn_block = item_fn.block;
+    let fn_name = item_fn.sig.ident;
+    let fn_async = item_fn.sig.asyncness;
+    let fn_generics = item_fn.sig.generics;
+    let fn_output = item_fn.sig.output;
+    let fn_const = item_fn.sig.constness;
+    let fn_unsafety = item_fn.sig.unsafety;
+
+    let runtime = macro_args
+        .runtime
+        .unwrap_or(syn::parse2(quote! { ::drink::runtime::MinimalRuntime })?);
 
     Ok(quote! {
         #[test]
-        #item_fn
+        #(#fn_attrs)*
+        #fn_vis #fn_async #fn_const #fn_unsafety fn #fn_name #fn_generics () #fn_output {
+            let mut session = Session::<#runtime>::new().expect("Failed to create a session");
+            #fn_block
+        }
     })
 }
 

@@ -981,8 +981,18 @@ version = "0.14.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7b750cb3417fd1b327431a470f388520309479ab0bf5e323505daf0290cd3850"
 dependencies = [
- "darling_core",
- "darling_macro",
+ "darling_core 0.14.4",
+ "darling_macro 0.14.4",
+]
+
+[[package]]
+name = "darling"
+version = "0.20.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0209d94da627ab5605dcccf08bb18afa5009cfbef48d8a8b7d7bdbc79be25c5e"
+dependencies = [
+ "darling_core 0.20.3",
+ "darling_macro 0.20.3",
 ]
 
 [[package]]
@@ -1000,14 +1010,39 @@ dependencies = [
 ]
 
 [[package]]
+name = "darling_core"
+version = "0.20.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "177e3443818124b357d8e76f53be906d60937f0d3a90773a664fa63fa253e621"
+dependencies = [
+ "fnv",
+ "ident_case",
+ "proc-macro2",
+ "quote",
+ "strsim",
+ "syn 2.0.32",
+]
+
+[[package]]
 name = "darling_macro"
 version = "0.14.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a4aab4dbc9f7611d8b55048a3a16d2d010c2c8334e46304b40ac1cc14bf3b48e"
 dependencies = [
- "darling_core",
+ "darling_core 0.14.4",
  "quote",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "darling_macro"
+version = "0.20.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "836a9bbc7ad63342d6d6e7b815ccab164bc77a2d95d84bc3117a8c0d5c98e2d5"
+dependencies = [
+ "darling_core 0.20.3",
+ "quote",
+ "syn 2.0.32",
 ]
 
 [[package]]
@@ -1107,7 +1142,7 @@ checksum = "9ea835d29036a4087793836fa931b08837ad5e957da9e23886b29586fb9b6650"
 
 [[package]]
 name = "drink"
-version = "0.8.5"
+version = "0.8.6"
 dependencies = [
  "contract-metadata",
  "contract-transcode",
@@ -1132,7 +1167,7 @@ dependencies = [
 
 [[package]]
 name = "drink-cli"
-version = "0.8.5"
+version = "0.8.6"
 dependencies = [
  "anyhow",
  "clap",
@@ -1148,12 +1183,13 @@ dependencies = [
 
 [[package]]
 name = "drink-test-macro"
-version = "0.8.5"
+version = "0.8.6"
 dependencies = [
  "cargo_metadata",
  "contract-build",
  "contract-metadata",
  "convert_case",
+ "darling 0.20.3",
  "proc-macro2",
  "quote",
  "syn 2.0.32",
@@ -3339,7 +3375,7 @@ version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "27873eb6005868f8cc72dcfe109fae664cf51223d35387bc2f28be4c28d94c47"
 dependencies = [
- "darling",
+ "darling 0.14.4",
  "proc-macro-crate 1.3.1",
  "proc-macro2",
  "quote",
@@ -3365,7 +3401,7 @@ version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "995491f110efdc6bea96d6a746140e32bfceb4ea47510750a5467295a4707a25"
 dependencies = [
- "darling",
+ "darling 0.14.4",
  "proc-macro-crate 1.3.1",
  "proc-macro2",
  "quote",

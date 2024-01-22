@@ -44,7 +44,6 @@ mod flipper {
 mod tests {
     use drink::{
         contract_api::decode_debug_buffer,
-        runtime::MinimalRuntime,
         session::{Session, NO_ARGS, NO_ENDOWMENT, NO_SALT},
     };
 
@@ -70,15 +69,12 @@ mod tests {
     /// have to run `cargo contract build` manually for every contract dependency.
     ///
     /// For convenience of using `?` operator, we mark the test function as returning a `Result`.
+    ///
+    /// `drink::test` will already provide us with a `Session` object. It is a wrapper around a runtime and it exposes
+    /// a broad API for interacting with it. Session is generic over the runtime type, but usually and by default, we
+    /// use `MinimalRuntime`, which is a minimalistic runtime that allows using smart contracts.
     #[drink::test]
-    fn deploy_and_call_a_contract() -> Result<(), Box<dyn std::error::Error>> {
-        // Firstly, we create a `Session` object. It is a wrapper around a runtime and it exposes a
-        // broad API for interacting with it.
-        //
-        // It is generic over the runtime type, but usually, it is sufficient to use
-        // `MinimalRuntime`, which is a minimalistic runtime that allows using smart contracts.
-        let mut session = Session::<MinimalRuntime>::new()?;
-
+    fn deploy_and_call_a_contract(mut session: Session) -> Result<(), Box<dyn std::error::Error>> {
         // Now we get the contract bundle from the `BundleProvider` enum. Since the current crate
         // comes with a contract, we can use the `local` method to get the bundle for it.
         let contract_bundle = BundleProvider::local()?;
@@ -122,9 +118,7 @@ mod tests {
 
     /// In this testcase we will see how to get and read debug logs from the contract.
     #[drink::test]
-    fn get_debug_logs() -> Result<(), Box<dyn std::error::Error>> {
-        // We create a session object as usual and deploy the contract bundle.
-        let mut session = Session::<MinimalRuntime>::new()?;
+    fn get_debug_logs(mut session: Session) -> Result<(), Box<dyn std::error::Error>> {
         session.deploy_bundle(
             BundleProvider::local()?,
             "new",
@@ -150,8 +144,9 @@ mod tests {
 
     /// In this testcase we will see how to work with multiple contracts.
     #[drink::test]
-    fn work_with_multiple_contracts() -> Result<(), Box<dyn std::error::Error>> {
-        let mut session = Session::<MinimalRuntime>::new()?;
+    fn work_with_multiple_contracts(
+        mut session: Session,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let bundle = BundleProvider::local()?;
 
         // We can deploy the same contract multiple times. However, we have to ensure that the

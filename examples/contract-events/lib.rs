@@ -37,20 +37,16 @@ mod flipper {
 mod tests {
     use std::error::Error;
 
-    use drink::{
-        runtime::MinimalRuntime,
-        session::{Session, NO_ARGS, NO_ENDOWMENT},
-    };
+    use drink::session::{Session, NO_ARGS, NO_ENDOWMENT};
 
     #[drink::contract_bundle_provider]
     enum BundleProvider {}
 
     #[drink::test]
-    fn we_can_inspect_emitted_events() -> Result<(), Box<dyn Error>> {
+    fn we_can_inspect_emitted_events(mut session: Session) -> Result<(), Box<dyn Error>> {
         let bundle = BundleProvider::local()?;
 
         // Firstly, we deploy the contract and call its `flip` method.
-        let mut session = Session::<MinimalRuntime>::new()?;
         session.deploy_bundle(bundle.clone(), "new", &["false"], vec![], NO_ENDOWMENT)?;
         session.call("flip", NO_ARGS, NO_ENDOWMENT)??;
 

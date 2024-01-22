@@ -51,9 +51,9 @@ mod tests {
     );
 
     /// Test that we can call chain extension from ink! contract and get a correct result.
-    #[drink::test]
-    fn we_can_test_chain_extension() -> Result<(), Box<dyn std::error::Error>> {
-        let result: u32 = Session::<RuntimeWithCE>::new()?
+    #[drink::test(runtime = RuntimeWithCE)]
+    fn we_can_test_chain_extension(mut session: Session) -> Result<(), Box<dyn std::error::Error>> {
+        let result: u32 = session
             .deploy_bundle_and(
                 BundleProvider::local()?,
                 "new",
