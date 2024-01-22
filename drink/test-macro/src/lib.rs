@@ -71,7 +71,7 @@ struct TestAttributes {
 /// Auxiliary function to enter ?-based error propagation.
 fn test_internal(attr: TokenStream2, item: TokenStream2) -> SynResult<TokenStream2> {
     let item_fn = syn::parse2::<ItemFn>(item)?;
-    let macro_args = TestAttributes::from_list(&NestedMeta::parse_meta_list(attr.into())?)?;
+    let macro_args = TestAttributes::from_list(&NestedMeta::parse_meta_list(attr)?)?;
 
     build_contracts();
 
