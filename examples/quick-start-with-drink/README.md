@@ -44,17 +44,19 @@ Your typical test module will look like:
 ```rust
 #[cfg(test)]
 mod tests {
+    use drink::session::{Session, NO_ARGS, NO_ENDOWMENT, NO_SALT};
+    
     #[drink::contract_bundle_provider]
     enum BundleProvider {}
 
     #[drink::test]
-    fn deploy_and_call_a_contract() -> Result<(), Box<dyn Error>> {
-        let result: bool = Session::<MinimalRuntime>::new()?
-            .deploy_bundle_and(BundleProvider::local(), "new", &["true"], vec![], None)?
-            .call_and("flip", NO_ARGS, None)?
-            .call_and("flip", NO_ARGS, None)?
-            .call_and("flip", NO_ARGS, None)?
-            .call("get", NO_ARGS, None)??;
+    fn deploy_and_call_a_contract(mut session: Session) -> Result<(), Box<dyn Error>> {
+        let result: bool = session
+            .deploy_bundle_and(BundleProvider::local(), "new", &["true"], NO_SALT, NO_ENDOWMENT)?
+            .call_and("flip", NO_ARGS, NO_ENDOWMENT)?
+            .call_and("flip", NO_ARGS, NO_ENDOWMENT)?
+            .call_and("flip", NO_ARGS, NO_ENDOWMENT)?
+            .call("get", NO_ARGS, NO_ENDOWMENT)??;
         assert_eq!(result, false);
     }
 }
