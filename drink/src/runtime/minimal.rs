@@ -200,10 +200,7 @@ mod construct_runtime {
 }
 
 // ------------ Export runtime type itself, pallets and useful types from the auxiliary module -----
-pub use construct_runtime::{
-    $name, Balances, Contracts, PalletInfo, RuntimeCall, RuntimeEvent, RuntimeHoldReason,
-    RuntimeOrigin, System, Timestamp, INITIAL_BALANCE,
-};
+pub use construct_runtime::*;
     };
 }
 
