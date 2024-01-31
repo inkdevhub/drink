@@ -19,9 +19,10 @@ scale-info = { version = "2.6", default-features = false, features = ["derive"],
 drink = { path = "../../drink" }
 
 # If you are creating a custom runtime with `drink::create_minimal_runtime!` macro, unfortunately you need to
-# include these two dependencies manually. Versions should match the ones in `Cargo.toml` of the `drink` crate.
-frame-support = "23.0.0"
-frame-system = "23.0.0"
+# include these dependencies manually. Versions should match the ones in `Cargo.toml` of the `drink` crate.
+frame-support = "28.0.0"
+frame-system = "28.0.0"
+pallet-balances = "28.0.0"
 
 [features]
 default = ["std"]

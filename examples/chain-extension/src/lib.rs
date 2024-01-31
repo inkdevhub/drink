@@ -20,6 +20,7 @@ mod contract_calling_chain_extension {
     pub struct ContractCallingChainExtension {}
 
     impl ContractCallingChainExtension {
+        #[allow(clippy::new_without_default)]
         #[ink(constructor)]
         pub fn new() -> Self {
             Self {}
