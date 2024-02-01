@@ -144,14 +144,14 @@ create_minimal_runtime!(MinimalRuntime);
 use std::time::SystemTime;
 
 use frame_support::{
-    sp_runtime::{BuildStorage, Storage},
+    sp_runtime::{traits::Header, BuildStorage, Storage},
     traits::Hooks,
 };
 
-use crate::runtime::{AccountIdFor, Runtime};
-use crate::AccountId32;
-use frame_support::sp_runtime::traits::Header; 
-
+use crate::{
+    runtime::{AccountIdFor, Runtime},
+    AccountId32,
+};
 
 /// Default initial balance for the default account.
 pub const INITIAL_BALANCE: u128 = 1_000_000_000_000_000;
@@ -161,12 +161,12 @@ type BalancesOf<T> = pallet_balances::Pallet<T>;
 type TimestampOf<T> = pallet_timestamp::Pallet<T>;
 type ContractsOf<T> = pallet_contracts::Pallet<T>;
 
-impl<T> Runtime for T 
+impl<T> Runtime for T
 where
-T:  pallet_balances::Config + pallet_timestamp::Config + pallet_contracts::Config,
-<T as frame_system::Config>::AccountId: From<AccountId32>,
-<T as pallet_balances::Config>::Balance: From<u128>,
-<T as pallet_timestamp::Config>::Moment: From<u64>,
+    T: pallet_balances::Config + pallet_timestamp::Config + pallet_contracts::Config,
+    <T as frame_system::Config>::AccountId: From<AccountId32>,
+    <T as pallet_balances::Config>::Balance: From<u128>,
+    <T as pallet_timestamp::Config>::Moment: From<u64>,
 {
     fn initialize_storage(storage: &mut Storage) -> Result<(), String> {
         pallet_balances::GenesisConfig::<Self> {
@@ -187,7 +187,7 @@ T:  pallet_balances::Config + pallet_timestamp::Config + pallet_contracts::Confi
                 .duration_since(SystemTime::UNIX_EPOCH)
                 .expect("Time went backwards")
                 .as_secs()
-                .into()
+                .into(),
         );
         TimestampOf::<T>::on_initialize(height);
         ContractsOf::<T>::on_initialize(height);
