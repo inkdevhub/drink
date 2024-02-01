@@ -23,8 +23,8 @@ mod tests {
         let initial_balance = sandbox.free_balance(&BOB);
 
         // Prepare a call object, a counterpart of a blockchain transaction.
-        let call_object = RuntimeCall::Balances(pallet_balances::Call::transfer {
-            dest: BOB,
+        let call_object = RuntimeCall::Balances(pallet_balances::Call::transfer_allow_death {
+            dest: BOB.into(),
             value: 100,
         });
 

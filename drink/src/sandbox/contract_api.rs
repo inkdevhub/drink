@@ -3,9 +3,9 @@ use std::ops::Not;
 
 use frame_support::{traits::fungible::Inspect, weights::Weight};
 use frame_system::Config;
-use pallet_contracts::{CollectEvents, DebugInfo, Determinism};
-use pallet_contracts_primitives::{
-    Code, CodeUploadResult, ContractExecResult, ContractInstantiateResult,
+use pallet_contracts::{
+    Code, CodeUploadResult, CollectEvents, ContractExecResult, ContractInstantiateResult,
+    DebugInfo, Determinism,
 };
 use parity_scale_codec::Decode as _;
 

@@ -10,13 +10,9 @@ use crate::{
     EventRecordOf, Sandbox,
 };
 
-type ContractInstantiateResult<R> = pallet_contracts_primitives::ContractInstantiateResult<
-    AccountIdFor<R>,
-    BalanceOf<R>,
-    EventRecordOf<R>,
->;
-type ContractExecResult<R> =
-    pallet_contracts_primitives::ContractExecResult<BalanceOf<R>, EventRecordOf<R>>;
+type ContractInstantiateResult<R> =
+    pallet_contracts::ContractInstantiateResult<AccountIdFor<R>, BalanceOf<R>, EventRecordOf<R>>;
+type ContractExecResult<R> = pallet_contracts::ContractExecResult<BalanceOf<R>, EventRecordOf<R>>;
 
 /// Data structure storing the results of contract interaction during a session.
 ///

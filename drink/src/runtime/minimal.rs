@@ -17,10 +17,11 @@ mod construct_runtime {
     // ------------ Bring some common types into the scope -----------------------------------------
     use $crate::frame_support::{
         construct_runtime,
+        derive_impl,
         parameter_types,
         sp_runtime::{
             testing::H256,
-            traits::{BlakeTwo256, Convert, IdentityLookup},
+            traits::Convert,
             AccountId32, Perbill,
         },
         traits::{ConstBool, ConstU128, ConstU32, ConstU64, Currency, Randomness},
@@ -39,30 +40,12 @@ mod construct_runtime {
     );
 
     // ------------ Configure pallet system --------------------------------------------------------
+    #[derive_impl($crate::frame_system::config_preludes::SolochainDefaultConfig as $crate::frame_system::DefaultConfig)]
     impl $crate::frame_system::Config for $name {
-        type BaseCallFilter = $crate::frame_support::traits::Everything;
-        type BlockWeights = ();
-        type BlockLength = ();
         type Block = $crate::frame_system::mocking::MockBlockU32<$name>;
-        type RuntimeOrigin = RuntimeOrigin;
-        type RuntimeCall = RuntimeCall;
-        type Nonce = u64;
-        type Hash = H256;
-        type Hashing = BlakeTwo256;
-        type AccountId = AccountId32;
-        type Lookup = IdentityLookup<Self::AccountId>;
-        type RuntimeEvent = RuntimeEvent;
-        type BlockHashCount = ConstU32<250>;
-        type DbWeight = ();
         type Version = ();
-        type PalletInfo = PalletInfo;
-        type AccountData = $crate::pallet_balances::AccountData<u128>;
-        type OnNewAccount = ();
-        type OnKilledAccount = ();
-        type SystemWeightInfo = ();
-        type SS58Prefix = ();
-        type OnSetCode = ();
-        type MaxConsumers = ConstU32<16>;
+        type BlockHashCount = ConstU32<250>;
+        type AccountData = $crate::pallet_balances::AccountData<<$name as pallet_balances::Config>::Balance>;
     }
 
     // ------------ Configure pallet balances ------------------------------------------------------
@@ -80,6 +63,7 @@ mod construct_runtime {
         type MaxHolds = ConstU32<1>;
         type MaxFreezes = ();
         type RuntimeHoldReason = RuntimeHoldReason;
+        type RuntimeFreezeReason = RuntimeFreezeReason;
     }
 
     // ------------ Configure pallet timestamp -----------------------------------------------------
@@ -141,6 +125,7 @@ mod construct_runtime {
         type MaxDelegateDependencies = MaxDelegateDependencies;
         type RuntimeHoldReason = RuntimeHoldReason;
         type Environment = ();
+        type Xcm = ();
     }
 
 // ------------ Implement `drink::Runtime` trait ---------------------------------------------------
@@ -209,7 +194,7 @@ mod construct_runtime {
         fn convert_account_to_origin(
             account: AccountIdFor<Self>,
         ) -> <<Self as $crate::frame_system::Config>::RuntimeCall as Dispatchable>::RuntimeOrigin {
-            Some(account).into()
+             Some(account).into()
         }
     }
 }
