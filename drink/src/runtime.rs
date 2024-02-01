@@ -5,7 +5,7 @@ pub mod minimal;
 pub mod pallet_contracts_debugging;
 
 pub use frame_metadata::RuntimeMetadataPrefixed;
-use frame_support::sp_runtime::{traits::Dispatchable, Storage};
+use frame_support::sp_runtime::Storage;
 use frame_system::pallet_prelude::BlockNumberFor;
 pub use minimal::MinimalRuntime;
 
@@ -39,14 +39,6 @@ pub trait Runtime: frame_system::Config {
 
     /// Default actor for the runtime.
     fn default_actor() -> AccountIdFor<Self>;
-
-    /// Metadata of the runtime.
-    fn get_metadata() -> RuntimeMetadataPrefixed;
-
-    /// Convert an account to an call origin.
-    fn convert_account_to_origin(
-        account: AccountIdFor<Self>,
-    ) -> <<Self as frame_system::Config>::RuntimeCall as Dispatchable>::RuntimeOrigin;
 }
 
 /// Convenient umbrella trait for `Runtime + pallet_contracts::Config`
