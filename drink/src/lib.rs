@@ -2,7 +2,6 @@
 //! a running node.
 
 #![warn(missing_docs)]
-#![recursion_limit = "1024"]
 
 mod bundle;
 pub mod errors;
