@@ -72,7 +72,7 @@ mod tests {
         Ok(())
     }
 
-    #[drink::test(runtime = pallet_contract_mock_network::parachain::Runtime)]
+    #[drink::test(runtime = pallet_contracts_mock_network::parachain::Runtime)]
     fn test_flipping_with_custom_runtime(mut session: Session) -> Result<(), Box<dyn std::error::Error>> {
         let contract = BundleProvider::Flipper.bundle()?;
         let init_value: bool = session
