@@ -122,7 +122,7 @@ mod construct_runtime {
         type Block = $crate::frame_system::mocking::MockBlockU32<$name>;
         type Version = ();
         type BlockHashCount = ConstU32<250>;
-        type AccountData = $crate::pallet_balances::AccountData<<$name as pallet_balances::Config>::Balance>;
+        type AccountData = $crate::pallet_balances::AccountData<<$name as $crate::pallet_balances::Config>::Balance>;
     }
 
     // ------------ Configure pallet balances ------------------------------------------------------
