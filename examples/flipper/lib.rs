@@ -73,7 +73,7 @@ mod tests {
     }
 
     use pallet_contracts_mock_network::{ALICE, parachain::Runtime as ParachainRuntime};
-    use drink::{impl_sandbox_config};
+    use drink::impl_sandbox_config;
 
     impl_sandbox_config!(
         struct ParachainSandbox {

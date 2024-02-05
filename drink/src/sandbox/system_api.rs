@@ -9,7 +9,7 @@ use crate::{EventRecordOf, RuntimeCall};
 impl<Config: crate::SandboxConfig> Sandbox<Config> {
     /// Return the current height of the chain.
     pub fn block_number(&mut self) -> BlockNumberFor<Config::Runtime> {
-        self.execute_with(|| frame_system::Pallet::<Config::Runtime>::block_number())
+        self.execute_with(frame_system::Pallet::<Config::Runtime>::block_number)
     }
 
     /// Return the events of the current block so far.

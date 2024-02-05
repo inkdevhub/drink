@@ -9,12 +9,12 @@ use pallet_contracts::{
 };
 use parity_scale_codec::Decode as _;
 
-use crate::{runtime::AccountIdFor, EventRecordOf, Sandbox};
+use crate::{runtime::AccountIdFor, EventRecordOf, Sandbox, SandboxApi};
 
 type BalanceOf<R> =
     <<R as pallet_contracts::Config>::Currency as Inspect<AccountIdFor<R>>>::Balance;
 
-pub trait ContractsApi<R: pallet_contracts::Config>: crate::SandboxApi<R> {
+pub trait ContractsApi<R: pallet_contracts::Config>: SandboxApi<R> {
     /// Interface for `bare_instantiate` contract call with a simultaneous upload.
     ///
     /// # Arguments

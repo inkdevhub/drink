@@ -1,7 +1,7 @@
 //! A sandboxed runtime.
 
-mod sandbox_core;
-pub use sandbox_core::SandboxConfig;
+mod sandbox_config;
+pub use sandbox_config::SandboxConfig;
 pub mod balance_api;
 pub mod contract_api;
 pub mod runtime_api;
@@ -14,12 +14,12 @@ use sp_externalities::Extension;
 use sp_io::TestExternalities;
 
 /// A sandboxed runtime.
-pub struct Sandbox<Config: SandboxConfig> {
+pub struct Sandbox<Config> {
     externalities: TestExternalities,
     _phantom: std::marker::PhantomData<Config>,
 }
 
-impl<Config: SandboxConfig> Sandbox<Config> {
+impl<Config> Sandbox<Config> {
     /// Execute the given closure with the inner externallities.
     ///
     /// Returns the result of the given closure.

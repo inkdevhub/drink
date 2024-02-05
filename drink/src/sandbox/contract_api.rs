@@ -29,7 +29,7 @@ where
     /// * `origin` - The sender of the contract call.
     /// * `gas_limit` - The gas limit for the contract call.
     /// * `storage_deposit_limit` - The storage deposit limit for the contract call.
-    #[allow(clippy::too_many_arguments)]
+    #[allow(clippy::type_complexity, clippy::too_many_arguments)]
     pub fn deploy_contract(
         &mut self,
         contract_bytes: Vec<u8>,
@@ -70,7 +70,7 @@ where
     /// * `origin` - The sender of the contract call.
     /// * `gas_limit` - The gas limit for the contract call.
     /// * `storage_deposit_limit` - The storage deposit limit for the contract call.
-    #[allow(clippy::too_many_arguments)]
+    #[allow(clippy::type_complexity, clippy::too_many_arguments)]
     pub fn instantiate_contract(
         &mut self,
         code_hash: Vec<u8>,

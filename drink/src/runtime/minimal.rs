@@ -1,17 +1,6 @@
 #![allow(missing_docs)] // `construct_macro` doesn't allow doc comments for the runtime type.
 
 /// The macro will generate an implementation of `drink::SandboxConfig` for the given runtime type.
-///
-/// Example usage:
-/// The following code will generate an implementation of `drink::SandboxConfig` for `CustomRuntime`
-/// ```no_run
-///    impl_sandbox_config!(
-///        struct CustomSandbox {
-///            runtime: CustomRuntime;
-///            default_balance: 1_000_000_000_000_000; 
-///            default_actor: ALICE;
-///        }
-///    );
 #[macro_export]
 macro_rules! impl_sandbox_config {
     (
