@@ -4,9 +4,9 @@ use frame_support::sp_runtime::{traits::Dispatchable, DispatchResultWithInfo};
 use frame_system::pallet_prelude::BlockNumberFor;
 
 use super::Sandbox;
-use crate::{EventRecordOf, RuntimeCall};
+use crate::{EventRecordOf, RuntimeCall, SandboxConfig};
 
-impl<Config: crate::SandboxConfig> Sandbox<Config> {
+impl<Config: SandboxConfig> Sandbox<Config> {
     /// Return the current height of the chain.
     pub fn block_number(&mut self) -> BlockNumberFor<Config::Runtime> {
         self.execute_with(frame_system::Pallet::<Config::Runtime>::block_number)

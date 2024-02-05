@@ -1,11 +1,11 @@
 //! timestamp API for the sandbox.
 
-use crate::Sandbox;
+use crate::{Sandbox, SandboxConfig};
 
 /// Generic Time type.
 type MomentOf<R> = <R as pallet_timestamp::Config>::Moment;
 
-impl<Config: crate::SandboxConfig> Sandbox<Config>
+impl<Config: SandboxConfig> Sandbox<Config>
 where
     Config::Runtime: pallet_timestamp::Config,
 {
