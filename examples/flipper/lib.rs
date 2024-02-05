@@ -72,8 +72,6 @@ mod tests {
         Ok(())
     }
 
-
-
     use pallet_contracts_mock_network::{ALICE, parachain::Runtime as ParachainRuntime};
     use drink::{impl_sandbox_config};
 

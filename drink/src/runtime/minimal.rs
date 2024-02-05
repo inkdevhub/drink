@@ -1,5 +1,17 @@
 #![allow(missing_docs)] // `construct_macro` doesn't allow doc comments for the runtime type.
 
+/// The macro will generate an implementation of `drink::SandboxConfig` for the given runtime type.
+///
+/// Example usage:
+/// The following code will generate an implementation of `drink::SandboxConfig` for `CustomRuntime`
+/// ```no_run
+///    impl_sandbox_config!(
+///        struct CustomSandbox {
+///            runtime: CustomRuntime;
+///            default_balance: 1_000_000_000_000_000; 
+///            default_actor: ALICE;
+///        }
+///    );
 #[macro_export]
 macro_rules! impl_sandbox_config {
     (
@@ -79,11 +91,11 @@ macro_rules! impl_sandbox_config {
 /// Macro creating a minimal runtime with the given name. Optionally can take a chain extension
 /// type as a second argument.
 ///
-/// The new macro will automatically implement `drink::Runtime`.
+/// The new macro will automatically implement `drink::SandboxConfig`.
 #[macro_export]
-macro_rules! create_minimal_sandbox {
+macro_rules! create_minimal_runtime {
     ($name:ident) => {
-        create_minimal_sandbox!($name, ());
+        create_minimal_runtime!($name, ());
     };
     ($name:ident, $chain_extension: ty) => {
 
@@ -222,4 +234,4 @@ pub use construct_runtime::{
     };
 }
 
-create_minimal_sandbox!(MinimalRuntime);
+create_minimal_runtime!(MinimalRuntime);

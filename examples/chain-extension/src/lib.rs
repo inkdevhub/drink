@@ -36,7 +36,7 @@ mod contract_calling_chain_extension {
 #[cfg(test)]
 mod tests {
     use drink::{
-        create_minimal_sandbox,
+        create_minimal_runtime,
         session::{Session, NO_ARGS, NO_ENDOWMENT, NO_SALT},
     };
 
@@ -46,7 +46,7 @@ mod tests {
     enum BundleProvider {}
 
     // We can inject arbitrary chain extension into the minimal runtime as follows:
-    create_minimal_sandbox!(
+    create_minimal_runtime!(
         SandboxWithCE,
         crate::chain_extension_runtime_side::StakingExtension
     );
