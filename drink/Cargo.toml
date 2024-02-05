@@ -1,5 +1,5 @@
 [package]
-name = "drink-next"
+name = "drink"
 authors.workspace = true
 edition.workspace = true
 homepage.workspace = true
