@@ -5,10 +5,13 @@ use crate::Sandbox;
 /// Generic Time type.
 type MomentOf<R> = <R as pallet_timestamp::Config>::Moment;
 
-impl<R: pallet_timestamp::Config> Sandbox<R> {
+impl<Config: crate::SandboxConfig> Sandbox<Config>
+where
+    Config::Runtime: pallet_timestamp::Config,
+{
     /// Return the timestamp of the current block.
-    pub fn get_timestamp(&mut self) -> MomentOf<R> {
-        self.execute_with(pallet_timestamp::Pallet::<R>::get)
+    pub fn get_timestamp(&mut self) -> MomentOf<Config::Runtime> {
+        self.execute_with(pallet_timestamp::Pallet::<Config::Runtime>::get)
     }
 
     /// Set the timestamp of the current block.
@@ -16,8 +19,8 @@ impl<R: pallet_timestamp::Config> Sandbox<R> {
     /// # Arguments
     ///
     /// * `timestamp` - The new timestamp to be set.
-    pub fn set_timestamp(&mut self, timestamp: MomentOf<R>) {
-        self.execute_with(|| pallet_timestamp::Pallet::<R>::set_timestamp(timestamp))
+    pub fn set_timestamp(&mut self, timestamp: MomentOf<Config::Runtime>) {
+        self.execute_with(|| pallet_timestamp::Pallet::<Config::Runtime>::set_timestamp(timestamp))
     }
 }
 

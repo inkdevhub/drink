@@ -6,7 +6,7 @@ From the perspective of a contract implementation or writing tests there is noth
 The thing that `drink` makes easier for you is combining an arbitrary chain extension with `drink`'s `MinimalRuntime`.
 By simply calling:
 ```rust
-create_minimal_runtime!(
+create_minimal_sandbox!(
     RuntimeWithCustomChainExtension,
     path::to::MyCustomChainExtension
 );

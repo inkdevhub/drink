@@ -2,7 +2,7 @@
 use std::ops::Not;
 
 use frame_support::{traits::fungible::Inspect, weights::Weight};
-use frame_system::Config as SysConfig;
+use frame_system::Config;
 use pallet_contracts::{
     Code, CodeUploadResult, CollectEvents, ContractExecResult, ContractInstantiateResult,
     DebugInfo, Determinism,
@@ -14,10 +14,7 @@ use crate::{runtime::AccountIdFor, EventRecordOf, Sandbox};
 type BalanceOf<R> =
     <<R as pallet_contracts::Config>::Currency as Inspect<AccountIdFor<R>>>::Balance;
 
-impl<Config: crate::SandboxConfig> Sandbox<Config>
-where
-    Config::Runtime: pallet_contracts::Config,
-{
+pub trait ContractsApi<R: pallet_contracts::Config>: crate::SandboxApi<R> {
     /// Interface for `bare_instantiate` contract call with a simultaneous upload.
     ///
     /// # Arguments
@@ -30,22 +27,18 @@ where
     /// * `gas_limit` - The gas limit for the contract call.
     /// * `storage_deposit_limit` - The storage deposit limit for the contract call.
     #[allow(clippy::too_many_arguments)]
-    pub fn deploy_contract(
+    fn deploy_contract(
         &mut self,
         contract_bytes: Vec<u8>,
-        value: BalanceOf<Config::Runtime>,
+        value: BalanceOf<R>,
         data: Vec<u8>,
         salt: Vec<u8>,
-        origin: AccountIdFor<Config::Runtime>,
+        origin: AccountIdFor<R>,
         gas_limit: Weight,
-        storage_deposit_limit: Option<BalanceOf<Config::Runtime>>,
-    ) -> ContractInstantiateResult<
-        AccountIdFor<Config::Runtime>,
-        BalanceOf<Config::Runtime>,
-        EventRecordOf<Config::Runtime>,
-    > {
-        self.externalities.execute_with(|| {
-            pallet_contracts::Pallet::<Config::Runtime>::bare_instantiate(
+        storage_deposit_limit: Option<BalanceOf<R>>,
+    ) -> ContractInstantiateResult<AccountIdFor<R>, BalanceOf<R>, EventRecordOf<R>> {
+        self.externalities().execute_with(|| {
+            pallet_contracts::Pallet::<R>::bare_instantiate(
                 origin,
                 value,
                 gas_limit,
@@ -71,30 +64,25 @@ where
     /// * `gas_limit` - The gas limit for the contract call.
     /// * `storage_deposit_limit` - The storage deposit limit for the contract call.
     #[allow(clippy::too_many_arguments)]
-    pub fn instantiate_contract(
+    fn instantiate_contract(
         &mut self,
         code_hash: Vec<u8>,
-        value: BalanceOf<Config::Runtime>,
+        value: BalanceOf<R>,
         data: Vec<u8>,
         salt: Vec<u8>,
-        origin: AccountIdFor<Config::Runtime>,
+        origin: AccountIdFor<R>,
         gas_limit: Weight,
-        storage_deposit_limit: Option<BalanceOf<Config::Runtime>>,
-    ) -> ContractInstantiateResult<
-        AccountIdFor<Config::Runtime>,
-        BalanceOf<Config::Runtime>,
-        EventRecordOf<Config::Runtime>,
-    > {
+        storage_deposit_limit: Option<BalanceOf<R>>,
+    ) -> ContractInstantiateResult<AccountIdFor<R>, BalanceOf<R>, EventRecordOf<R>> {
         let mut code_hash = &code_hash[..];
-        self.externalities.execute_with(|| {
-            pallet_contracts::Pallet::<Config::Runtime>::bare_instantiate(
+        self.externalities().execute_with(|| {
+            pallet_contracts::Pallet::<R>::bare_instantiate(
                 origin,
                 value,
                 gas_limit,
                 storage_deposit_limit,
                 Code::Existing(
-                    <Config::Runtime as SysConfig>::Hash::decode(&mut code_hash)
-                        .expect("Invalid code hash"),
+                    <R as Config>::Hash::decode(&mut code_hash).expect("Invalid code hash"),
                 ),
                 data,
                 salt,
@@ -111,16 +99,15 @@ where
     /// * `contract_bytes` - The contract code.
     /// * `origin` - The sender of the contract call.
     /// * `storage_deposit_limit` - The storage deposit limit for the contract call.
-    pub fn upload_contract(
+    fn upload_contract(
         &mut self,
         contract_bytes: Vec<u8>,
-        origin: AccountIdFor<Config::Runtime>,
-        storage_deposit_limit: Option<BalanceOf<Config::Runtime>>,
+        origin: AccountIdFor<R>,
+        storage_deposit_limit: Option<BalanceOf<R>>,
         determinism: Determinism,
-    ) -> CodeUploadResult<<Config::Runtime as frame_system::Config>::Hash, BalanceOf<Config::Runtime>>
-    {
-        self.externalities.execute_with(|| {
-            pallet_contracts::Pallet::<Config::Runtime>::bare_upload_code(
+    ) -> CodeUploadResult<<R as frame_system::Config>::Hash, BalanceOf<R>> {
+        self.externalities().execute_with(|| {
+            pallet_contracts::Pallet::<R>::bare_upload_code(
                 origin,
                 contract_bytes,
                 storage_deposit_limit,
@@ -140,18 +127,18 @@ where
     /// * `gas_limit` - The gas limit for the contract call.
     /// * `storage_deposit_limit` - The storage deposit limit for the contract call.
     #[allow(clippy::too_many_arguments)]
-    pub fn call_contract(
+    fn call_contract(
         &mut self,
-        address: AccountIdFor<Config::Runtime>,
-        value: BalanceOf<Config::Runtime>,
+        address: AccountIdFor<R>,
+        value: BalanceOf<R>,
         data: Vec<u8>,
-        origin: AccountIdFor<Config::Runtime>,
+        origin: AccountIdFor<R>,
         gas_limit: Weight,
-        storage_deposit_limit: Option<BalanceOf<Config::Runtime>>,
+        storage_deposit_limit: Option<BalanceOf<R>>,
         determinism: Determinism,
-    ) -> ContractExecResult<BalanceOf<Config::Runtime>, EventRecordOf<Config::Runtime>> {
-        self.externalities.execute_with(|| {
-            pallet_contracts::Pallet::<Config::Runtime>::bare_call(
+    ) -> ContractExecResult<BalanceOf<R>, EventRecordOf<R>> {
+        self.externalities().execute_with(|| {
+            pallet_contracts::Pallet::<R>::bare_call(
                 origin,
                 address,
                 value,
@@ -182,7 +169,7 @@ mod tests {
 
     use super::*;
     use crate::{
-        minimal::RuntimeEvent, sandbox::SandboxConfig, session::NO_SALT, MinimalRuntime,
+        minimal::RuntimeEvent, runtime::Runtime, session::NO_SALT, MinimalRuntime,
         DEFAULT_GAS_LIMIT,
     };
 

@@ -1,13 +1,89 @@
 #![allow(missing_docs)] // `construct_macro` doesn't allow doc comments for the runtime type.
 
+#[macro_export]
+macro_rules! impl_sandbox_config {
+    (
+        struct $name:ident {
+            runtime: $runtime:tt;
+            default_balance: $default_balance:expr;
+            default_actor: $default_actor:expr;
+        }
+    ) => {
+        struct $name;
+        impl_sandbox_config!($name, $runtime, $default_balance, $default_actor);
+    };
+    (
+        $name:ident, $runtime:tt, $default_balance:expr, $default_actor:expr
+    ) => {
+        impl $crate::SandboxConfig for $name {
+            type Runtime = $runtime;
+
+            fn initialize_storage(storage: &mut $crate::frame_support::sp_runtime::Storage) -> Result<(), String> {
+                use $crate::frame_support::sp_runtime::BuildStorage;
+                $crate::pallet_balances::GenesisConfig::<$runtime> {
+                    balances: vec![(Self::default_actor(), $default_balance)],
+                }
+                .assimilate_storage(storage)
+            }
+
+            fn initialize_block(
+                height: $crate::frame_system::pallet_prelude::BlockNumberFor<$runtime>,
+                parent_hash: <$runtime as $crate::frame_system::Config>::Hash,
+            ) -> Result<(), String> {
+                use std::time::SystemTime;
+                use $crate::frame_support::traits::Hooks;
+
+                $crate::frame_system::Pallet::<$runtime>::reset_events();
+                $crate::frame_system::Pallet::<$runtime>::initialize(&height, &parent_hash, &Default::default());
+                $crate::pallet_balances::Pallet::<$runtime>::on_initialize(height);
+                $crate::pallet_timestamp::Pallet::<$runtime>::set_timestamp(
+                    SystemTime::now()
+                        .duration_since(SystemTime::UNIX_EPOCH)
+                        .expect("Time went backwards")
+                        .as_secs(),
+                );
+                $crate::pallet_timestamp::Pallet::<$runtime>::on_initialize(height);
+                $crate::pallet_contracts::Pallet::<$runtime>::on_initialize(height);
+                $crate::frame_system::Pallet::<$runtime>::note_finished_initialize();
+                Ok(())
+            }
+
+            fn finalize_block(
+                height: $crate::frame_system::pallet_prelude::BlockNumberFor<$runtime>,
+            ) -> Result<<$runtime as $crate::frame_system::Config>::Hash, String> {
+                use $crate::frame_support::traits::Hooks;
+
+                $crate::pallet_contracts::Pallet::<$runtime>::on_finalize(height);
+                $crate::pallet_timestamp::Pallet::<$runtime>::on_finalize(height);
+                $crate::pallet_balances::Pallet::<$runtime>::on_finalize(height);
+                Ok($crate::frame_system::Pallet::<$runtime>::finalize().hash())
+            }
+
+            fn default_actor() -> $crate::runtime::AccountIdFor<$runtime> {
+                $default_actor
+            }
+
+            fn get_metadata() -> $crate::runtime::RuntimeMetadataPrefixed {
+                $runtime::metadata()
+            }
+
+            fn convert_account_to_origin(
+                account: $crate::runtime::AccountIdFor<$runtime>,
+            ) -> <<$runtime as $crate::frame_system::Config>::RuntimeCall as $crate::frame_support::sp_runtime::traits::Dispatchable>::RuntimeOrigin {
+                Some(account).into()
+            }
+        }
+    };
+}
+
 /// Macro creating a minimal runtime with the given name. Optionally can take a chain extension
 /// type as a second argument.
 ///
 /// The new macro will automatically implement `drink::Runtime`.
 #[macro_export]
-macro_rules! create_minimal_runtime {
+macro_rules! create_minimal_sandbox {
     ($name:ident) => {
-        create_minimal_runtime!($name, ());
+        create_minimal_sandbox!($name, ());
     };
     ($name:ident, $chain_extension: ty) => {
 
@@ -128,83 +204,22 @@ mod construct_runtime {
         type Xcm = ();
     }
 
-// ------------ Implement `drink::Runtime` trait ---------------------------------------------------
-
-    use std::time::SystemTime;
-
-    use $crate::frame_support::{
-        sp_runtime::{traits::Dispatchable, BuildStorage, Storage},
-        traits::Hooks,
-    };
-
-    use $crate::runtime::{AccountIdFor, Runtime, RuntimeMetadataPrefixed};
-
+    // ------------ Implement `drink::Runtime` trait ---------------------------------------------------
 
     /// Default initial balance for the default account.
     pub const INITIAL_BALANCE: u128 = 1_000_000_000_000_000;
-
-    impl Runtime for $name {
-        fn initialize_storage(storage: &mut Storage) -> Result<(), String> {
-            $crate::pallet_balances::GenesisConfig::<Self> {
-                balances: vec![(Self::default_actor(), INITIAL_BALANCE)],
-            }
-            .assimilate_storage(storage)
-        }
-
-        fn initialize_block(
-            height: $crate::frame_system::pallet_prelude::BlockNumberFor<Self>,
-            parent_hash: H256,
-        ) -> Result<(), String> {
-            System::reset_events();
-            System::initialize(&height, &parent_hash, &Default::default());
-
-            Balances::on_initialize(height);
-            Timestamp::set_timestamp(
-                SystemTime::now()
-                    .duration_since(SystemTime::UNIX_EPOCH)
-                    .expect("Time went backwards")
-                    .as_secs(),
-            );
-            Timestamp::on_initialize(height);
-            Contracts::on_initialize(height);
-
-            System::note_finished_initialize();
-
-            Ok(())
-        }
-
-        fn finalize_block(
-            height: $crate::frame_system::pallet_prelude::BlockNumberFor<Self>,
-        ) -> Result<H256, String> {
-            Contracts::on_finalize(height);
-            Timestamp::on_finalize(height);
-            Balances::on_finalize(height);
-
-            Ok(System::finalize().hash())
-        }
-
-        fn default_actor() -> AccountIdFor<Self> {
-            AccountId32::new([1u8; 32])
-        }
-
-        fn get_metadata() -> RuntimeMetadataPrefixed {
-            Self::metadata()
-        }
-
-        fn convert_account_to_origin(
-            account: AccountIdFor<Self>,
-        ) -> <<Self as $crate::frame_system::Config>::RuntimeCall as Dispatchable>::RuntimeOrigin {
-             Some(account).into()
-        }
-    }
+    $crate::impl_sandbox_config!($name, $name, INITIAL_BALANCE, AccountId32::new([1u8; 32]));
 }
+
+
+
 
 // ------------ Export runtime type itself, pallets and useful types from the auxiliary module -----
 pub use construct_runtime::{
     $name, Balances, Contracts, PalletInfo, RuntimeCall, RuntimeEvent, RuntimeHoldReason,
-    RuntimeOrigin, System, Timestamp, INITIAL_BALANCE,
+    RuntimeOrigin, System, Timestamp,
 };
     };
 }
 
-create_minimal_runtime!(MinimalRuntime);
+create_minimal_sandbox!(MinimalRuntime);

@@ -71,4 +71,36 @@ mod tests {
 
         Ok(())
     }
+
+
+
+    use pallet_contracts_mock_network::{ALICE, parachain::Runtime as ParachainRuntime};
+    use drink::{impl_sandbox_config};
+
+    impl_sandbox_config!(
+        struct ParachainSandbox {
+            runtime: ParachainRuntime;
+            default_balance: 1_000_000_000_000_000; 
+            default_actor: ALICE;
+        }
+    );
+
+    #[drink::test(config = ParachainSandbox)]
+    fn test_flipping_with_custom_runtime(mut session: Session) -> Result<(), Box<dyn std::error::Error>> {
+        let contract = BundleProvider::Flipper.bundle()?;
+        let init_value: bool = session
+            .deploy_bundle_and(contract, "new", &["true"], NO_SALT, NO_ENDOWMENT)?
+            .call_and("flip", NO_ARGS, NO_ENDOWMENT)?
+            .call_and("flip", NO_ARGS, NO_ENDOWMENT)?
+            .call_and("flip", NO_ARGS, NO_ENDOWMENT)?
+            .call_and("get", NO_ARGS, NO_ENDOWMENT)?
+            .record()
+            .last_call_return_decoded()?
+            .expect("Call was successful");
+
+        assert_eq!(init_value, false);
+
+        Ok(())
+    }
 }
+

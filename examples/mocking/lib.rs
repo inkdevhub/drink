@@ -17,6 +17,7 @@ mod proxy {
 
     impl Proxy {
         #[ink(constructor)]
+        #[allow(clippy::new_without_default)]
         pub fn new() -> Self {
             Self {}
         }

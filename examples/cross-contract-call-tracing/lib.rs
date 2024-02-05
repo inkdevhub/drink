@@ -12,6 +12,7 @@ mod contract {
 
     impl CrossCallingContract {
         #[ink(constructor)]
+        #[allow(clippy::new_without_default)]
         pub fn new() -> Self {
             Self {}
         }

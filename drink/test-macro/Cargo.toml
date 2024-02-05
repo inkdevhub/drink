@@ -1,5 +1,5 @@
 [package]
-name = "drink-test-macro"
+name = "drink-test-macro-next"
 authors.workspace = true
 edition.workspace = true
 homepage.workspace = true
