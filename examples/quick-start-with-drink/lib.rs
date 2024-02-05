@@ -43,7 +43,7 @@ mod flipper {
 #[cfg(test)]
 mod tests {
     use drink::{
-        contract_api::decode_debug_buffer,
+        contracts_api::decode_debug_buffer,
         session::{Session, NO_ARGS, NO_ENDOWMENT, NO_SALT},
     };
 

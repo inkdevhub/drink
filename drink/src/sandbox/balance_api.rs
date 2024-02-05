@@ -2,11 +2,11 @@
 use frame_support::{sp_runtime::DispatchError, traits::fungible::Mutate};
 
 use super::Sandbox;
-use crate::{runtime::AccountIdFor, BalanceOf};
+use crate::{runtime::AccountIdFor, BalanceOf, SandboxConfig};
 
-impl<Config: crate::SandboxConfig> Sandbox<Config>
+impl<Config: SandboxConfig> Sandbox<Config>
 where
-    Config::Runtime: crate::pallet_balances::Config,
+    Config::Runtime: pallet_balances::Config,
 {
     /// Mint tokens to an account.
     ///
