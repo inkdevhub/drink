@@ -76,14 +76,14 @@ mod tests {
     use drink::impl_sandbox_config;
 
     impl_sandbox_config!(
-        struct ParachainSandbox {
+        struct ParachainConfig {
             runtime: ParachainRuntime;
             default_balance: 1_000_000_000_000_000; 
             default_actor: ALICE;
         }
     );
 
-    #[drink::test(config = ParachainSandbox)]
+    #[drink::test(config = ParachainConfig)]
     fn test_flipping_with_custom_runtime(mut session: Session) -> Result<(), Box<dyn std::error::Error>> {
         let contract = BundleProvider::Flipper.bundle()?;
         let init_value: bool = session

@@ -4,13 +4,15 @@
 #[macro_export]
 macro_rules! impl_sandbox_config {
     (
-        struct $name:ident {
+        $( #[ $attr:meta ] )*
+        $vis:vis struct $name:ident {
             runtime: $runtime:tt;
             default_balance: $default_balance:expr;
             default_actor: $default_actor:expr;
         }
     ) => {
-        struct $name;
+        $( #[ $attr ] )*
+        $vis struct $name;
         impl_sandbox_config!($name, $runtime, $default_balance, $default_actor);
     };
     (
