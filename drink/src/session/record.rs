@@ -21,6 +21,7 @@ type ContractExecResult<R> = pallet_contracts::ContractExecResult<BalanceOf<R>, 
 /// By `result` we mean the full result (enriched with some context information) of the contract
 /// interaction, like `ContractExecResult`. By `return` we mean the return value of the contract
 /// execution, like a value returned from a message or the address of a newly instantiated contract.
+#[derive(frame_support::DefaultNoBound)]
 pub struct Record<Config: pallet_contracts::Config> {
     /// The results of contract instantiation.
     deploy_results: Vec<ContractInstantiateResult<Config>>,
@@ -35,18 +36,6 @@ pub struct Record<Config: pallet_contracts::Config> {
 
     /// The events emitted by the contracts.
     event_batches: Vec<EventBatch<Config>>,
-}
-
-impl<Config: pallet_contracts::Config> Default for Record<Config> {
-    fn default() -> Self {
-        Self {
-            deploy_results: Vec::new(),
-            deploy_returns: Vec::new(),
-            call_results: Vec::new(),
-            call_returns: Vec::new(),
-            event_batches: Vec::new(),
-        }
-    }
 }
 
 // API for `Session` to record results and events related to contract interaction.
