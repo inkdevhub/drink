@@ -12,7 +12,7 @@ use contract_transcode::ContractMessageTranscoder;
 use frame_support::{traits::fungible::Inspect, weights::Weight};
 use pallet_contracts::Determinism;
 use parity_scale_codec::Decode;
-pub use record::Record;
+pub use record::{EventBatch, Record};
 
 use crate::{
     mock::MockRegistry,
@@ -142,7 +142,7 @@ where
     determinism: Determinism,
 
     transcoders: TranscoderRegistry<AccountIdFor<Config::Runtime>>,
-    record: Record<Config>,
+    record: Record<Config::Runtime>,
     mocks: Arc<Mutex<MockRegistry<AccountIdFor<Config::Runtime>>>>,
 }
 
@@ -240,7 +240,7 @@ where
     }
 
     /// Returns a reference to the record of the session.
-    pub fn record(&self) -> &Record<Config> {
+    pub fn record(&self) -> &Record<Config::Runtime> {
         &self.record
     }
 
@@ -270,6 +270,13 @@ where
         )
         .map(|_| self)
     }
+    fn record_events<T>(&mut self, recording: impl FnOnce(&mut Self) -> T) -> T {
+        let start = self.sandbox.events().len();
+        let result = recording(self);
+        let events = self.sandbox.events()[start..].to_vec();
+        self.record.push_event_batches(events);
+        result
+    }
 
     /// Deploys a contract with a given constructor, arguments, salt and endowment. In case of
     /// success, returns the address of the deployed contract.
@@ -286,17 +293,17 @@ where
             .encode(constructor, args)
             .map_err(|err| SessionError::Encoding(err.to_string()))?;
 
-        self.record.start_recording_events(&mut self.sandbox);
-        let result = self.sandbox.deploy_contract(
-            contract_bytes,
-            endowment.unwrap_or_default(),
-            data,
-            salt,
-            self.actor.clone(),
-            self.gas_limit,
-            None,
-        );
-        self.record.stop_recording_events(&mut self.sandbox);
+        let result = self.record_events(|session| {
+            session.sandbox.deploy_contract(
+                contract_bytes,
+                endowment.unwrap_or_default(),
+                data,
+                salt,
+                session.actor.clone(),
+                session.gas_limit,
+                None,
+            )
+        });
 
         let ret = match &result.result {
             Ok(exec_result) if exec_result.result.did_revert() => {
@@ -305,7 +312,6 @@ where
             Ok(exec_result) => {
                 let address = exec_result.account_id.clone();
                 self.record.push_deploy_return(address.clone());
-
                 self.transcoders.register(address.clone(), transcoder);
 
                 Ok(address)
@@ -466,17 +472,17 @@ where
             .encode(message, args)
             .map_err(|err| SessionError::Encoding(err.to_string()))?;
 
-        self.record.start_recording_events(&mut self.sandbox);
-        let result = self.sandbox.call_contract(
-            address,
-            endowment.unwrap_or_default(),
-            data,
-            self.actor.clone(),
-            self.gas_limit,
-            None,
-            self.determinism,
-        );
-        self.record.stop_recording_events(&mut self.sandbox);
+        let result = self.record_events(|session| {
+            session.sandbox.call_contract(
+                address,
+                endowment.unwrap_or_default(),
+                data,
+                session.actor.clone(),
+                session.gas_limit,
+                None,
+                session.determinism,
+            )
+        });
 
         let ret = match &result.result {
             Ok(exec_result) if exec_result.did_revert() => Err(SessionError::CallReverted),

@@ -7,7 +7,7 @@ use crate::{
     errors::MessageResult,
     runtime::{minimal::RuntimeEvent, AccountIdFor, MinimalRuntime},
     session::{error::SessionError, BalanceOf},
-    EventRecordOf, Sandbox, SandboxConfig,
+    EventRecordOf,
 };
 
 type ContractInstantiateResult<R> =
@@ -21,38 +21,23 @@ type ContractExecResult<R> = pallet_contracts::ContractExecResult<BalanceOf<R>, 
 /// By `result` we mean the full result (enriched with some context information) of the contract
 /// interaction, like `ContractExecResult`. By `return` we mean the return value of the contract
 /// execution, like a value returned from a message or the address of a newly instantiated contract.
-pub struct Record<Config: SandboxConfig>
-where
-    Config::Runtime: pallet_contracts::Config,
-{
+pub struct Record<Config: pallet_contracts::Config> {
     /// The results of contract instantiation.
-    deploy_results: Vec<ContractInstantiateResult<Config::Runtime>>,
+    deploy_results: Vec<ContractInstantiateResult<Config>>,
     /// The return values of contract instantiation (i.e. the addresses of the newly instantiated
     /// contracts).
-    deploy_returns: Vec<AccountIdFor<Config::Runtime>>,
+    deploy_returns: Vec<AccountIdFor<Config>>,
 
     /// The results of contract calls.
-    call_results: Vec<ContractExecResult<Config::Runtime>>,
+    call_results: Vec<ContractExecResult<Config>>,
     /// The return values of contract calls (in the SCALE-encoded form).
     call_returns: Vec<Vec<u8>>,
 
     /// The events emitted by the contracts.
-    event_batches: Vec<EventBatch<Config::Runtime>>,
-
-    /// Because `drink` normally doesn't have a continuous block production, everything implicitly
-    /// happens within a single block (unless user explicitly trigger a new block). This means that
-    /// all runtime events (from consecutive transactions) are stacked up in a common buffer.
-    /// `Record` is capable of recording only the events that happened during a single transaction
-    /// by remembering the number of events that were already in the buffer before the transaction
-    /// started. However, this is must be explicitly enabled by calling `start_recording_events`
-    /// before the transaction and `stop_recording_events` after the transaction.
-    block_events_so_far: Option<usize>,
+    event_batches: Vec<EventBatch<Config>>,
 }
 
-impl<Config: SandboxConfig> Default for Record<Config>
-where
-    Config::Runtime: pallet_contracts::Config,
-{
+impl<Config: pallet_contracts::Config> Default for Record<Config> {
     fn default() -> Self {
         Self {
             deploy_results: Vec::new(),
@@ -60,28 +45,21 @@ where
             call_results: Vec::new(),
             call_returns: Vec::new(),
             event_batches: Vec::new(),
-            block_events_so_far: None,
         }
     }
 }
 
 // API for `Session` to record results and events related to contract interaction.
-impl<Config: SandboxConfig> Record<Config>
-where
-    Config::Runtime: pallet_contracts::Config,
-{
-    pub(super) fn push_deploy_result(
-        &mut self,
-        result: ContractInstantiateResult<Config::Runtime>,
-    ) {
+impl<Config: pallet_contracts::Config> Record<Config> {
+    pub(super) fn push_deploy_result(&mut self, result: ContractInstantiateResult<Config>) {
         self.deploy_results.push(result);
     }
 
-    pub(super) fn push_deploy_return(&mut self, return_value: AccountIdFor<Config::Runtime>) {
+    pub(super) fn push_deploy_return(&mut self, return_value: AccountIdFor<Config>) {
         self.deploy_returns.push(return_value);
     }
 
-    pub(super) fn push_call_result(&mut self, result: ContractExecResult<Config::Runtime>) {
+    pub(super) fn push_call_result(&mut self, result: ContractExecResult<Config>) {
         self.call_results.push(result);
     }
 
@@ -89,60 +67,43 @@ where
         self.call_returns.push(return_value);
     }
 
-    pub(super) fn start_recording_events(&mut self, sandbox: &mut Sandbox<Config>) {
-        assert!(
-            self.block_events_so_far.is_none(),
-            "Already recording events"
-        );
-        self.block_events_so_far = Some(sandbox.events().len());
-    }
-
-    pub(super) fn stop_recording_events(&mut self, sandbox: &mut Sandbox<Config>) {
-        let start = self
-            .block_events_so_far
-            .take()
-            .expect("Not recording events");
-        let end = sandbox.events().len();
-        let events = sandbox.events()[start..end].to_vec();
+    pub(super) fn push_event_batches(&mut self, events: Vec<EventRecordOf<Config>>) {
         self.event_batches.push(EventBatch { events });
     }
 }
 
 // API for the end user.
-impl<Config: SandboxConfig> Record<Config>
-where
-    Config::Runtime: pallet_contracts::Config,
-{
+impl<Config: pallet_contracts::Config> Record<Config> {
     /// Returns all the results of contract instantiations that happened during the session.
-    pub fn deploy_results(&self) -> &[ContractInstantiateResult<Config::Runtime>] {
+    pub fn deploy_results(&self) -> &[ContractInstantiateResult<Config>] {
         &self.deploy_results
     }
 
     /// Returns the last result of contract instantiation that happened during the session. Panics
     /// if there were no contract instantiations.
-    pub fn last_deploy_result(&self) -> &ContractInstantiateResult<Config::Runtime> {
+    pub fn last_deploy_result(&self) -> &ContractInstantiateResult<Config> {
         self.deploy_results.last().expect("No deploy results")
     }
 
     /// Returns all the return values of contract instantiations that happened during the session.
-    pub fn deploy_returns(&self) -> &[AccountIdFor<Config::Runtime>] {
+    pub fn deploy_returns(&self) -> &[AccountIdFor<Config>] {
         &self.deploy_returns
     }
 
     /// Returns the last return value of contract instantiation that happened during the session.
     /// Panics if there were no contract instantiations.
-    pub fn last_deploy_return(&self) -> &AccountIdFor<Config::Runtime> {
+    pub fn last_deploy_return(&self) -> &AccountIdFor<Config> {
         self.deploy_returns.last().expect("No deploy returns")
     }
 
     /// Returns all the results of contract calls that happened during the session.
-    pub fn call_results(&self) -> &[ContractExecResult<Config::Runtime>] {
+    pub fn call_results(&self) -> &[ContractExecResult<Config>] {
         &self.call_results
     }
 
     /// Returns the last result of contract call that happened during the session. Panics if there
     /// were no contract calls.
-    pub fn last_call_result(&self) -> &ContractExecResult<Config::Runtime> {
+    pub fn last_call_result(&self) -> &ContractExecResult<Config> {
         self.call_results.last().expect("No call results")
     }
 
@@ -170,13 +131,13 @@ where
 
     /// Returns all the event batches that were recorded for contract interactions during the
     /// session.
-    pub fn event_batches(&self) -> &[EventBatch<Config::Runtime>] {
+    pub fn event_batches(&self) -> &[EventBatch<Config>] {
         &self.event_batches
     }
 
     /// Returns the last event batch that was recorded for contract interactions during the session.
     /// Panics if there were no event batches.
-    pub fn last_event_batch(&self) -> &EventBatch<Config::Runtime> {
+    pub fn last_event_batch(&self) -> &EventBatch<Config> {
         self.event_batches.last().expect("No event batches")
     }
 }
