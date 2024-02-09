@@ -17,6 +17,7 @@ mod proxy {
 
     impl Proxy {
         #[ink(constructor)]
+        #[allow(clippy::new_without_default)]
         pub fn new() -> Self {
             Self {}
         }
@@ -41,7 +42,6 @@ mod tests {
 
     use drink::{
         mock_message,
-        runtime::MinimalRuntime,
         session::{mocking_api::MockingApi, Session, NO_ARGS, NO_ENDOWMENT, NO_SALT},
         ContractMock,
     };
@@ -52,9 +52,7 @@ mod tests {
     enum BundleProvider {}
 
     #[drink::test]
-    fn call_mocked_message() -> Result<(), Box<dyn Error>> {
-        let mut session = Session::<MinimalRuntime>::new()?;
-
+    fn call_mocked_message(mut session: Session) -> Result<(), Box<dyn Error>> {
         // Firstly, we create the mocked contract.
         const RETURN_VALUE: (u8, u8) = (4, 1);
         let mocked_contract =
@@ -67,8 +65,8 @@ mod tests {
         let result: (u8, u8) = session
             .deploy_bundle_and(BundleProvider::local()?, "new", NO_ARGS, NO_SALT, None)?
             .call_and("forward_call", &[mock_address.to_string()], NO_ENDOWMENT)?
-            .last_call_return()
-            .expect("Call was successful, so there should be a return")
+            .record()
+            .last_call_return_decoded()?
             .expect("Call was successful");
         assert_eq!(result, RETURN_VALUE);
 

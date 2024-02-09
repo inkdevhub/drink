@@ -11,20 +11,22 @@ pub use contract_transcode;
 use contract_transcode::ContractMessageTranscoder;
 use frame_support::{traits::fungible::Inspect, weights::Weight};
 use pallet_contracts::Determinism;
-use pallet_contracts_primitives::{ContractExecResult, ContractInstantiateResult};
 use parity_scale_codec::Decode;
+pub use record::{EventBatch, Record};
 
 use crate::{
     mock::MockRegistry,
     runtime::{
         pallet_contracts_debugging::{InterceptingExt, TracingExt},
-        AccountIdFor, HashFor, RuntimeWithContracts,
+        AccountIdFor, HashFor,
     },
-    EventRecordOf, MockingExtension, Sandbox, DEFAULT_GAS_LIMIT,
+    sandbox::SandboxConfig,
+    MockingExtension, Sandbox, DEFAULT_GAS_LIMIT,
 };
 
 pub mod error;
 pub mod mocking_api;
+mod record;
 mod transcoding;
 
 use error::SessionError;
@@ -121,31 +123,33 @@ pub const NO_ENDOWMENT: Option<BalanceOf<MinimalRuntime>> = None;
 /// # fn main() -> Result<(), drink::session::error::SessionError> {
 /// // Simplest way, loading a bundle from the project's directory:
 /// Session::<MinimalRuntime>::new()?
-///     .deploy_bundle_and(local_contract_file!(), "new", NO_ARGS, NO_SALT, NO_ENDOWMENT); /* ... */
+///     .deploy_bundle_and(local_contract_file!(), "new", NO_ARGS, NO_SALT, NO_ENDOWMENT)?; /* ... */
 ///
 /// // Or choosing the file explicitly:
 /// let contract = ContractBundle::load("path/to/your.contract")?;
 /// Session::<MinimalRuntime>::new()?
-///     .deploy_bundle_and(contract, "new", NO_ARGS, NO_SALT, NO_ENDOWMENT); /* ... */
+///     .deploy_bundle_and(contract, "new", NO_ARGS, NO_SALT, NO_ENDOWMENT)?; /* ... */
 ///  # Ok(()) }
 /// ```
-pub struct Session<R: RuntimeWithContracts> {
-    sandbox: Sandbox<R>,
+pub struct Session<Config: SandboxConfig>
+where
+    Config::Runtime: pallet_contracts::Config,
+{
+    sandbox: Sandbox<Config>,
 
-    actor: AccountIdFor<R>,
+    actor: AccountIdFor<Config::Runtime>,
     gas_limit: Weight,
     determinism: Determinism,
 
-    transcoders: TranscoderRegistry<AccountIdFor<R>>,
-
-    deploy_results: Vec<ContractInstantiateResult<AccountIdFor<R>, BalanceOf<R>, EventRecordOf<R>>>,
-    deploy_returns: Vec<AccountIdFor<R>>,
-    call_results: Vec<ContractExecResult<BalanceOf<R>, EventRecordOf<R>>>,
-    call_returns: Vec<Vec<u8>>,
-    mocks: Arc<Mutex<MockRegistry<AccountIdFor<R>>>>,
+    transcoders: TranscoderRegistry<AccountIdFor<Config::Runtime>>,
+    record: Record<Config::Runtime>,
+    mocks: Arc<Mutex<MockRegistry<AccountIdFor<Config::Runtime>>>>,
 }
 
-impl<R: RuntimeWithContracts> Session<R> {
+impl<Config: SandboxConfig> Session<Config>
+where
+    Config::Runtime: pallet_contracts::Config,
+{
     /// Creates a new `Session`.
     pub fn new() -> Result<Self, SessionError> {
         let mocks = Arc::new(Mutex::new(MockRegistry::new()));
@@ -157,29 +161,29 @@ impl<R: RuntimeWithContracts> Session<R> {
         Ok(Self {
             sandbox,
             mocks,
-            actor: R::default_actor(),
+            actor: Config::default_actor(),
             gas_limit: DEFAULT_GAS_LIMIT,
             determinism: Determinism::Enforced,
             transcoders: TranscoderRegistry::new(),
-            deploy_results: vec![],
-            deploy_returns: vec![],
-            call_results: vec![],
-            call_returns: vec![],
+            record: Default::default(),
         })
     }
 
     /// Sets a new actor and returns updated `self`.
-    pub fn with_actor(self, actor: AccountIdFor<R>) -> Self {
+    pub fn with_actor(self, actor: AccountIdFor<Config::Runtime>) -> Self {
         Self { actor, ..self }
     }
 
     /// Returns currently set actor.
-    pub fn get_actor(&self) -> AccountIdFor<R> {
+    pub fn get_actor(&self) -> AccountIdFor<Config::Runtime> {
         self.actor.clone()
     }
 
     /// Sets a new actor and returns the old one.
-    pub fn set_actor(&mut self, actor: AccountIdFor<R>) -> AccountIdFor<R> {
+    pub fn set_actor(
+        &mut self,
+        actor: AccountIdFor<Config::Runtime>,
+    ) -> AccountIdFor<Config::Runtime> {
         mem::replace(&mut self.actor, actor)
     }
 
@@ -214,7 +218,7 @@ impl<R: RuntimeWithContracts> Session<R> {
     /// Register a transcoder for a particular contract and returns updated `self`.
     pub fn with_transcoder(
         mut self,
-        contract_address: AccountIdFor<R>,
+        contract_address: AccountIdFor<Config::Runtime>,
         transcoder: &Rc<ContractMessageTranscoder>,
     ) -> Self {
         self.set_transcoder(contract_address, transcoder);
@@ -224,19 +228,24 @@ impl<R: RuntimeWithContracts> Session<R> {
     /// Registers a transcoder for a particular contract.
     pub fn set_transcoder(
         &mut self,
-        contract_address: AccountIdFor<R>,
+        contract_address: AccountIdFor<Config::Runtime>,
         transcoder: &Rc<ContractMessageTranscoder>,
     ) {
         self.transcoders.register(contract_address, transcoder);
     }
 
     /// The underlying `Sandbox` instance.
-    pub fn sandbox(&mut self) -> &mut Sandbox<R> {
+    pub fn sandbox(&mut self) -> &mut Sandbox<Config> {
         &mut self.sandbox
     }
 
+    /// Returns a reference to the record of the session.
+    pub fn record(&self) -> &Record<Config::Runtime> {
+        &self.record
+    }
+
     /// Returns a reference for mocking API.
-    pub fn mocking_api(&mut self) -> &mut impl MockingApi<R> {
+    pub fn mocking_api(&mut self) -> &mut impl MockingApi<Config::Runtime> {
         self
     }
 
@@ -248,7 +257,7 @@ impl<R: RuntimeWithContracts> Session<R> {
         constructor: &str,
         args: &[S],
         salt: Vec<u8>,
-        endowment: Option<BalanceOf<R>>,
+        endowment: Option<BalanceOf<Config::Runtime>>,
         transcoder: &Rc<ContractMessageTranscoder>,
     ) -> Result<Self, SessionError> {
         self.deploy(
@@ -261,6 +270,13 @@ impl<R: RuntimeWithContracts> Session<R> {
         )
         .map(|_| self)
     }
+    fn record_events<T>(&mut self, recording: impl FnOnce(&mut Self) -> T) -> T {
+        let start = self.sandbox.events().len();
+        let result = recording(self);
+        let events = self.sandbox.events()[start..].to_vec();
+        self.record.push_event_batches(events);
+        result
+    }
 
     /// Deploys a contract with a given constructor, arguments, salt and endowment. In case of
     /// success, returns the address of the deployed contract.
@@ -270,22 +286,24 @@ impl<R: RuntimeWithContracts> Session<R> {
         constructor: &str,
         args: &[S],
         salt: Vec<u8>,
-        endowment: Option<BalanceOf<R>>,
+        endowment: Option<BalanceOf<Config::Runtime>>,
         transcoder: &Rc<ContractMessageTranscoder>,
-    ) -> Result<AccountIdFor<R>, SessionError> {
+    ) -> Result<AccountIdFor<Config::Runtime>, SessionError> {
         let data = transcoder
             .encode(constructor, args)
             .map_err(|err| SessionError::Encoding(err.to_string()))?;
 
-        let result = self.sandbox.deploy_contract(
-            contract_bytes,
-            endowment.unwrap_or_default(),
-            data,
-            salt,
-            self.actor.clone(),
-            self.gas_limit,
-            None,
-        );
+        let result = self.record_events(|session| {
+            session.sandbox.deploy_contract(
+                contract_bytes,
+                endowment.unwrap_or_default(),
+                data,
+                salt,
+                session.actor.clone(),
+                session.gas_limit,
+                None,
+            )
+        });
 
         let ret = match &result.result {
             Ok(exec_result) if exec_result.result.did_revert() => {
@@ -293,8 +311,7 @@ impl<R: RuntimeWithContracts> Session<R> {
             }
             Ok(exec_result) => {
                 let address = exec_result.account_id.clone();
-                self.deploy_returns.push(address.clone());
-
+                self.record.push_deploy_return(address.clone());
                 self.transcoders.register(address.clone(), transcoder);
 
                 Ok(address)
@@ -302,7 +319,7 @@ impl<R: RuntimeWithContracts> Session<R> {
             Err(err) => Err(SessionError::DeploymentFailed(*err)),
         };
 
-        self.deploy_results.push(result);
+        self.record.push_deploy_result(result);
         ret
     }
 
@@ -315,8 +332,8 @@ impl<R: RuntimeWithContracts> Session<R> {
         constructor: &str,
         args: &[S],
         salt: Vec<u8>,
-        endowment: Option<BalanceOf<R>>,
-    ) -> Result<AccountIdFor<R>, SessionError> {
+        endowment: Option<BalanceOf<Config::Runtime>>,
+    ) -> Result<AccountIdFor<Config::Runtime>, SessionError> {
         self.deploy(
             contract_file.wasm,
             constructor,
@@ -336,7 +353,7 @@ impl<R: RuntimeWithContracts> Session<R> {
         constructor: &str,
         args: &[S],
         salt: Vec<u8>,
-        endowment: Option<BalanceOf<R>>,
+        endowment: Option<BalanceOf<Config::Runtime>>,
     ) -> Result<Self, SessionError> {
         self.deploy_bundle(contract_file, constructor, args, salt, endowment)
             .map(|_| self)
@@ -348,7 +365,10 @@ impl<R: RuntimeWithContracts> Session<R> {
     }
 
     /// Uploads a raw contract code. In case of success returns the code hash.
-    pub fn upload(&mut self, contract_bytes: Vec<u8>) -> Result<HashFor<R>, SessionError> {
+    pub fn upload(
+        &mut self,
+        contract_bytes: Vec<u8>,
+    ) -> Result<HashFor<Config::Runtime>, SessionError> {
         let result = self.sandbox.upload_contract(
             contract_bytes,
             self.actor.clone(),
@@ -374,7 +394,7 @@ impl<R: RuntimeWithContracts> Session<R> {
     pub fn upload_bundle(
         &mut self,
         contract_file: ContractBundle,
-    ) -> Result<HashFor<R>, SessionError> {
+    ) -> Result<HashFor<Config::Runtime>, SessionError> {
         self.upload(contract_file.wasm)
     }
 
@@ -383,7 +403,7 @@ impl<R: RuntimeWithContracts> Session<R> {
         mut self,
         message: &str,
         args: &[S],
-        endowment: Option<BalanceOf<R>>,
+        endowment: Option<BalanceOf<Config::Runtime>>,
     ) -> Result<Self, SessionError> {
         // We ignore result, so we can pass `()` as the message result type, which will never fail
         // at decoding.
@@ -394,10 +414,10 @@ impl<R: RuntimeWithContracts> Session<R> {
     /// Calls the last deployed contract. In case of a successful call, returns `self`.
     pub fn call_with_address_and<S: AsRef<str> + Debug>(
         mut self,
-        address: AccountIdFor<R>,
+        address: AccountIdFor<Config::Runtime>,
         message: &str,
         args: &[S],
-        endowment: Option<BalanceOf<R>>,
+        endowment: Option<BalanceOf<Config::Runtime>>,
     ) -> Result<Self, SessionError> {
         // We ignore result, so we can pass `()` as the message result type, which will never fail
         // at decoding.
@@ -410,7 +430,7 @@ impl<R: RuntimeWithContracts> Session<R> {
         &mut self,
         message: &str,
         args: &[S],
-        endowment: Option<BalanceOf<R>>,
+        endowment: Option<BalanceOf<Config::Runtime>>,
     ) -> Result<MessageResult<T>, SessionError> {
         self.call_internal::<_, T>(None, message, args, endowment)
     }
@@ -419,25 +439,26 @@ impl<R: RuntimeWithContracts> Session<R> {
     /// result.
     pub fn call_with_address<S: AsRef<str> + Debug, T: Decode>(
         &mut self,
-        address: AccountIdFor<R>,
+        address: AccountIdFor<Config::Runtime>,
         message: &str,
         args: &[S],
-        endowment: Option<BalanceOf<R>>,
+        endowment: Option<BalanceOf<Config::Runtime>>,
     ) -> Result<MessageResult<T>, SessionError> {
         self.call_internal(Some(address), message, args, endowment)
     }
 
     fn call_internal<S: AsRef<str> + Debug, T: Decode>(
         &mut self,
-        address: Option<AccountIdFor<R>>,
+        address: Option<AccountIdFor<Config::Runtime>>,
         message: &str,
         args: &[S],
-        endowment: Option<BalanceOf<R>>,
+        endowment: Option<BalanceOf<Config::Runtime>>,
     ) -> Result<MessageResult<T>, SessionError> {
         let address = match address {
             Some(address) => address,
             None => self
-                .deploy_returns
+                .record
+                .deploy_returns()
                 .last()
                 .ok_or(SessionError::NoContract)?
                 .clone(),
@@ -451,70 +472,29 @@ impl<R: RuntimeWithContracts> Session<R> {
             .encode(message, args)
             .map_err(|err| SessionError::Encoding(err.to_string()))?;
 
-        let result = self.sandbox.call_contract(
-            address,
-            endowment.unwrap_or_default(),
-            data,
-            self.actor.clone(),
-            self.gas_limit,
-            None,
-            self.determinism,
-        );
+        let result = self.record_events(|session| {
+            session.sandbox.call_contract(
+                address,
+                endowment.unwrap_or_default(),
+                data,
+                session.actor.clone(),
+                session.gas_limit,
+                None,
+                session.determinism,
+            )
+        });
 
         let ret = match &result.result {
             Ok(exec_result) if exec_result.did_revert() => Err(SessionError::CallReverted),
             Ok(exec_result) => {
-                let encoded = exec_result.data.clone();
-                self.call_returns.push(encoded.clone());
-
-                MessageResult::<T>::decode(&mut encoded.as_slice()).map_err(|err| {
-                    SessionError::Decoding(format!(
-                        "Failed to decode the result of calling a contract: {err:?}",
-                    ))
-                })
+                self.record.push_call_return(exec_result.data.clone());
+                self.record.last_call_return_decoded::<T>()
             }
             Err(err) => Err(SessionError::CallFailed(*err)),
         };
 
-        self.call_results.push(result);
+        self.record.push_call_result(result);
         ret
-    }
-
-    /// Returns the last result of deploying a contract.
-    pub fn last_deploy_result(
-        &self,
-    ) -> Option<&ContractInstantiateResult<AccountIdFor<R>, BalanceOf<R>, EventRecordOf<R>>> {
-        self.deploy_results.last()
-    }
-
-    /// Returns the address of the last deployed contract.
-    pub fn last_deploy_return(&self) -> Option<AccountIdFor<R>> {
-        self.deploy_returns.last().cloned()
-    }
-
-    /// Returns the addresses of all deployed contracts in the order of deploying.
-    pub fn deployed_contracts(&self) -> Vec<AccountIdFor<R>> {
-        self.deploy_returns.clone()
-    }
-
-    /// Returns the last result of calling a contract.
-    pub fn last_call_result(&self) -> Option<&ContractExecResult<BalanceOf<R>, EventRecordOf<R>>> {
-        self.call_results.last()
-    }
-
-    /// Returns the last value (in the encoded form) returned from calling a contract.
-    ///
-    /// Returns `None` if there has been no call yet.
-    pub fn last_call_raw_return(&self) -> Option<Vec<u8>> {
-        self.call_returns.last().cloned()
-    }
-
-    /// Returns the last value (in the decoded form) returned from calling a contract.
-    ///
-    /// Returns `None` if there has been no call yet, or if decoding failed.
-    pub fn last_call_return<T: Decode>(&self) -> Option<MessageResult<T>> {
-        let raw = self.last_call_raw_return()?;
-        MessageResult::decode(&mut raw.as_slice()).ok()
     }
 
     /// Set the tracing extension

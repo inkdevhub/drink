@@ -23,16 +23,16 @@ pub use frame_support::{
 };
 use frame_system::EventRecord;
 pub use mock::{mock_message, ContractMock, MessageMock, MockedCallResult, Selector};
-use pallet_contracts::debug::ExecResult;
-use pallet_contracts_primitives::{ExecReturnValue, ReturnFlags};
+use pallet_contracts::{debug::ExecResult, ExecReturnValue};
+use pallet_contracts_uapi::ReturnFlags;
 use parity_scale_codec::{Decode, Encode};
 /// Export pallets that are used in the minimal runtime.
 pub use {frame_support, frame_system, pallet_balances, pallet_contracts, pallet_timestamp};
 
+pub use crate::runtime::minimal::{self, MinimalRuntime};
 use crate::{
-    errors::MessageResult,
-    mock::MockRegistry,
-    runtime::{pallet_contracts_debugging::InterceptingExtT, *},
+    errors::MessageResult, mock::MockRegistry,
+    runtime::pallet_contracts_debugging::InterceptingExtT,
 };
 
 /// Alias for `frame-system`'s `RuntimeCall` type.

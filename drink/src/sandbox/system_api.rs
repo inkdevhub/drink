@@ -4,22 +4,22 @@ use frame_support::sp_runtime::{traits::Dispatchable, DispatchResultWithInfo};
 use frame_system::pallet_prelude::BlockNumberFor;
 
 use super::Sandbox;
-use crate::{EventRecordOf, RuntimeCall};
+use crate::{EventRecordOf, RuntimeCall, SandboxConfig};
 
-impl<R: frame_system::Config> Sandbox<R> {
+impl<Config: SandboxConfig> Sandbox<Config> {
     /// Return the current height of the chain.
-    pub fn block_number(&mut self) -> BlockNumberFor<R> {
-        self.execute_with(|| frame_system::Pallet::<R>::block_number())
+    pub fn block_number(&mut self) -> BlockNumberFor<Config::Runtime> {
+        self.execute_with(frame_system::Pallet::<Config::Runtime>::block_number)
     }
 
     /// Return the events of the current block so far.
-    pub fn events(&mut self) -> Vec<EventRecordOf<R>> {
-        self.execute_with(frame_system::Pallet::<R>::events)
+    pub fn events(&mut self) -> Vec<EventRecordOf<Config::Runtime>> {
+        self.execute_with(frame_system::Pallet::<Config::Runtime>::events)
     }
 
     /// Reset the events of the current block.
     pub fn reset_events(&mut self) {
-        self.execute_with(frame_system::Pallet::<R>::reset_events)
+        self.execute_with(frame_system::Pallet::<Config::Runtime>::reset_events)
     }
 
     /// Execute a runtime call (dispatchable).
@@ -28,11 +28,13 @@ impl<R: frame_system::Config> Sandbox<R> {
     ///
     /// * `call` - The runtime call to execute.
     /// * `origin` - The origin of the call.
-    pub fn runtime_call<Origin: Into<<RuntimeCall<R> as Dispatchable>::RuntimeOrigin>>(
+    pub fn runtime_call<
+        Origin: Into<<RuntimeCall<Config::Runtime> as Dispatchable>::RuntimeOrigin>,
+    >(
         &mut self,
-        call: RuntimeCall<R>,
+        call: RuntimeCall<Config::Runtime>,
         origin: Origin,
-    ) -> DispatchResultWithInfo<<RuntimeCall<R> as Dispatchable>::PostInfo> {
+    ) -> DispatchResultWithInfo<<RuntimeCall<Config::Runtime> as Dispatchable>::PostInfo> {
         self.execute_with(|| call.dispatch(origin.into()))
     }
 }
@@ -42,8 +44,8 @@ mod tests {
     use frame_support::sp_runtime::{traits::Dispatchable, DispatchResultWithInfo};
 
     use crate::{
-        runtime::{minimal::RuntimeEvent, MinimalRuntime, Runtime},
-        AccountId32, RuntimeCall, Sandbox,
+        runtime::{minimal::RuntimeEvent, MinimalRuntime},
+        AccountId32, RuntimeCall, Sandbox, SandboxConfig,
     };
 
     fn make_transfer(
@@ -51,9 +53,17 @@ mod tests {
         dest: AccountId32,
         value: u128,
     ) -> DispatchResultWithInfo<<RuntimeCall<MinimalRuntime> as Dispatchable>::PostInfo> {
+        assert_ne!(
+            MinimalRuntime::default_actor(),
+            dest,
+            "make_transfer should send to account different than default_actor"
+        );
         sandbox.runtime_call(
             RuntimeCall::<MinimalRuntime>::Balances(
-                pallet_balances::Call::<MinimalRuntime>::transfer { dest, value },
+                pallet_balances::Call::<MinimalRuntime>::transfer_allow_death {
+                    dest: dest.into(),
+                    value,
+                },
             ),
             Some(MinimalRuntime::default_actor()),
         )
@@ -78,7 +88,6 @@ mod tests {
         let mut sandbox = Sandbox::<MinimalRuntime>::new().expect("Failed to create sandbox");
 
         const RECIPIENT: AccountId32 = AccountId32::new([2u8; 32]);
-        assert_ne!(MinimalRuntime::default_actor(), RECIPIENT);
         let initial_balance = sandbox.free_balance(&RECIPIENT);
 
         let result = make_transfer(&mut sandbox, RECIPIENT, 100);
@@ -91,30 +100,33 @@ mod tests {
     #[test]
     fn current_events() {
         let mut sandbox = Sandbox::<MinimalRuntime>::new().expect("Failed to create sandbox");
+        const RECIPIENT: AccountId32 = AccountId32::new([2u8; 32]);
 
         let events_before = sandbox.events();
         assert!(events_before.is_empty());
 
-        make_transfer(&mut sandbox, MinimalRuntime::default_actor(), 1)
-            .expect("Failed to make transfer");
+        make_transfer(&mut sandbox, RECIPIENT, 1).expect("Failed to make transfer");
 
         let events_after = sandbox.events();
-        assert_eq!(events_after.len(), 1);
-        assert!(matches!(events_after[0].event, RuntimeEvent::Balances(_)));
+        assert!(!events_after.is_empty());
+        assert!(matches!(
+            events_after.last().unwrap().event,
+            RuntimeEvent::Balances(_)
+        ));
     }
 
     #[test]
     fn resetting_events() {
         let mut sandbox = Sandbox::<MinimalRuntime>::new().expect("Failed to create sandbox");
-        let actor = MinimalRuntime::default_actor();
+        const RECIPIENT: AccountId32 = AccountId32::new([3u8; 32]);
 
-        make_transfer(&mut sandbox, actor.clone(), 1).expect("Failed to make transfer");
+        make_transfer(&mut sandbox, RECIPIENT.clone(), 1).expect("Failed to make transfer");
 
         assert!(!sandbox.events().is_empty());
         sandbox.reset_events();
         assert!(sandbox.events().is_empty());
 
-        make_transfer(&mut sandbox, actor, 1).expect("Failed to make transfer");
+        make_transfer(&mut sandbox, RECIPIENT, 1).expect("Failed to make transfer");
         assert!(!sandbox.events().is_empty());
     }
 }

@@ -1,7 +1,11 @@
 use ink::env::{chain_extension::FromStatusCode, DefaultEnvironment, Environment};
 
 /// Simple chain extension that provides some staking information.
+<<<<<<< HEAD
 #[ink::chain_extension(extension = 1)]
+=======
+#[ink::chain_extension(extension = 0)]
+>>>>>>> main
 pub trait StakingExtension {
     type ErrorCode = StakingExtensionErrorCode;
 

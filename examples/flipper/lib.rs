@@ -34,22 +34,19 @@ mod flipper {
 mod tests {
     use std::error::Error;
 
-    use drink::{
-        runtime::MinimalRuntime,
-        session::{Session, NO_ARGS, NO_ENDOWMENT, NO_SALT},
-    };
+    use drink::session::{Session, NO_ARGS, NO_ENDOWMENT, NO_SALT};
 
     #[drink::contract_bundle_provider]
     enum BundleProvider {}
 
     #[drink::test]
-    fn initialization() -> Result<(), Box<dyn Error>> {
+    fn initialization(mut session: Session) -> Result<(), Box<dyn Error>> {
         let contract = BundleProvider::local()?;
-        let init_value: bool = Session::<MinimalRuntime>::new()?
+        let init_value: bool = session
             .deploy_bundle_and(contract, "new", &["true"], NO_SALT, NO_ENDOWMENT)?
             .call_and("get", NO_ARGS, NO_ENDOWMENT)?
-            .last_call_return()
-            .expect("Call was successful, so there should be a return")
+            .record()
+            .last_call_return_decoded()?
             .expect("Call was successful");
 
         assert_eq!(init_value, true);
@@ -58,16 +55,45 @@ mod tests {
     }
 
     #[drink::test]
-    fn flipping() -> Result<(), Box<dyn Error>> {
+    fn flipping(mut session: Session) -> Result<(), Box<dyn Error>> {
         let contract = BundleProvider::Flipper.bundle()?;
-        let init_value: bool = Session::<MinimalRuntime>::new()?
+        let init_value: bool = session
             .deploy_bundle_and(contract, "new", &["true"], NO_SALT, NO_ENDOWMENT)?
             .call_and("flip", NO_ARGS, NO_ENDOWMENT)?
             .call_and("flip", NO_ARGS, NO_ENDOWMENT)?
             .call_and("flip", NO_ARGS, NO_ENDOWMENT)?
             .call_and("get", NO_ARGS, NO_ENDOWMENT)?
-            .last_call_return()
-            .expect("Call was successful, so there should be a return")
+            .record()
+            .last_call_return_decoded()?
+            .expect("Call was successful");
+
+        assert_eq!(init_value, false);
+
+        Ok(())
+    }
+
+    use pallet_contracts_mock_network::{ALICE, parachain::Runtime as ParachainRuntime};
+    use drink::impl_sandbox_config;
+
+    impl_sandbox_config!(
+        struct ParachainConfig {
+            runtime: ParachainRuntime;
+            default_balance: 1_000_000_000_000_000; 
+            default_actor: ALICE;
+        }
+    );
+
+    #[drink::test(config = ParachainConfig)]
+    fn test_flipping_with_custom_runtime(mut session: Session) -> Result<(), Box<dyn std::error::Error>> {
+        let contract = BundleProvider::Flipper.bundle()?;
+        let init_value: bool = session
+            .deploy_bundle_and(contract, "new", &["true"], NO_SALT, NO_ENDOWMENT)?
+            .call_and("flip", NO_ARGS, NO_ENDOWMENT)?
+            .call_and("flip", NO_ARGS, NO_ENDOWMENT)?
+            .call_and("flip", NO_ARGS, NO_ENDOWMENT)?
+            .call_and("get", NO_ARGS, NO_ENDOWMENT)?
+            .record()
+            .last_call_return_decoded()?
             .expect("Call was successful");
 
         assert_eq!(init_value, false);
@@ -75,3 +101,4 @@ mod tests {
         Ok(())
     }
 }
+

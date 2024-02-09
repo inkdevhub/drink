@@ -20,6 +20,7 @@ mod contract_calling_chain_extension {
     pub struct ContractCallingChainExtension {}
 
     impl ContractCallingChainExtension {
+        #[allow(clippy::new_without_default)]
         #[ink(constructor)]
         pub fn new() -> Self {
             Self {}
@@ -46,14 +47,14 @@ mod tests {
 
     // We can inject arbitrary chain extension into the minimal runtime as follows:
     create_minimal_runtime!(
-        RuntimeWithCE,
+        SandboxWithCE,
         crate::chain_extension_runtime_side::StakingExtension
     );
 
     /// Test that we can call chain extension from ink! contract and get a correct result.
-    #[drink::test]
-    fn we_can_test_chain_extension() -> Result<(), Box<dyn std::error::Error>> {
-        let result: u32 = Session::<RuntimeWithCE>::new()?
+    #[drink::test(config = SandboxWithCE)]
+    fn we_can_test_chain_extension(mut session: Session) -> Result<(), Box<dyn std::error::Error>> {
+        let result: u32 = session
             .deploy_bundle_and(
                 BundleProvider::local()?,
                 "new",

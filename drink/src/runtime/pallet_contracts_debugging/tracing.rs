@@ -1,8 +1,7 @@
 use pallet_contracts::{
     debug::{CallSpan, ExportedFunction},
-    Tracing,
+    ExecReturnValue, Tracing,
 };
-use pallet_contracts_primitives::ExecReturnValue;
 
 use crate::runtime::{pallet_contracts_debugging::DrinkDebug, AccountIdFor};
 

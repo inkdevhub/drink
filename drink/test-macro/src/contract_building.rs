@@ -6,8 +6,8 @@ use std::{
 
 use cargo_metadata::{Metadata, MetadataCommand, Package};
 use contract_build::{
-    BuildArtifacts, BuildMode, ExecuteArgs, Features, ManifestPath, Network, OptimizationPasses,
-    OutputType, Target, UnstableFlags, Verbosity,
+    BuildArtifacts, BuildMode, ExecuteArgs, Features, ImageVariant, ManifestPath, Network,
+    OptimizationPasses, OutputType, Target, UnstableFlags, Verbosity, DEFAULT_MAX_MEMORY_PAGES,
 };
 
 use crate::bundle_provision::BundleProviderGenerator;
@@ -60,12 +60,11 @@ fn get_contract_crates(metadata: &Metadata) -> (Option<&Package>, impl Iterator<
     let contract_deps = dep_graph
         .nodes
         .iter()
-        .filter(|&node| {
+        .filter(|node| {
             node.features
                 .contains(&INK_AS_DEPENDENCY_FEATURE.to_string())
         })
-        .map(|node| node.id.clone())
-        .map(pkg_lookup);
+        .map(move |node| pkg_lookup(node.id.clone()));
 
     let root = dep_graph
         .root
@@ -106,8 +105,8 @@ fn build_contract_crate(pkg: &Package) -> (String, PathBuf) {
                 output_type: OutputType::HumanReadable,
                 skip_wasm_validation: false,
                 target: Target::Wasm,
-                max_memory_pages: contract_build::DEFAULT_MAX_MEMORY_PAGES,
-                image: contract_build::ImageVariant::Default,
+                max_memory_pages: DEFAULT_MAX_MEMORY_PAGES,
+                image: ImageVariant::Default,
             };
 
             let result = contract_build::execute(args).expect("Error building contract");

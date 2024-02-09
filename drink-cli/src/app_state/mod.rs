@@ -1,11 +1,7 @@
 use std::{env, path::PathBuf};
 
 pub use contracts::{Contract, ContractIndex, ContractRegistry};
-use drink::{
-    runtime::{MinimalRuntime, Runtime},
-    session::Session,
-    Weight, DEFAULT_GAS_LIMIT,
-};
+use drink::{runtime::MinimalRuntime, session::Session, SandboxConfig, Weight, DEFAULT_GAS_LIMIT};
 use sp_core::crypto::AccountId32;
 pub use user_input::UserInput;
 

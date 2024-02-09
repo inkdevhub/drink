@@ -12,6 +12,7 @@ mod contract {
 
     impl CrossCallingContract {
         #[ink(constructor)]
+        #[allow(clippy::new_without_default)]
         pub fn new() -> Self {
             Self {}
         }
@@ -53,8 +54,8 @@ mod contract {
         #[ink(message)]
         pub fn inner_call(&self, arg: u32) -> u32 {
             match arg % 2 {
-                0 => arg / 2,
-                _ => 3 * arg + 1,
+                0 => arg.checked_div(2).unwrap(),
+                _ => 3_u32.saturating_mul(arg).saturating_add(1),
             }
         }
     }
@@ -65,10 +66,7 @@ mod tests {
     use std::{cell::RefCell, error::Error};
 
     use drink::{
-        runtime::{
-            pallet_contracts_debugging::{TracingExt, TracingExtT},
-            MinimalRuntime,
-        },
+        runtime::pallet_contracts_debugging::{TracingExt, TracingExtT},
         session::{contract_transcode::Value, Session, NO_ARGS, NO_ENDOWMENT},
         AccountId32,
     };
@@ -117,7 +115,7 @@ mod tests {
                 };
 
                 transcoder
-                    .decode_return(call_name, &mut result.as_slice())
+                    .decode_message_return(call_name, &mut result.as_slice())
                     .unwrap()
             } else {
                 Value::Unit
@@ -131,8 +129,7 @@ mod tests {
     }
 
     #[drink::test]
-    fn test() -> Result<(), Box<dyn Error>> {
-        let mut session = Session::<MinimalRuntime>::new()?;
+    fn test(mut session: Session) -> Result<(), Box<dyn Error>> {
         session.set_tracing_extension(TracingExt(Box::new(TestDebugger {})));
 
         let outer_address = session.deploy_bundle(
