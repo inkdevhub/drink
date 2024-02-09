@@ -7,11 +7,7 @@ repository = "https://github.com/Cardinal-Cryptography/drink"
 version = "0.1.0"
 
 [dependencies]
-<<<<<<< HEAD
 ink = { version = "=5.0.0-rc.1", default-features = false }
-=======
-ink = { version = "=5.0.0-rc", default-features = false }
->>>>>>> main
 
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2.6", default-features = false, features = ["derive"], optional = true }
