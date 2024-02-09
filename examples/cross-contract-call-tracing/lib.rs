@@ -26,7 +26,8 @@ mod contract {
         ) -> u32 {
             build_call::<DefaultEnvironment>()
                 .call(next_callee)
-                .gas_limit(0)
+                .proof_time_limit(0)
+                .storage_deposit_limit(0)
                 .transferred_value(0)
                 .exec_input(
                     ExecutionInput::new(Selector::new(ink::selector_bytes!("middle_call")))
@@ -41,7 +42,8 @@ mod contract {
         pub fn middle_call(&self, next_callee: AccountId, arg: u32) -> u32 {
             build_call::<DefaultEnvironment>()
                 .call(next_callee)
-                .gas_limit(0)
+                .proof_time_limit(0)
+                .storage_deposit_limit(0)
                 .transferred_value(0)
                 .exec_input(
                     ExecutionInput::new(Selector::new(ink::selector_bytes!("inner_call")))
