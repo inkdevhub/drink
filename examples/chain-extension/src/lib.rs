@@ -47,12 +47,12 @@ mod tests {
 
     // We can inject arbitrary chain extension into the minimal runtime as follows:
     create_minimal_runtime!(
-        RuntimeWithCE,
+        SandboxWithCE,
         crate::chain_extension_runtime_side::StakingExtension
     );
 
     /// Test that we can call chain extension from ink! contract and get a correct result.
-    #[drink::test(runtime = RuntimeWithCE)]
+    #[drink::test(config = SandboxWithCE)]
     fn we_can_test_chain_extension(mut session: Session) -> Result<(), Box<dyn std::error::Error>> {
         let result: u32 = session
             .deploy_bundle_and(

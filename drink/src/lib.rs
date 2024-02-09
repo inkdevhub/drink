@@ -29,10 +29,10 @@ use parity_scale_codec::{Decode, Encode};
 /// Export pallets that are used in the minimal runtime.
 pub use {frame_support, frame_system, pallet_balances, pallet_contracts, pallet_timestamp};
 
+pub use crate::runtime::minimal::{self, MinimalRuntime};
 use crate::{
-    errors::MessageResult,
-    mock::MockRegistry,
-    runtime::{pallet_contracts_debugging::InterceptingExtT, *},
+    errors::MessageResult, mock::MockRegistry,
+    runtime::pallet_contracts_debugging::InterceptingExtT,
 };
 
 /// Alias for `frame-system`'s `RuntimeCall` type.

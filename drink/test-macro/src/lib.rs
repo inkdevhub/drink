@@ -39,8 +39,8 @@ type SynResult<T> = Result<T, syn::Error>;
 /// # Creating a session object
 ///
 /// The macro will also create a new mutable session object and pass it to the decorated function by value. You can
-/// configure which runtime should be used (by specifying a path to a type implementing
-/// `drink::runtime::RuntimeWithContracts` trait. Thus, your testcase function should accept a single argument:
+/// configure which sandbox should be used (by specifying a path to a type implementing
+/// `drink::runtime::SandboxConfig` trait. Thus, your testcase function should accept a single argument:
 /// `mut session: Session<_>`.
 ///
 /// By default, the macro will use `drink::runtime::MinimalRuntime`.
@@ -65,7 +65,7 @@ pub fn test(attr: TokenStream, item: TokenStream) -> TokenStream {
 
 #[derive(FromMeta)]
 struct TestAttributes {
-    runtime: Option<syn::Path>,
+    config: Option<syn::Path>,
 }
 
 /// Auxiliary function to enter ?-based error propagation.
@@ -85,15 +85,15 @@ fn test_internal(attr: TokenStream2, item: TokenStream2) -> SynResult<TokenStrea
     let fn_const = item_fn.sig.constness;
     let fn_unsafety = item_fn.sig.unsafety;
 
-    let runtime = macro_args
-        .runtime
+    let config = macro_args
+        .config
         .unwrap_or(syn::parse2(quote! { ::drink::runtime::MinimalRuntime })?);
 
     Ok(quote! {
         #[test]
         #(#fn_attrs)*
         #fn_vis #fn_async #fn_const #fn_unsafety fn #fn_name #fn_generics () #fn_output {
-            let mut session = Session::<#runtime>::new().expect("Failed to create a session");
+            let mut session = Session::<#config>::new().expect("Failed to create a session");
             #fn_block
         }
     })

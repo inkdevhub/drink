@@ -3,8 +3,8 @@ mod tests {
     use drink::{
         pallet_balances, pallet_contracts,
         pallet_contracts::Determinism,
-        runtime::{minimal::RuntimeCall, MinimalRuntime, Runtime},
-        AccountId32, Sandbox,
+        runtime::{minimal::RuntimeCall, MinimalRuntime},
+        AccountId32, Sandbox, SandboxConfig,
     };
 
     #[test]

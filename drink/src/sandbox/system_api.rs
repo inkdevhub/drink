@@ -4,22 +4,22 @@ use frame_support::sp_runtime::{traits::Dispatchable, DispatchResultWithInfo};
 use frame_system::pallet_prelude::BlockNumberFor;
 
 use super::Sandbox;
-use crate::{EventRecordOf, RuntimeCall};
+use crate::{EventRecordOf, RuntimeCall, SandboxConfig};
 
-impl<R: frame_system::Config> Sandbox<R> {
+impl<Config: SandboxConfig> Sandbox<Config> {
     /// Return the current height of the chain.
-    pub fn block_number(&mut self) -> BlockNumberFor<R> {
-        self.execute_with(|| frame_system::Pallet::<R>::block_number())
+    pub fn block_number(&mut self) -> BlockNumberFor<Config::Runtime> {
+        self.execute_with(frame_system::Pallet::<Config::Runtime>::block_number)
     }
 
     /// Return the events of the current block so far.
-    pub fn events(&mut self) -> Vec<EventRecordOf<R>> {
-        self.execute_with(frame_system::Pallet::<R>::events)
+    pub fn events(&mut self) -> Vec<EventRecordOf<Config::Runtime>> {
+        self.execute_with(frame_system::Pallet::<Config::Runtime>::events)
     }
 
     /// Reset the events of the current block.
     pub fn reset_events(&mut self) {
-        self.execute_with(frame_system::Pallet::<R>::reset_events)
+        self.execute_with(frame_system::Pallet::<Config::Runtime>::reset_events)
     }
 
     /// Execute a runtime call (dispatchable).
@@ -28,11 +28,13 @@ impl<R: frame_system::Config> Sandbox<R> {
     ///
     /// * `call` - The runtime call to execute.
     /// * `origin` - The origin of the call.
-    pub fn runtime_call<Origin: Into<<RuntimeCall<R> as Dispatchable>::RuntimeOrigin>>(
+    pub fn runtime_call<
+        Origin: Into<<RuntimeCall<Config::Runtime> as Dispatchable>::RuntimeOrigin>,
+    >(
         &mut self,
-        call: RuntimeCall<R>,
+        call: RuntimeCall<Config::Runtime>,
         origin: Origin,
-    ) -> DispatchResultWithInfo<<RuntimeCall<R> as Dispatchable>::PostInfo> {
+    ) -> DispatchResultWithInfo<<RuntimeCall<Config::Runtime> as Dispatchable>::PostInfo> {
         self.execute_with(|| call.dispatch(origin.into()))
     }
 }
@@ -42,8 +44,8 @@ mod tests {
     use frame_support::sp_runtime::{traits::Dispatchable, DispatchResultWithInfo};
 
     use crate::{
-        runtime::{minimal::RuntimeEvent, MinimalRuntime, Runtime},
-        AccountId32, RuntimeCall, Sandbox,
+        runtime::{minimal::RuntimeEvent, MinimalRuntime},
+        AccountId32, RuntimeCall, Sandbox, SandboxConfig,
     };
 
     fn make_transfer(
