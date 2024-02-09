@@ -60,12 +60,11 @@ fn get_contract_crates(metadata: &Metadata) -> (Option<&Package>, impl Iterator<
     let contract_deps = dep_graph
         .nodes
         .iter()
-        .filter_map(|node| {
+        .filter(|node| {
             node.features
                 .contains(&INK_AS_DEPENDENCY_FEATURE.to_string())
-                .then(|| node.id.clone())
         })
-        .map(pkg_lookup);
+        .map(move |node| pkg_lookup(node.id.clone()));
 
     let root = dep_graph
         .root
