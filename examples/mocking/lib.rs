@@ -26,8 +26,7 @@ mod proxy {
         #[ink(message)]
         pub fn forward_call(&self, callee: AccountId) -> (u8, u8) {
             build_call::<DefaultEnvironment>()
-                .call(callee)
-                .gas_limit(0)
+                .call_v1(callee)
                 .transferred_value(0)
                 .exec_input(ExecutionInput::new(CALLEE_SELECTOR.into()))
                 .returns::<(u8, u8)>()
