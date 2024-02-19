@@ -1,6 +1,7 @@
 #![allow(missing_docs)] // `construct_macro` doesn't allow doc comments for the runtime type.
 
-/// The macro will generate an implementation of `drink::SandboxConfig` for the given runtime type.
+/// The macro will generate an implementation of `drink::SandboxConfig` for the given
+/// runtime type.
 #[macro_export]
 macro_rules! impl_sandbox_config {
     (
@@ -79,8 +80,8 @@ macro_rules! impl_sandbox_config {
     };
 }
 
-/// Macro creating a minimal runtime with the given name. Optionally can take a chain extension
-/// type as a second argument.
+/// Macro creating a minimal runtime with the given name. Optionally can take a chain
+/// extension type as a second argument.
 ///
 /// The new macro will automatically implement `drink::SandboxConfig`.
 #[macro_export]
@@ -139,7 +140,6 @@ mod construct_runtime {
         type FreezeIdentifier = ();
         type MaxLocks = ();
         type MaxReserves = ();
-        type MaxHolds = ConstU32<1>;
         type MaxFreezes = ();
         type RuntimeHoldReason = RuntimeHoldReason;
         type RuntimeFreezeReason = RuntimeFreezeReason;
