@@ -47,8 +47,27 @@ mod tests {
     enum BundleProvider {}
 
     #[drink::test]
-    fn compile(mut session: Session) -> Result<(), Box<dyn Error>> {
-        let contract = BundleProvider::local()?;
+    fn contracts_work_correctly(mut session: Session) -> Result<(), Box<dyn Error>> {
+        let token_contract = session.deploy_bundle(
+            BundleProvider::Psp22.bundle()?,
+            "new",
+            &["10", "None", "None", "1"],
+            NO_SALT,
+            NO_ENDOWMENT,
+        )?;
+
+        let user_account = session.get_actor();
+        let _checker_contract = session.deploy_bundle(
+            BundleProvider::local()?,
+            "new",
+            &[user_account.to_string(), token_contract.to_string()],
+            NO_SALT,
+            NO_ENDOWMENT,
+        )?;
+
+        let balance: u128 = session.call("check", NO_ARGS, NO_ENDOWMENT)??;
+        assert_eq!(balance, 10);
+
         Ok(())
     }
 }
