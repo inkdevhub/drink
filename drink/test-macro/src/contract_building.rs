@@ -82,7 +82,8 @@ fn get_contract_crates(metadata: &Metadata) -> (Option<&Package>, impl Iterator<
 
 fn build_contract_crate(pkg: &Package) -> (String, PathBuf) {
     let manifest_path = get_manifest_path(pkg);
-
+    let mut features = Features::default();
+    features.push("contract");
     match CONTRACTS_BUILT
         .get_or_init(|| Mutex::new(HashMap::new()))
         .lock()
@@ -95,7 +96,7 @@ fn build_contract_crate(pkg: &Package) -> (String, PathBuf) {
                 manifest_path,
                 verbosity: Verbosity::Default,
                 build_mode: BuildMode::Release,
-                features: Features::default(),
+                features,
                 network: Network::Online,
                 build_artifact: BuildArtifacts::All,
                 unstable_flags: UnstableFlags::default(),

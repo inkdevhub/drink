@@ -1,0 +1,26 @@
+[package]
+name = "multiple-contracts"
+authors = ["Cardinal", "Aleph Zero Foundation"]
+edition = "2021"
+homepage = "https://alephzero.org"
+repository = "https://github.com/Cardinal-Cryptography/drink"
+version = "0.1.0"
+
+[dependencies]
+ink = { version = "=5.0.0-rc.1", default-features = false, features = ["ink-debug"] }
+psp22 = { git = "https://github.com/Cardinal-Cryptography/PSP22.git", default-features = false, features = ["contract", "ink-as-dependency"] }
+
+[dev-dependencies]
+drink = { path = "../../drink" }
+
+[lib]
+path = "lib.rs"
+
+[features]
+default = ["std"]
+std = [
+    "ink/std",
+    "psp22/std",
+]
+ink-as-dependency = []
+contract = []
