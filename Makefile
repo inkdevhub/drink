@@ -8,7 +8,7 @@ run: ## Run the project
 	cargo run --release
 
 build: ## Build the project
-	cargo build --release
+	cargo build --release -j 12
 
 lint: ## Run the linter
 	cargo +nightly fmt
