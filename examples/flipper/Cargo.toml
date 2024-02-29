@@ -16,9 +16,8 @@ scale-info = { version = "2.6", default-features = false, features = ["derive"],
 drink = { path = "../../drink" }
 
 # testing custom runtime
-frame-support = "28.0.0"
-frame-system = "28.0.0"
-pallet-contracts-mock-network = "5.0.0"
+frame-support = "27.0.0"
+frame-system = "27.0.0"
 
 
 [lib]
