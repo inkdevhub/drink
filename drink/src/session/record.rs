@@ -192,7 +192,7 @@ impl EventBatch<MinimalRuntime> {
                         // We have to `encode` the data because `decode_contract_event` is targeted
                         // at decoding the data from the runtime, and not directly from the contract
                         // events.
-                        .decode_contract_event(&signature_topic.into(), &mut &*data.encode())
+                        .decode_contract_event(&signature_topic, &mut &*data.encode())
                     {
                         return Some(decoded);
                     }
