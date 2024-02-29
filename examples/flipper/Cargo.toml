@@ -18,7 +18,7 @@ drink = { path = "../../drink" }
 # testing custom runtime
 frame-support = "28.0.0"
 frame-system = "28.0.0"
-pallet-contracts-mock-network = "3.0.0"
+pallet-contracts-mock-network = "4.0.0"
 
 
 [lib]
