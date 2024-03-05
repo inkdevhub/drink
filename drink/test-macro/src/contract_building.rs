@@ -43,7 +43,18 @@ pub fn build_contracts() -> BundleProviderGenerator {
     )
 }
 
-fn get_contract_crates(metadata: &Metadata) -> (Option<&Package>, impl Iterator<Item = &Package>) {
+/// Contract package together with the features it should be built with.
+struct FeaturedPackage<'metadata> {
+    package: &'metadata Package,
+    features_on: Vec<String>,
+}
+
+fn get_contract_crates(
+    metadata: &Metadata,
+) -> (
+    Option<FeaturedPackage>,
+    impl Iterator<Item = FeaturedPackage>,
+) {
     let pkg_lookup = |id| {
         metadata
             .packages
@@ -64,7 +75,14 @@ fn get_contract_crates(metadata: &Metadata) -> (Option<&Package>, impl Iterator<
             node.features
                 .contains(&INK_AS_DEPENDENCY_FEATURE.to_string())
         })
-        .map(move |node| pkg_lookup(node.id.clone()));
+        .map(move |node| {
+            let mut features_on = node.features.clone();
+            features_on.retain(|feature| feature != INK_AS_DEPENDENCY_FEATURE && feature != "std");
+            FeaturedPackage {
+                package: pkg_lookup(node.id.clone()),
+                features_on,
+            }
+        });
 
     let root = dep_graph
         .root
@@ -75,13 +93,20 @@ fn get_contract_crates(metadata: &Metadata) -> (Option<&Package>, impl Iterator<
     (
         root.features
             .contains_key(INK_AS_DEPENDENCY_FEATURE)
-            .then_some(root),
+            .then_some(FeaturedPackage {
+                package: root,
+                features_on: vec![],
+            }),
         contract_deps,
     )
 }
 
-fn build_contract_crate(pkg: &Package) -> (String, PathBuf) {
-    let manifest_path = get_manifest_path(pkg);
+fn build_contract_crate(pkg: FeaturedPackage) -> (String, PathBuf) {
+    let manifest_path = get_manifest_path(pkg.package);
+    let mut features = Features::default();
+    for feature in pkg.features_on {
+        features.push(&feature);
+    }
 
     match CONTRACTS_BUILT
         .get_or_init(|| Mutex::new(HashMap::new()))
@@ -95,7 +120,7 @@ fn build_contract_crate(pkg: &Package) -> (String, PathBuf) {
                 manifest_path,
                 verbosity: Verbosity::Default,
                 build_mode: BuildMode::Release,
-                features: Features::default(),
+                features,
                 network: Network::Online,
                 build_artifact: BuildArtifacts::All,
                 unstable_flags: UnstableFlags::default(),
@@ -115,7 +140,7 @@ fn build_contract_crate(pkg: &Package) -> (String, PathBuf) {
                 .expect("Metadata should have been generated")
                 .dest_bundle;
 
-            let new_entry = (pkg.name.clone(), bundle_path);
+            let new_entry = (pkg.package.name.clone(), bundle_path);
             todo.insert(new_entry.clone());
             new_entry
         }
