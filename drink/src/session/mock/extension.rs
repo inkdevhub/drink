@@ -1,11 +1,13 @@
 use std::sync::{Arc, Mutex};
 
+use pallet_contracts::{debug::ExecResult, ExecReturnValue};
+use pallet_contracts_uapi::ReturnFlags;
 use parity_scale_codec::{Decode, Encode};
 
 use crate::{
-    errors::MessageResult, mock::MockRegistry,
-    runtime::pallet_contracts_debugging::InterceptingExtT, ExecResult, ExecReturnValue,
-    ReturnFlags, Selector,
+    errors::MessageResult,
+    runtime::pallet_contracts_debugging::InterceptingExtT,
+    session::mock::{MockRegistry, Selector},
 };
 
 /// Runtime extension enabling contract call interception.

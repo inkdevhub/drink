@@ -4,7 +4,6 @@
 #![warn(missing_docs)]
 
 pub mod errors;
-mod mock;
 pub mod runtime;
 pub mod sandbox;
 pub use sandbox::*;
@@ -19,9 +18,8 @@ pub use frame_support::{
     weights::Weight,
 };
 use frame_system::EventRecord;
-pub use mock::{mock_message, ContractMock, MessageMock, MockedCallResult, Selector};
-use pallet_contracts::{debug::ExecResult, ExecReturnValue};
-use pallet_contracts_uapi::ReturnFlags;
+#[cfg(feature = "session")]
+pub use session::mock::{mock_message, ContractMock, MessageMock, MockedCallResult, Selector};
 /// Export pallets that are used in the minimal runtime.
 pub use {frame_support, frame_system, pallet_balances, pallet_contracts, pallet_timestamp};
 

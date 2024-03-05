@@ -15,18 +15,17 @@ use parity_scale_codec::Decode;
 pub use record::{EventBatch, Record};
 
 use crate::{
-    mock::MockRegistry,
     runtime::{
         pallet_contracts_debugging::{InterceptingExt, TracingExt},
         AccountIdFor, HashFor,
     },
     sandbox::SandboxConfig,
+    session::mock::MockRegistry,
     Sandbox, DEFAULT_GAS_LIMIT,
 };
 
-mod mock_extension;
-use mock_extension::MockingExtension;
-
+pub mod mock;
+use mock::MockingExtension;
 pub mod bundle;
 pub mod error;
 pub mod mocking_api;

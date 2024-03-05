@@ -4,7 +4,7 @@ use parity_scale_codec::{Decode, Encode};
 
 use crate::{
     errors::LangError,
-    mock::{error::MockingError, MockedCallResult},
+    session::mock::{error::MockingError, MockedCallResult},
 };
 
 /// Alias for a 4-byte selector.
