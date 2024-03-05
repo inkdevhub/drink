@@ -116,9 +116,8 @@ pub const NO_ENDOWMENT: Option<BalanceOf<MinimalRuntime>> = None;
 /// # use drink::{
 /// #   local_contract_file,
 /// #   session::Session,
-/// #   session::{NO_ARGS, NO_SALT, NO_ENDOWMENT},
+/// #   session::{ContractBundle, NO_ARGS, NO_SALT, NO_ENDOWMENT},
 /// #   runtime::MinimalRuntime,
-/// #   ContractBundle,
 /// # };
 ///
 /// # fn main() -> Result<(), drink::session::error::SessionError> {
