@@ -24,17 +24,18 @@ use crate::{
     MockingExtension, Sandbox, DEFAULT_GAS_LIMIT,
 };
 
+pub mod bundle;
 pub mod error;
 pub mod mocking_api;
 mod record;
 mod transcoding;
 
+pub use bundle::ContractBundle;
 use error::SessionError;
 
 use self::mocking_api::MockingApi;
 use crate::{
-    bundle::ContractBundle, errors::MessageResult, runtime::MinimalRuntime,
-    session::transcoding::TranscoderRegistry,
+    errors::MessageResult, runtime::MinimalRuntime, session::transcoding::TranscoderRegistry,
 };
 
 type BalanceOf<R> =

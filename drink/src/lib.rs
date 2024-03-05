@@ -3,7 +3,6 @@
 
 #![warn(missing_docs)]
 
-mod bundle;
 pub mod errors;
 mod mock;
 pub mod runtime;
@@ -14,7 +13,7 @@ pub mod session;
 
 use std::sync::{Arc, Mutex};
 
-pub use bundle::ContractBundle;
+#[cfg(feature = "session")]
 pub use drink_test_macro::{contract_bundle_provider, test};
 pub use errors::Error;
 pub use frame_support::{
