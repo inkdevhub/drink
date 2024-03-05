@@ -11,6 +11,7 @@ Drink is developed and tested with stable Rust 1.70 (see [toolchain file](../../
 ## Dependencies
 
 You only need the `drink` library brought into your project:
+
 ```toml
 drink = { version = "0.8" }
 ```
@@ -22,25 +23,28 @@ See [Cargo.toml](Cargo.toml) for a typical cargo setup of a single-contract proj
 ### Preparing contracts
 
 For every contract that you want to interact with from your tests, you need to create a _contract bundle_, which includes:
- - built contract artifact (`.wasm` file),
- - contract transcoder (object based on the `.json` file, responsible for translating message arguments and results).
+
+- built contract artifact (`.wasm` file),
+- contract transcoder (object based on the `.json` file, responsible for translating message arguments and results).
 
 The recommended way is to use `drink::contract_bundle_provider` macro, which will discover all the contract dependencies (including the current crate, if that is the case) and gather all contract bundles into a single registry.
 
 However, if needed, you can do it manually, by running `cargo contract build` for every such contract, and then, bring the artifacts into your tests.
-For this, you might want to use `drink::ContractBundle` API, which includes `ContractBundle::load` and `local_contract_file!` utilities.
+For this, you might want to use `drink::session::ContractBundle` API, which includes `ContractBundle::load` and `local_contract_file!` utilities.
 
 ### `drink` test macros
 
 `drink` provides a few macros to write tests for smart contracts:
- - `#[drink::test]` - which marks a function as a test function (similar to `#[test]`).
- - `#[drink::contract_bundle_provider]` - which gathers all contract artifacts into a single registry.
+
+- `#[drink::test]` - which marks a function as a test function (similar to `#[test]`).
+- `#[drink::contract_bundle_provider]` - which gathers all contract artifacts into a single registry.
 
 While neither is required to write `drink` tests, they make it easier to write and maintain them.
 
 ### Writing tests
 
 Your typical test module will look like:
+
 ```rust
 #[cfg(test)]
 mod tests {
@@ -63,6 +67,7 @@ mod tests {
 ```
 
 So, firstly, you declare a bundle provider like:
+
 ```rust
 #[drink::contract_bundle_provider]
 enum BundleProvider {}
@@ -70,12 +75,14 @@ enum BundleProvider {}
 
 It will take care of building all contract dependencies in the compilation phase and gather all contract bundles into a single registry.
 Then, you will be able to get a contract bundle by calling:
+
 ```rust
 let bundle = BundleProvider::local()?; // for the contract from the current crate
 let bundle = BundleProvider::Flipper.bundle()?; // for the contract from the `flipper` crate
 ```
 
 We mark each testcase with `#[drink::test]` attribute and declare return type as `Result` so that we can use the `?` operator:
+
 ```rust
 #[drink::test]
 fn testcase() -> Result<(), Box<dyn Error>> {

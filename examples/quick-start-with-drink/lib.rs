@@ -49,7 +49,7 @@ mod tests {
 
     /// `drink` automatically discovers all the contract projects that your tests will need. For
     /// every such dependency (including the contract from the current crate), it will generate a
-    /// [`ContractBundle`](drink::ContractBundle) object that contains the compiled contract's code
+    /// [`ContractBundle`](drink::session::ContractBundle) object that contains the compiled contract's code
     /// and a special transcoder, which is used to encode and decode the contract's message
     /// arguments. Such a bundle will be useful when deploying a contract.
     ///

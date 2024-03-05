@@ -44,8 +44,8 @@ impl BundleProviderGenerator {
             Some(root_name) => {
                 let local_bundle = self.bundles[root_name].to_str().expect("Invalid path");
                 quote! {
-                    pub fn local() -> ::drink::DrinkResult<::drink::ContractBundle> {
-                        ::drink::ContractBundle::load(#local_bundle)
+                    pub fn local() -> ::drink::DrinkResult<::drink::session::ContractBundle> {
+                        ::drink::session::ContractBundle::load(#local_bundle)
                     }
                 }
             }
@@ -58,7 +58,7 @@ impl BundleProviderGenerator {
                 let name_ident = Ident::new(name, Span::call_site());
                 let path = self.bundles[name].to_str().expect("Invalid path");
                 let matcher = quote! {
-                    #enum_name::#name_ident => ::drink::ContractBundle::load(#path),
+                    #enum_name::#name_ident => ::drink::session::ContractBundle::load(#path),
                 };
                 (name_ident, matcher)
             })
@@ -74,7 +74,7 @@ impl BundleProviderGenerator {
             impl #enum_name {
                 #local
 
-                pub fn bundle(self) -> ::drink::DrinkResult<::drink::ContractBundle> {
+                pub fn bundle(self) -> ::drink::DrinkResult<::drink::session::ContractBundle> {
                     match self {
                         #(#matches)*
                     }
