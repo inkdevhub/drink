@@ -32,9 +32,14 @@ type SynResult<T> = Result<T, syn::Error>;
 /// Contracts to be built:
 ///  - current cargo package if contains a `ink-as-dependency` feature
 ///  - all dependencies declared in the `Cargo.toml` file with the `ink-as-dependency` feature
-/// enabled
+/// enabled (works with non-local packages as well).
 ///
-/// Note: Depending on a non-local contract is not tested yet.
+/// ## Compilation features
+///
+/// 1. The root contract package (if any) is assumed to be built without any features.
+///
+/// 2. All contract dependencies will be built with a union of all features enabled on that package (through potentially
+/// different configurations or dependency paths), **excluding** `ink-as-dependency` and `std` features.
 ///
 /// # Creating a session object
 ///
