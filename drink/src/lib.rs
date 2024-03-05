@@ -10,7 +10,7 @@ pub use sandbox::*;
 #[cfg(feature = "session")]
 pub mod session;
 
-#[cfg(feature = "session")]
+#[cfg(feature = "macros")]
 pub use drink_test_macro::{contract_bundle_provider, test};
 pub use errors::Error;
 pub use frame_support::{

@@ -36,7 +36,9 @@ drink-test-macro = { workspace = true }
 default = [
     # This is required for the runtime-interface to work properly in the std env.
     "std",
-    "session"
+    "session",
+    "macros"
 ]
 session = ["contract-metadata", "contract-transcode", "serde_json"]
+macros = ["contract-metadata", "contract-transcode", "serde_json"]
 std = []
