@@ -21,8 +21,11 @@ use crate::{
         AccountIdFor, HashFor,
     },
     sandbox::SandboxConfig,
-    MockingExtension, Sandbox, DEFAULT_GAS_LIMIT,
+    Sandbox, DEFAULT_GAS_LIMIT,
 };
+
+mod mock_extension;
+use mock_extension::MockingExtension;
 
 pub mod bundle;
 pub mod error;
