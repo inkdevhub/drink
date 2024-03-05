@@ -584,9 +584,9 @@ dependencies = [
 
 [[package]]
 name = "bumpalo"
-version = "3.15.2"
+version = "3.15.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a3b1be7772ee4501dba05acbe66bb1e8760f6a6c474a36035631638e4415f130"
+checksum = "c764d619ca78fccbf3069b37bd7af92577f044bb15236036662d79b6559f25b7"
 
 [[package]]
 name = "byte-slice-cast"
@@ -1362,14 +1362,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dry-running"
-version = "0.1.0"
-dependencies = [
- "drink",
- "ink",
-]
-
-[[package]]
 name = "duct"
 version = "0.13.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1573,6 +1565,18 @@ dependencies = [
  "rand",
  "rustc-hex",
  "static_assertions",
+]
+
+[[package]]
+name = "flipper"
+version = "0.1.0"
+dependencies = [
+ "drink",
+ "frame-support",
+ "frame-system",
+ "ink",
+ "parity-scale-codec",
+ "scale-info",
 ]
 
 [[package]]
@@ -4652,9 +4656,9 @@ dependencies = [
 
 [[package]]
 name = "staging-xcm-builder"
-version = "7.0.3"
+version = "7.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3ba4f214fe99d79ffcc266f431abbb32d3596788327b925d469c7bb6a3c84d3c"
+checksum = "2f7a45adc5b85ac35d2245833967772cc74af10899143ebfa4df3c7eb494edb0"
 dependencies = [
  "frame-support",
  "frame-system",
@@ -4675,9 +4679,9 @@ dependencies = [
 
 [[package]]
 name = "staging-xcm-executor"
-version = "7.0.3"
+version = "7.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5f1dea1e33eefee513c197c24255670951a2c515a6ce2c7049fe86385400074f"
+checksum = "2493cf438497734b64cdeb55dbee9872bd598f7b08649e9a3bd56d7939360a80"
 dependencies = [
  "environmental",
  "frame-benchmarking",
@@ -4814,9 +4818,9 @@ checksum = "55937e1799185b12863d447f42597ed69d9928686b8d88a1df17376a097d8369"
 
 [[package]]
 name = "target-lexicon"
-version = "0.12.14"
+version = "0.12.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e1fc403891a21bcfb7c37834ba66a547a8f402146eba7265b5a6d88059c9ff2f"
+checksum = "69758bda2e78f098e4ccb393021a0963bb3442eac05f135c30f61b7370bbafae"
 
 [[package]]
 name = "tempfile"

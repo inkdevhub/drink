@@ -7,7 +7,7 @@ repository = "https://github.com/Cardinal-Cryptography/drink"
 version = "0.1.0"
 
 [dependencies]
-ink = { version = "=5.0.0-rc.1", default-features = false }
+ink = { version = "=5.0.0-rc.2", default-features = false }
 
 [dev-dependencies]
 drink = { path = "../../drink" }
