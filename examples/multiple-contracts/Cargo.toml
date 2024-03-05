@@ -23,4 +23,3 @@ std = [
     "psp22/std",
 ]
 ink-as-dependency = []
-contract = []
