@@ -1066,6 +1066,7 @@ dependencies = [
  "sp-io",
  "sp-runtime-interface",
  "thiserror",
+ "wasm-instrument",
  "wat",
 ]
 

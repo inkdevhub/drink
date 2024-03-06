@@ -6,8 +6,8 @@ use std::{
 
 use cargo_metadata::{Metadata, MetadataCommand, Package};
 use contract_build::{
-    BuildArtifacts, BuildMode, ExecuteArgs, Features, ManifestPath, Network,
-    OptimizationPasses, OutputType, Target, UnstableFlags, Verbosity,
+    BuildArtifacts, BuildMode, ExecuteArgs, Features, ManifestPath, Network, OptimizationPasses,
+    OutputType, Target, UnstableFlags, Verbosity,
 };
 
 use crate::bundle_provision::BundleProviderGenerator;
@@ -60,11 +60,11 @@ fn get_contract_crates(metadata: &Metadata) -> (Option<&Package>, impl Iterator<
     let contract_deps = dep_graph
         .nodes
         .iter()
-        .filter_map(|node| {
+        .filter(|node| {
             node.features
                 .contains(&INK_AS_DEPENDENCY_FEATURE.to_string())
-                .then(|| node.id.clone())
         })
+        .map(|node| node.id.clone())
         .map(pkg_lookup);
 
     let root = dep_graph
