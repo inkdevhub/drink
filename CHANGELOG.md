@@ -1,0 +1,114 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+## [0.12.0]
+
+### Pull requests
+
+- https://github.com/inkdevhub/drink/pull/110
+
+### Changed
+
+- Hide macros behind dedicated `macros` (default) feature flag
+- Hide contract bundles behind `session` feature flag
+
+## [0.11.1]
+
+### Pull requests
+
+- https://github.com/inkdevhub/drink/pull/104
+
+### Added
+
+- Respect features for the contract dependencies when building contracts via drink macros
+
+## [0.11.0]
+
+### Pull requests
+
+- https://github.com/inkdevhub/drink/pull/109
+
+### Changed
+
+- Support `ink@5.0.0-rc.2`
+- Update `contract-*` crates to `4.0.0-rc.3`
+
+### Changed
+
+## [0.10.0]
+
+### Pull requests
+
+- https://github.com/inkdevhub/drink/pull/100
+- https://github.com/inkdevhub/drink/pull/101
+
+### Changed
+
+- Update toolchain to `1.74.0`
+- Support `ink@5.0.0-rc.1`
+- Update `contract-*` crates to `4.0.0-rc.2`
+
+## [0.9.0]
+
+### Pull requests
+
+- https://github.com/inkdevhub/drink/pull/99
+
+### Changed
+
+- Rework `Sandbox` API to ease working with custom runtimes
+
+## [0.8.7]
+
+### Pull requests
+
+- https://github.com/inkdevhub/drink/pull/112
+
+### Changed
+
+- Migrate examples back to `ink@4.3.0`
+- Downgrade `contract-*` crates from `4.0.0-rc.1` to `3.2.0`
+- Bumped toolchain to `1.74.0`
+
+### Fixed
+
+- Compilation issues due to the breaking changes in `contract-build` dependency
+
+## [0.8.6] [YANKED]
+
+### Pull requests
+
+- https://github.com/inkdevhub/drink/pull/92
+- https://github.com/inkdevhub/drink/pull/94
+
+### Added
+
+- Accessing events emitted by contracts
+- `#[drink::test]` creates and adds a `session: Session` argument to the test function
+
+## [0.8.5] [YANKED]
+
+### Pull requests
+
+- https://github.com/inkdevhub/drink/pull/91
+
+### Changed
+
+- Update `contract-*` crates from `3.x.x` to `4.0.0-rc.1`
+- Migrate examples from `ink@4.2.1` to `ink@5.0.0-rc`
+
+## [0.8.4]
+
+### Pull requests
+
+- https://github.com/inkdevhub/drink/pull/90
+
+### Added
+
+- `NO_SALT`, `NO_ENDOWMENT` contstants added
