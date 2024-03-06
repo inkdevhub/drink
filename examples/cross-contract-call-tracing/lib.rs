@@ -114,7 +114,7 @@ mod tests {
                 };
 
                 transcoder
-                    .decode_message_return(call_name, &mut result.as_slice())
+                    .decode_return(call_name, &mut result.as_slice())
                     .unwrap()
             } else {
                 Value::Unit
