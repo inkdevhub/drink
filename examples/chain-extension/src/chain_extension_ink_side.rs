@@ -1,12 +1,12 @@
 use ink::env::{chain_extension::FromStatusCode, DefaultEnvironment, Environment};
 
 /// Simple chain extension that provides some staking information.
-#[ink::chain_extension(extension = 0)]
+#[ink::chain_extension]
 pub trait StakingExtension {
     type ErrorCode = StakingExtensionErrorCode;
 
     /// Returns the number of the validators.
-    #[ink(function = 41, handle_status = false)]
+    #[ink(extension = 41, handle_status = false)]
     fn get_num_of_validators() -> u32;
 }
 

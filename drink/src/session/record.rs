@@ -214,29 +214,21 @@ impl EventBatch<MinimalRuntime> {
         &self,
         transcoder: &Rc<ContractMessageTranscoder>,
     ) -> Vec<Value> {
-        let signature_topics = transcoder
-            .metadata()
-            .spec()
-            .events()
-            .iter()
-            .filter_map(|event| event.signature_topic())
-            .map(|sig| sig.as_bytes().try_into().unwrap())
-            .collect::<Vec<[u8; 32]>>();
-
         self.contract_events()
             .into_iter()
             .filter_map(|data| {
-                for signature_topic in &signature_topics {
-                    if let Ok(decoded) = transcoder
-                        // We have to `encode` the data because `decode_contract_event` is targeted
-                        // at decoding the data from the runtime, and not directly from the contract
-                        // events.
-                        .decode_contract_event(&signature_topic.into(), &mut &*data.encode())
-                    {
-                        return Some(decoded);
+                match transcoder
+                    // We have to `encode` the data because `decode_contract_event` is targeted
+                    // at decoding the data from the runtime, and not directly from the contract
+                    // events.
+                    .decode_contract_event(&mut &*data.encode())
+                {
+                    Ok(decoded) => Some(decoded),
+                    Err(err) => {
+                        println!("Decoding error: {:?}", err);
+                        None
                     }
                 }
-                None
             })
             .collect()
     }
