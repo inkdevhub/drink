@@ -18,7 +18,7 @@ test_examples: ## Run tests for the examples
 	@mkdir -p $(EXAMPLES_TARGET)
 	@for dir in $(EXAMPLES_PATHS); do \
 		echo "Processing $$dir"; \
-		cargo test --quiet --manifest-path $$dir/Cargo.toml --release -j 12 --target-dir $(EXAMPLES_TARGET) || exit 1; \
+		cargo test --quiet --manifest-path $$dir/Cargo.toml --release --target-dir $(EXAMPLES_TARGET) || exit 1; \
 	done
 
 clean: ## Clean all the workspace build files
