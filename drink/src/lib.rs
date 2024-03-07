@@ -19,12 +19,14 @@ pub use frame_support::{
     weights::Weight,
 };
 use frame_system::EventRecord;
+use pallet_contracts::{ContractExecResult, ContractInstantiateResult};
 #[cfg(feature = "session")]
 pub use session::mock::{mock_message, ContractMock, MessageMock, MockedCallResult, Selector};
 /// Export pallets that are used in the minimal runtime.
 pub use {frame_support, frame_system, pallet_balances, pallet_contracts, pallet_timestamp};
 
 pub use crate::runtime::minimal::{self, MinimalRuntime};
+use crate::runtime::AccountIdFor;
 
 /// Alias for `frame-system`'s `RuntimeCall` type.
 pub type RuntimeCall<Runtime> = <Runtime as frame_system::Config>::RuntimeCall;
