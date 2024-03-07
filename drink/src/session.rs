@@ -9,19 +9,21 @@ use std::{
 
 pub use contract_transcode;
 use contract_transcode::ContractMessageTranscoder;
+use error::SessionError;
 use frame_support::{traits::fungible::Inspect, weights::Weight};
 use pallet_contracts::Determinism;
 use parity_scale_codec::Decode;
 pub use record::{EventBatch, Record};
 
+use self::mocking_api::MockingApi;
 use crate::{
     runtime::{
         pallet_contracts_debugging::{InterceptingExt, TracingExt},
-        AccountIdFor, HashFor,
+        AccountIdFor, HashFor, MinimalRuntime,
     },
     sandbox::SandboxConfig,
     session::mock::MockRegistry,
-    Sandbox, DEFAULT_GAS_LIMIT,
+    ContractExecResultFor, ContractInstantiateResultFor, Sandbox, DEFAULT_GAS_LIMIT,
 };
 
 pub mod mock;
@@ -33,12 +35,8 @@ mod record;
 mod transcoding;
 
 pub use bundle::ContractBundle;
-use error::SessionError;
 
-use self::mocking_api::MockingApi;
-use crate::{
-    errors::MessageResult, runtime::MinimalRuntime, session::transcoding::TranscoderRegistry,
-};
+use crate::{errors::MessageResult, session::transcoding::TranscoderRegistry};
 
 type BalanceOf<R> =
     <<R as pallet_contracts::Config>::Currency as Inspect<AccountIdFor<R>>>::Balance;
@@ -272,6 +270,7 @@ where
         )
         .map(|_| self)
     }
+
     fn record_events<T>(&mut self, recording: impl FnOnce(&mut Self) -> T) -> T {
         let start = self.sandbox.events().len();
         let result = recording(self);
@@ -344,6 +343,33 @@ where
             endowment,
             &contract_file.transcoder,
         )
+    }
+
+    /// Performs a dry run of the deployment of a contract.
+    pub fn dry_run_deployment<S: AsRef<str> + Debug>(
+        &mut self,
+        contract_file: ContractBundle,
+        constructor: &str,
+        args: &[S],
+        salt: Vec<u8>,
+        endowment: Option<BalanceOf<Config::Runtime>>,
+    ) -> Result<ContractInstantiateResultFor<Config::Runtime>, SessionError> {
+        let data = contract_file
+            .transcoder
+            .encode(constructor, args)
+            .map_err(|err| SessionError::Encoding(err.to_string()))?;
+
+        Ok(self.sandbox.dry_run(|sandbox| {
+            sandbox.deploy_contract(
+                contract_file.wasm,
+                endowment.unwrap_or_default(),
+                data,
+                salt,
+                self.actor.clone(),
+                self.gas_limit,
+                None,
+            )
+        }))
     }
 
     /// Similar to `deploy_and` but takes the parsed contract file (`ContractBundle`) as a first argument.
@@ -447,6 +473,35 @@ where
         endowment: Option<BalanceOf<Config::Runtime>>,
     ) -> Result<MessageResult<T>, SessionError> {
         self.call_internal(Some(address), message, args, endowment)
+    }
+
+    /// Performs a dry run of a contract call.
+    pub fn dry_run_call<S: AsRef<str> + Debug>(
+        &mut self,
+        address: AccountIdFor<Config::Runtime>,
+        message: &str,
+        args: &[S],
+        endowment: Option<BalanceOf<Config::Runtime>>,
+    ) -> Result<ContractExecResultFor<Config::Runtime>, SessionError> {
+        let data = self
+            .transcoders
+            .get(&address)
+            .as_ref()
+            .ok_or(SessionError::NoTranscoder)?
+            .encode(message, args)
+            .map_err(|err| SessionError::Encoding(err.to_string()))?;
+
+        Ok(self.sandbox.dry_run(|sandbox| {
+            sandbox.call_contract(
+                address,
+                endowment.unwrap_or_default(),
+                data,
+                self.actor.clone(),
+                self.gas_limit,
+                None,
+                self.determinism,
+            )
+        }))
     }
 
     fn call_internal<S: AsRef<str> + Debug, T: Decode>(

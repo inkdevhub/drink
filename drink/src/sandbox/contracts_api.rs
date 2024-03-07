@@ -1,18 +1,17 @@
 //! Contracts API for the sandbox.
 use std::ops::Not;
 
-use frame_support::{traits::fungible::Inspect, weights::Weight};
+use frame_support::weights::Weight;
 use frame_system::Config as SysConfig;
 use pallet_contracts::{
-    Code, CodeUploadResult, CollectEvents, ContractExecResult, ContractInstantiateResult,
-    DebugInfo, Determinism,
+    Code, CodeUploadResult, CollectEvents, ContractInstantiateResult, DebugInfo, Determinism,
 };
 use parity_scale_codec::Decode as _;
 
-use crate::{runtime::AccountIdFor, EventRecordOf, Sandbox};
-
-type BalanceOf<R> =
-    <<R as pallet_contracts::Config>::Currency as Inspect<AccountIdFor<R>>>::Balance;
+use crate::{
+    runtime::AccountIdFor, BalanceOf, ContractExecResultFor, ContractInstantiateResultFor,
+    EventRecordOf, Sandbox,
+};
 
 impl<Config: crate::SandboxConfig> Sandbox<Config>
 where
@@ -39,11 +38,7 @@ where
         origin: AccountIdFor<Config::Runtime>,
         gas_limit: Weight,
         storage_deposit_limit: Option<BalanceOf<Config::Runtime>>,
-    ) -> ContractInstantiateResult<
-        AccountIdFor<Config::Runtime>,
-        BalanceOf<Config::Runtime>,
-        EventRecordOf<Config::Runtime>,
-    > {
+    ) -> ContractInstantiateResultFor<Config::Runtime> {
         self.externalities.execute_with(|| {
             pallet_contracts::Pallet::<Config::Runtime>::bare_instantiate(
                 origin,
@@ -149,7 +144,7 @@ where
         gas_limit: Weight,
         storage_deposit_limit: Option<BalanceOf<Config::Runtime>>,
         determinism: Determinism,
-    ) -> ContractExecResult<BalanceOf<Config::Runtime>, EventRecordOf<Config::Runtime>> {
+    ) -> ContractExecResultFor<Config::Runtime> {
         self.externalities.execute_with(|| {
             pallet_contracts::Pallet::<Config::Runtime>::bare_call(
                 origin,
