@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-use crate::Selector;
+use crate::session::mock::Selector;
 
 /// Error type for mocking operations.
 #[derive(Error, Debug)]

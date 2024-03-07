@@ -1,6 +1,6 @@
 //! Mocking API for the sandbox.
 use super::Session;
-use crate::{mock::ContractMock, runtime::AccountIdFor, SandboxConfig, DEFAULT_GAS_LIMIT};
+use crate::{runtime::AccountIdFor, session::mock::ContractMock, SandboxConfig, DEFAULT_GAS_LIMIT};
 
 /// Interface for basic mocking operations.
 pub trait MockingApi<R: pallet_contracts::Config> {

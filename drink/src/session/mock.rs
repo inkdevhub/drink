@@ -1,10 +1,13 @@
+//! Mocking utilities for contract calls.
+
 mod contract;
 mod error;
-
+mod extension;
 use std::collections::BTreeMap;
 
 pub use contract::{mock_message, ContractMock, MessageMock, Selector};
 use error::MockingError;
+pub(crate) use extension::MockingExtension;
 
 /// Untyped result of a mocked call.
 pub type MockedCallResult = Result<Vec<u8>, MockingError>;

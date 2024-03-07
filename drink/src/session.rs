@@ -17,23 +17,30 @@ pub use record::{EventBatch, Record};
 
 use self::mocking_api::MockingApi;
 use crate::{
-    bundle::ContractBundle,
-    errors::MessageResult,
-    mock::MockRegistry,
     runtime::{
         pallet_contracts_debugging::{InterceptingExt, TracingExt},
         AccountIdFor, HashFor, MinimalRuntime,
     },
     sandbox::SandboxConfig,
-    session::transcoding::TranscoderRegistry,
-    ContractExecResultFor, ContractInstantiateResultFor, MockingExtension, Sandbox,
-    DEFAULT_GAS_LIMIT,
+    session::mock::MockRegistry,
+    Sandbox, DEFAULT_GAS_LIMIT,
 };
 
+pub mod mock;
+use mock::MockingExtension;
+pub mod bundle;
 pub mod error;
 pub mod mocking_api;
 mod record;
 mod transcoding;
+
+pub use bundle::ContractBundle;
+use error::SessionError;
+
+use self::mocking_api::MockingApi;
+use crate::{
+    errors::MessageResult, runtime::MinimalRuntime, session::transcoding::TranscoderRegistry,
+};
 
 type BalanceOf<R> =
     <<R as pallet_contracts::Config>::Currency as Inspect<AccountIdFor<R>>>::Balance;
@@ -113,9 +120,8 @@ pub const NO_ENDOWMENT: Option<BalanceOf<MinimalRuntime>> = None;
 /// # use drink::{
 /// #   local_contract_file,
 /// #   session::Session,
-/// #   session::{NO_ARGS, NO_SALT, NO_ENDOWMENT},
+/// #   session::{ContractBundle, NO_ARGS, NO_SALT, NO_ENDOWMENT},
 /// #   runtime::MinimalRuntime,
-/// #   ContractBundle,
 /// # };
 ///
 /// # fn main() -> Result<(), drink::session::error::SessionError> {

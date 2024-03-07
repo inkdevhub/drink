@@ -70,7 +70,7 @@ impl ContractBundle {
 #[macro_export]
 macro_rules! local_contract_file {
     () => {
-        drink::ContractBundle::local(
+        drink::session::ContractBundle::local(
             env!("CARGO_MANIFEST_DIR"),
             env!("CARGO_CRATE_NAME").to_owned() + ".contract",
         )
