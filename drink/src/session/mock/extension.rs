@@ -1,7 +1,6 @@
 use std::sync::{Arc, Mutex};
 
-use pallet_contracts::{debug::ExecResult, ExecReturnValue};
-use pallet_contracts_uapi::ReturnFlags;
+use pallet_contracts::{chain_extension::ReturnFlags, debug::ExecResult, ExecReturnValue};
 use parity_scale_codec::{Decode, Encode};
 
 use crate::{
