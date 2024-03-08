@@ -2,7 +2,9 @@
 use frame_support::{sp_runtime::DispatchError, traits::fungible::Mutate};
 
 use super::Sandbox;
-use crate::{runtime::AccountIdFor, BalanceOf, SandboxConfig};
+use crate::{runtime::AccountIdFor, SandboxConfig};
+
+type BalanceOf<R> = <R as pallet_balances::Config>::Balance;
 
 impl<Config: SandboxConfig> Sandbox<Config>
 where

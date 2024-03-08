@@ -7,11 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.1]
+
+### Added
+
+- Support dry running contract interactions
+
 ## [0.12.0]
-
-### Pull requests
-
-- https://github.com/inkdevhub/drink/pull/110
 
 ### Changed
 
@@ -20,19 +22,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.11.1]
 
-### Pull requests
-
-- https://github.com/inkdevhub/drink/pull/104
-
 ### Added
 
 - Respect features for the contract dependencies when building contracts via drink macros
 
 ## [0.11.0]
-
-### Pull requests
-
-- https://github.com/inkdevhub/drink/pull/109
 
 ### Changed
 
@@ -43,11 +37,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.10.0]
 
-### Pull requests
-
-- https://github.com/inkdevhub/drink/pull/100
-- https://github.com/inkdevhub/drink/pull/101
-
 ### Changed
 
 - Update toolchain to `1.74.0`
@@ -56,19 +45,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.9.0]
 
-### Pull requests
-
-- https://github.com/inkdevhub/drink/pull/99
-
 ### Changed
 
 - Rework `Sandbox` API to ease working with custom runtimes
 
 ## [0.8.7]
-
-### Pull requests
-
-- https://github.com/inkdevhub/drink/pull/112
 
 ### Changed
 
@@ -82,11 +63,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.8.6] [YANKED]
 
-### Pull requests
-
-- https://github.com/inkdevhub/drink/pull/92
-- https://github.com/inkdevhub/drink/pull/94
-
 ### Added
 
 - Accessing events emitted by contracts
@@ -94,20 +70,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.8.5] [YANKED]
 
-### Pull requests
-
-- https://github.com/inkdevhub/drink/pull/91
-
 ### Changed
 
 - Update `contract-*` crates from `3.x.x` to `4.0.0-rc.1`
 - Migrate examples from `ink@4.2.1` to `ink@5.0.0-rc`
 
 ## [0.8.4]
-
-### Pull requests
-
-- https://github.com/inkdevhub/drink/pull/90
 
 ### Added
 

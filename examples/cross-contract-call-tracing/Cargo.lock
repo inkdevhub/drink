@@ -1338,7 +1338,7 @@ checksum = "9ea835d29036a4087793836fa931b08837ad5e957da9e23886b29586fb9b6650"
 
 [[package]]
 name = "drink"
-version = "0.11.1"
+version = "0.11.2"
 dependencies = [
  "contract-metadata",
  "contract-transcode",
@@ -1363,7 +1363,7 @@ dependencies = [
 
 [[package]]
 name = "drink-test-macro"
-version = "0.11.1"
+version = "0.11.2"
 dependencies = [
  "cargo_metadata",
  "contract-build",
