@@ -25,8 +25,9 @@ sp-externalities = { workspace = true }
 sp-io = { workspace = true }
 sp-runtime-interface = { workspace = true }
 
-serde_json = { workspace = true, optional = true }
+paste = { workspace = true }
 scale-info = { workspace = true }
+serde_json = { workspace = true, optional = true }
 thiserror = { workspace = true }
 wat = { workspace = true }
 

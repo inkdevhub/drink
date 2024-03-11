@@ -8,12 +8,6 @@ pub enum Error {
     /// Externalities could not be initialized.
     #[error("Failed to build storage: {0}")]
     StorageBuilding(String),
-    /// Block couldn't have been initialized.
-    #[error("Failed to initialize block: {0}")]
-    BlockInitialize(String),
-    /// Block couldn't have been finalized.
-    #[error("Failed to finalize block: {0}")]
-    BlockFinalize(String),
     /// Bundle loading and parsing has failed
     #[error("Loading the contract bundle has failed: {0}")]
     BundleLoadFailed(String),

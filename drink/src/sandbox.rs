@@ -1,56 +1,64 @@
-//! A sandboxed runtime.
+//! Module containing the sandbox trait and its prelude.
 
-mod sandbox_config;
-pub use sandbox_config::SandboxConfig;
+use core::any::Any;
+
 pub mod balance_api;
 pub mod contracts_api;
-pub mod runtime_api;
 pub mod system_api;
 pub mod timestamp_api;
 
-use std::any::Any;
-
-use sp_externalities::Extension;
-use sp_io::TestExternalities;
-
-/// A sandboxed runtime.
-pub struct Sandbox<Config> {
-    externalities: TestExternalities,
-    _phantom: std::marker::PhantomData<Config>,
+/// The prelude of the sandbox module.
+pub mod prelude {
+    pub use super::{
+        balance_api::BalanceAPI, contracts_api::ContractAPI, system_api::SystemAPI,
+        timestamp_api::TimestampAPI, Sandbox,
+    };
 }
 
-impl<Config> Sandbox<Config> {
-    /// Execute the given closure with the inner externallities.
-    ///
-    /// Returns the result of the given closure.
-    pub fn execute_with<T>(&mut self, execute: impl FnOnce() -> T) -> T {
-        self.externalities.execute_with(execute)
+use frame_metadata::RuntimeMetadataPrefixed;
+use frame_support::sp_runtime::traits::Dispatchable;
+use frame_system::pallet_prelude::BlockNumberFor;
+use sp_externalities::Extension;
+
+/// The type of an account identifier.
+pub type AccountIdFor<R> = <R as frame_system::Config>::AccountId;
+
+/// Sandbox defines the API of a sandboxed runtime.
+pub trait Sandbox {
+    /// The runtime associated with the sandbox.
+    type Runtime: frame_system::Config;
+
+    /// Execute the given externalities.
+    fn execute_with<T>(&mut self, execute: impl FnOnce() -> T) -> T;
+
+    /// Dry run an action without modifying the storage.
+    fn dry_run<T>(&mut self, action: impl FnOnce(&mut Self) -> T) -> T;
+
+    /// Register an extension.
+    fn register_extension<E: Any + Extension>(&mut self, ext: E);
+
+    /// Initialize a new block at particular height.
+    fn initialize_block(
+        _height: BlockNumberFor<Self::Runtime>,
+        _parent_hash: <Self::Runtime as frame_system::Config>::Hash,
+    ) {
     }
 
-    /// Run an action without modifying the storage.
-    ///
-    /// # Arguments
-    ///
-    /// * `action` - The action to run.
-    pub fn dry_run<T>(&mut self, action: impl FnOnce(&mut Self) -> T) -> T {
-        // Make a backup of the backend.
-        let backend_backup = self.externalities.as_backend();
-
-        // Run the action, potentially modifying storage. Ensure, that there are no pending changes
-        // that would affect the reverted backend.
-        let result = action(self);
-        self.externalities
-            .commit_all()
-            .expect("Failed to commit changes");
-
-        // Restore the backend.
-        self.externalities.backend = backend_backup;
-
-        result
+    /// Finalize a block at particular height.
+    fn finalize_block(
+        _height: BlockNumberFor<Self::Runtime>,
+    ) -> <Self::Runtime as frame_system::Config>::Hash {
+        Default::default()
     }
 
-    /// Registers an extension.
-    pub fn register_extension<E: Any + Extension>(&mut self, ext: E) {
-        self.externalities.register_extension(ext);
-    }
+    /// Default actor for the sandbox.
+    fn default_actor() -> AccountIdFor<Self::Runtime>;
+
+    /// Metadata of the runtime.
+    fn get_metadata() -> RuntimeMetadataPrefixed;
+
+    /// Convert an account to an call origin.
+    fn convert_account_to_origin(
+        account: AccountIdFor<Self::Runtime>,
+    ) -> <<Self::Runtime as frame_system::Config>::RuntimeCall as Dispatchable>::RuntimeOrigin;
 }

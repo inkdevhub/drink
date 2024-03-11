@@ -1,6 +1,8 @@
 //! Mocking API for the sandbox.
 use super::Session;
-use crate::{runtime::AccountIdFor, session::mock::ContractMock, SandboxConfig, DEFAULT_GAS_LIMIT};
+use crate::{
+    runtime::AccountIdFor, sandbox::prelude::*, session::mock::ContractMock, DEFAULT_GAS_LIMIT,
+};
 
 /// Interface for basic mocking operations.
 pub trait MockingApi<R: pallet_contracts::Config> {
@@ -12,11 +14,11 @@ pub trait MockingApi<R: pallet_contracts::Config> {
     fn mock_existing_contract(&mut self, _mock: ContractMock, _address: AccountIdFor<R>);
 }
 
-impl<Config: SandboxConfig> MockingApi<Config::Runtime> for Session<Config>
+impl<T: Sandbox> MockingApi<T::Runtime> for Session<T>
 where
-    Config::Runtime: pallet_contracts::Config,
+    T::Runtime: pallet_contracts::Config,
 {
-    fn deploy(&mut self, mock: ContractMock) -> AccountIdFor<Config::Runtime> {
+    fn deploy(&mut self, mock: ContractMock) -> AccountIdFor<T::Runtime> {
         // We have to deploy some contract. We use a dummy contract for that. Thanks to that, we
         // ensure that the pallet will treat our mock just as a regular contract, until we actually
         // call it.
@@ -34,7 +36,7 @@ where
                 0u32.into(),
                 vec![],
                 salt,
-                Config::default_actor(),
+                T::default_actor(),
                 DEFAULT_GAS_LIMIT,
                 None,
             )
@@ -50,11 +52,7 @@ where
         mock_address
     }
 
-    fn mock_existing_contract(
-        &mut self,
-        _mock: ContractMock,
-        _address: AccountIdFor<Config::Runtime>,
-    ) {
+    fn mock_existing_contract(&mut self, _mock: ContractMock, _address: AccountIdFor<T::Runtime>) {
         todo!("soon")
     }
 }

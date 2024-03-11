@@ -1304,6 +1304,7 @@ dependencies = [
  "pallet-timestamp",
  "parity-scale-codec",
  "parity-scale-codec-derive",
+ "paste",
  "scale-info",
  "serde_json",
  "sp-externalities",

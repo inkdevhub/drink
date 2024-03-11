@@ -72,7 +72,7 @@ mod tests {
     ///
     /// `drink::test` will already provide us with a `Session` object. It is a wrapper around a runtime and it exposes
     /// a broad API for interacting with it. Session is generic over the runtime type, but usually and by default, we
-    /// use `MinimalRuntime`, which is a minimalistic runtime that allows using smart contracts.
+    /// use `MinimalSandbox`, which is a minimalistic runtime that allows using smart contracts.
     #[drink::test]
     fn deploy_and_call_a_contract(mut session: Session) -> Result<(), Box<dyn std::error::Error>> {
         // Now we get the contract bundle from the `BundleProvider` enum. Since the current crate

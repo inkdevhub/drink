@@ -15,13 +15,12 @@ use pallet_contracts::Determinism;
 use parity_scale_codec::Decode;
 pub use record::{EventBatch, Record};
 
-use self::mocking_api::MockingApi;
 use crate::{
     runtime::{
         pallet_contracts_debugging::{InterceptingExt, TracingExt},
-        AccountIdFor, HashFor, MinimalRuntime,
+        AccountIdFor, HashFor,
     },
-    sandbox::SandboxConfig,
+    sandbox::prelude::*,
     session::mock::MockRegistry,
     ContractExecResultFor, ContractInstantiateResultFor, Sandbox, DEFAULT_GAS_LIMIT,
 };
@@ -36,7 +35,10 @@ mod transcoding;
 
 pub use bundle::ContractBundle;
 
-use crate::{errors::MessageResult, session::transcoding::TranscoderRegistry};
+use self::mocking_api::MockingApi;
+use crate::{
+    errors::MessageResult, minimal::MinimalSandboxRuntime, session::transcoding::TranscoderRegistry,
+};
 
 type BalanceOf<R> =
     <<R as pallet_contracts::Config>::Currency as Inspect<AccountIdFor<R>>>::Balance;
@@ -51,7 +53,7 @@ pub const NO_SALT: Vec<u8> = vec![];
 /// Convenient value for no endowment.
 ///
 /// Compatible with any runtime with `u128` as the balance type.
-pub const NO_ENDOWMENT: Option<BalanceOf<MinimalRuntime>> = None;
+pub const NO_ENDOWMENT: Option<BalanceOf<MinimalSandboxRuntime>> = None;
 
 /// Wrapper around `Sandbox` that provides a convenient API for interacting with multiple contracts.
 ///
@@ -66,7 +68,7 @@ pub const NO_ENDOWMENT: Option<BalanceOf<MinimalRuntime>> = None;
 /// #   session::Session,
 /// #   AccountId32,
 /// #   session::{NO_ARGS, NO_SALT, NO_ENDOWMENT},
-/// #   runtime::MinimalRuntime
+/// #   runtime::MinimalSandbox
 /// # };
 /// #
 /// # fn get_transcoder() -> Rc<ContractMessageTranscoder> {
@@ -77,7 +79,7 @@ pub const NO_ENDOWMENT: Option<BalanceOf<MinimalRuntime>> = None;
 ///
 /// # fn main() -> Result<(), drink::session::error::SessionError> {
 ///
-/// Session::<MinimalRuntime>::new()?
+/// Session::<MinimalSandbox>::default()
 ///     .deploy_and(contract_bytes(), "new", NO_ARGS, NO_SALT, NO_ENDOWMENT, &get_transcoder())?
 ///     .call_and("foo", NO_ARGS, NO_ENDOWMENT)?
 ///     .with_actor(bob())
@@ -92,7 +94,7 @@ pub const NO_ENDOWMENT: Option<BalanceOf<MinimalRuntime>> = None;
 /// # use drink::{
 /// #   session::Session,
 /// #   AccountId32,
-/// #   runtime::MinimalRuntime,
+/// #   runtime::MinimalSandbox,
 /// #   session::{NO_ARGS, NO_ENDOWMENT, NO_SALT}
 /// # };
 /// # fn get_transcoder() -> Rc<ContractMessageTranscoder> {
@@ -103,7 +105,7 @@ pub const NO_ENDOWMENT: Option<BalanceOf<MinimalRuntime>> = None;
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 ///
-/// let mut session = Session::<MinimalRuntime>::new()?;
+/// let mut session = Session::<MinimalSandbox>::default();
 /// let _address = session.deploy(contract_bytes(), "new", NO_ARGS, NO_SALT, NO_ENDOWMENT, &get_transcoder())?;
 /// let _result: u32 = session.call("foo", NO_ARGS, NO_ENDOWMENT)??;
 /// session.set_actor(bob());
@@ -117,73 +119,75 @@ pub const NO_ENDOWMENT: Option<BalanceOf<MinimalRuntime>> = None;
 /// #   local_contract_file,
 /// #   session::Session,
 /// #   session::{ContractBundle, NO_ARGS, NO_SALT, NO_ENDOWMENT},
-/// #   runtime::MinimalRuntime,
+/// #   runtime::MinimalSandbox,
 /// # };
 ///
 /// # fn main() -> Result<(), drink::session::error::SessionError> {
 /// // Simplest way, loading a bundle from the project's directory:
-/// Session::<MinimalRuntime>::new()?
+/// Session::<MinimalSandbox>::default()
 ///     .deploy_bundle_and(local_contract_file!(), "new", NO_ARGS, NO_SALT, NO_ENDOWMENT)?; /* ... */
 ///
 /// // Or choosing the file explicitly:
 /// let contract = ContractBundle::load("path/to/your.contract")?;
-/// Session::<MinimalRuntime>::new()?
+/// Session::<MinimalSandbox>::default()
 ///     .deploy_bundle_and(contract, "new", NO_ARGS, NO_SALT, NO_ENDOWMENT)?; /* ... */
 ///  # Ok(()) }
 /// ```
-pub struct Session<Config: SandboxConfig>
+pub struct Session<T: Sandbox>
 where
-    Config::Runtime: pallet_contracts::Config,
+    T::Runtime: pallet_contracts::Config,
 {
-    sandbox: Sandbox<Config>,
+    sandbox: T,
 
-    actor: AccountIdFor<Config::Runtime>,
+    actor: AccountIdFor<T::Runtime>,
     gas_limit: Weight,
     determinism: Determinism,
 
-    transcoders: TranscoderRegistry<AccountIdFor<Config::Runtime>>,
-    record: Record<Config::Runtime>,
-    mocks: Arc<Mutex<MockRegistry<AccountIdFor<Config::Runtime>>>>,
+    transcoders: TranscoderRegistry<AccountIdFor<T::Runtime>>,
+    record: Record<T::Runtime>,
+    mocks: Arc<Mutex<MockRegistry<AccountIdFor<T::Runtime>>>>,
 }
 
-impl<Config: SandboxConfig> Session<Config>
+impl<T: Sandbox> Default for Session<T>
 where
-    Config::Runtime: pallet_contracts::Config,
+    T::Runtime: pallet_contracts::Config,
+    T: Default,
 {
-    /// Creates a new `Session`.
-    pub fn new() -> Result<Self, SessionError> {
+    fn default() -> Self {
         let mocks = Arc::new(Mutex::new(MockRegistry::new()));
-        let mut sandbox = Sandbox::new().map_err(SessionError::Drink)?;
+        let mut sandbox = T::default();
         sandbox.register_extension(InterceptingExt(Box::new(MockingExtension {
             mock_registry: Arc::clone(&mocks),
         })));
 
-        Ok(Self {
+        Self {
             sandbox,
             mocks,
-            actor: Config::default_actor(),
+            actor: T::default_actor(),
             gas_limit: DEFAULT_GAS_LIMIT,
             determinism: Determinism::Enforced,
             transcoders: TranscoderRegistry::new(),
             record: Default::default(),
-        })
+        }
     }
+}
 
+impl<T: Sandbox> Session<T>
+where
+    T::Runtime: pallet_contracts::Config,
+{
     /// Sets a new actor and returns updated `self`.
-    pub fn with_actor(self, actor: AccountIdFor<Config::Runtime>) -> Self {
+    pub fn with_actor(self, actor: AccountIdFor<T::Runtime>) -> Self {
         Self { actor, ..self }
     }
 
     /// Returns currently set actor.
-    pub fn get_actor(&self) -> AccountIdFor<Config::Runtime> {
+    pub fn get_actor(&self) -> AccountIdFor<T::Runtime> {
         self.actor.clone()
     }
 
     /// Sets a new actor and returns the old one.
-    pub fn set_actor(
-        &mut self,
-        actor: AccountIdFor<Config::Runtime>,
-    ) -> AccountIdFor<Config::Runtime> {
+    pub fn set_actor(&mut self, actor: AccountIdFor<T::Runtime>) -> AccountIdFor<T::Runtime> {
         mem::replace(&mut self.actor, actor)
     }
 
@@ -218,7 +222,7 @@ where
     /// Register a transcoder for a particular contract and returns updated `self`.
     pub fn with_transcoder(
         mut self,
-        contract_address: AccountIdFor<Config::Runtime>,
+        contract_address: AccountIdFor<T::Runtime>,
         transcoder: &Rc<ContractMessageTranscoder>,
     ) -> Self {
         self.set_transcoder(contract_address, transcoder);
@@ -228,24 +232,24 @@ where
     /// Registers a transcoder for a particular contract.
     pub fn set_transcoder(
         &mut self,
-        contract_address: AccountIdFor<Config::Runtime>,
+        contract_address: AccountIdFor<T::Runtime>,
         transcoder: &Rc<ContractMessageTranscoder>,
     ) {
         self.transcoders.register(contract_address, transcoder);
     }
 
     /// The underlying `Sandbox` instance.
-    pub fn sandbox(&mut self) -> &mut Sandbox<Config> {
+    pub fn sandbox(&mut self) -> &mut T {
         &mut self.sandbox
     }
 
     /// Returns a reference to the record of the session.
-    pub fn record(&self) -> &Record<Config::Runtime> {
+    pub fn record(&self) -> &Record<T::Runtime> {
         &self.record
     }
 
     /// Returns a reference for mocking API.
-    pub fn mocking_api(&mut self) -> &mut impl MockingApi<Config::Runtime> {
+    pub fn mocking_api(&mut self) -> &mut impl MockingApi<T::Runtime> {
         self
     }
 
@@ -257,7 +261,7 @@ where
         constructor: &str,
         args: &[S],
         salt: Vec<u8>,
-        endowment: Option<BalanceOf<Config::Runtime>>,
+        endowment: Option<BalanceOf<T::Runtime>>,
         transcoder: &Rc<ContractMessageTranscoder>,
     ) -> Result<Self, SessionError> {
         self.deploy(
@@ -270,8 +274,7 @@ where
         )
         .map(|_| self)
     }
-
-    fn record_events<T>(&mut self, recording: impl FnOnce(&mut Self) -> T) -> T {
+    fn record_events<V>(&mut self, recording: impl FnOnce(&mut Self) -> V) -> V {
         let start = self.sandbox.events().len();
         let result = recording(self);
         let events = self.sandbox.events()[start..].to_vec();
@@ -287,9 +290,9 @@ where
         constructor: &str,
         args: &[S],
         salt: Vec<u8>,
-        endowment: Option<BalanceOf<Config::Runtime>>,
+        endowment: Option<BalanceOf<T::Runtime>>,
         transcoder: &Rc<ContractMessageTranscoder>,
-    ) -> Result<AccountIdFor<Config::Runtime>, SessionError> {
+    ) -> Result<AccountIdFor<T::Runtime>, SessionError> {
         let data = transcoder
             .encode(constructor, args)
             .map_err(|err| SessionError::Encoding(err.to_string()))?;
@@ -333,8 +336,8 @@ where
         constructor: &str,
         args: &[S],
         salt: Vec<u8>,
-        endowment: Option<BalanceOf<Config::Runtime>>,
-    ) -> Result<AccountIdFor<Config::Runtime>, SessionError> {
+        endowment: Option<BalanceOf<T::Runtime>>,
+    ) -> Result<AccountIdFor<T::Runtime>, SessionError> {
         self.deploy(
             contract_file.wasm,
             constructor,
@@ -352,8 +355,8 @@ where
         constructor: &str,
         args: &[S],
         salt: Vec<u8>,
-        endowment: Option<BalanceOf<Config::Runtime>>,
-    ) -> Result<ContractInstantiateResultFor<Config::Runtime>, SessionError> {
+        endowment: Option<BalanceOf<T::Runtime>>,
+    ) -> Result<ContractInstantiateResultFor<T::Runtime>, SessionError> {
         let data = contract_file
             .transcoder
             .encode(constructor, args)
@@ -381,7 +384,7 @@ where
         constructor: &str,
         args: &[S],
         salt: Vec<u8>,
-        endowment: Option<BalanceOf<Config::Runtime>>,
+        endowment: Option<BalanceOf<T::Runtime>>,
     ) -> Result<Self, SessionError> {
         self.deploy_bundle(contract_file, constructor, args, salt, endowment)
             .map(|_| self)
@@ -393,10 +396,7 @@ where
     }
 
     /// Uploads a raw contract code. In case of success returns the code hash.
-    pub fn upload(
-        &mut self,
-        contract_bytes: Vec<u8>,
-    ) -> Result<HashFor<Config::Runtime>, SessionError> {
+    pub fn upload(&mut self, contract_bytes: Vec<u8>) -> Result<HashFor<T::Runtime>, SessionError> {
         let result = self.sandbox.upload_contract(
             contract_bytes,
             self.actor.clone(),
@@ -422,7 +422,7 @@ where
     pub fn upload_bundle(
         &mut self,
         contract_file: ContractBundle,
-    ) -> Result<HashFor<Config::Runtime>, SessionError> {
+    ) -> Result<HashFor<T::Runtime>, SessionError> {
         self.upload(contract_file.wasm)
     }
 
@@ -431,7 +431,7 @@ where
         mut self,
         message: &str,
         args: &[S],
-        endowment: Option<BalanceOf<Config::Runtime>>,
+        endowment: Option<BalanceOf<T::Runtime>>,
     ) -> Result<Self, SessionError> {
         // We ignore result, so we can pass `()` as the message result type, which will never fail
         // at decoding.
@@ -442,10 +442,10 @@ where
     /// Calls the last deployed contract. In case of a successful call, returns `self`.
     pub fn call_with_address_and<S: AsRef<str> + Debug>(
         mut self,
-        address: AccountIdFor<Config::Runtime>,
+        address: AccountIdFor<T::Runtime>,
         message: &str,
         args: &[S],
-        endowment: Option<BalanceOf<Config::Runtime>>,
+        endowment: Option<BalanceOf<T::Runtime>>,
     ) -> Result<Self, SessionError> {
         // We ignore result, so we can pass `()` as the message result type, which will never fail
         // at decoding.
@@ -454,35 +454,35 @@ where
     }
 
     /// Calls the last deployed contract. In case of a successful call, returns the encoded result.
-    pub fn call<S: AsRef<str> + Debug, T: Decode>(
+    pub fn call<S: AsRef<str> + Debug, V: Decode>(
         &mut self,
         message: &str,
         args: &[S],
-        endowment: Option<BalanceOf<Config::Runtime>>,
-    ) -> Result<MessageResult<T>, SessionError> {
-        self.call_internal::<_, T>(None, message, args, endowment)
+        endowment: Option<BalanceOf<T::Runtime>>,
+    ) -> Result<MessageResult<V>, SessionError> {
+        self.call_internal::<_, V>(None, message, args, endowment)
     }
 
     /// Calls a contract with a given address. In case of a successful call, returns the encoded
     /// result.
-    pub fn call_with_address<S: AsRef<str> + Debug, T: Decode>(
+    pub fn call_with_address<S: AsRef<str> + Debug, V: Decode>(
         &mut self,
-        address: AccountIdFor<Config::Runtime>,
+        address: AccountIdFor<T::Runtime>,
         message: &str,
         args: &[S],
-        endowment: Option<BalanceOf<Config::Runtime>>,
-    ) -> Result<MessageResult<T>, SessionError> {
+        endowment: Option<BalanceOf<T::Runtime>>,
+    ) -> Result<MessageResult<V>, SessionError> {
         self.call_internal(Some(address), message, args, endowment)
     }
 
     /// Performs a dry run of a contract call.
     pub fn dry_run_call<S: AsRef<str> + Debug>(
         &mut self,
-        address: AccountIdFor<Config::Runtime>,
+        address: AccountIdFor<T::Runtime>,
         message: &str,
         args: &[S],
-        endowment: Option<BalanceOf<Config::Runtime>>,
-    ) -> Result<ContractExecResultFor<Config::Runtime>, SessionError> {
+        endowment: Option<BalanceOf<T::Runtime>>,
+    ) -> Result<ContractExecResultFor<T::Runtime>, SessionError> {
         let data = self
             .transcoders
             .get(&address)
@@ -504,13 +504,13 @@ where
         }))
     }
 
-    fn call_internal<S: AsRef<str> + Debug, T: Decode>(
+    fn call_internal<S: AsRef<str> + Debug, V: Decode>(
         &mut self,
-        address: Option<AccountIdFor<Config::Runtime>>,
+        address: Option<AccountIdFor<T::Runtime>>,
         message: &str,
         args: &[S],
-        endowment: Option<BalanceOf<Config::Runtime>>,
-    ) -> Result<MessageResult<T>, SessionError> {
+        endowment: Option<BalanceOf<T::Runtime>>,
+    ) -> Result<MessageResult<V>, SessionError> {
         let address = match address {
             Some(address) => address,
             None => self
@@ -545,7 +545,7 @@ where
             Ok(exec_result) if exec_result.did_revert() => Err(SessionError::CallReverted),
             Ok(exec_result) => {
                 self.record.push_call_return(exec_result.data.clone());
-                self.record.last_call_return_decoded::<T>()
+                self.record.last_call_return_decoded::<V>()
             }
             Err(err) => Err(SessionError::CallFailed(*err)),
         };
