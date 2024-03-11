@@ -4,8 +4,9 @@ This example shows how we can extract events that were emitted by a contract.
 
 When you are working with a `Session` object, you can consult its `Record` - a data structure that collects all the results and events that have been produced while interacting with contracts.
 For example:
+
 ```rust
-let mut session = Session::<MinimalRuntime>::new()?;
+let mut session = Session::<MinimalSandbox>::default();
 // .. some contract interaction
 
 // `record` is a `Record` object that contains all the results and events that have been produced while interacting with contracts.
@@ -13,6 +14,7 @@ let record = session.record();
 ```
 
 Given a `Record` object, we can extract the results of the contract interaction:
+
 ```rust
 // `deploy_returns` returns a vector of contract addresses that have been deployed during the session.
 let all_deployed_contracts = record.deploy_returns();
@@ -21,6 +23,7 @@ let last_call_value = record.last_call_return_decoded::<CustomType>();
 ```
 
 as well as the events that have been emitted by contracts:
+
 ```rust
 // `last_event_batch` returns the batch of runtime events that have been emitted during last contract interaction.
 let last_event_batch = record.last_event_batch();

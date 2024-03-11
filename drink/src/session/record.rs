@@ -5,7 +5,8 @@ use parity_scale_codec::{Decode, Encode};
 
 use crate::{
     errors::MessageResult,
-    runtime::{minimal::RuntimeEvent, AccountIdFor, MinimalRuntime},
+    minimal::MinimalSandboxRuntime,
+    runtime::{minimal::RuntimeEvent, AccountIdFor},
     session::{error::SessionError, BalanceOf},
     EventRecordOf,
 };
@@ -143,20 +144,22 @@ impl<R: frame_system::Config> EventBatch<R> {
     }
 }
 
-impl EventBatch<MinimalRuntime> {
+impl EventBatch<MinimalSandboxRuntime> {
     /// Returns all the contract events that were emitted during the contract interaction.
     ///
     /// **WARNING**: This method will return all the events that were emitted by ANY contract. If your
     /// call triggered multiple contracts, you will have to filter the events yourself.
     ///
     /// We have to match against static enum variant, and thus (at least for now) we support only
-    /// `MinimalRuntime`.
+    /// `MinimalSandbox`.
     pub fn contract_events(&self) -> Vec<&[u8]> {
         self.events
             .iter()
             .filter_map(|event| match &event.event {
                 RuntimeEvent::Contracts(
-                    pallet_contracts::Event::<MinimalRuntime>::ContractEmitted { data, .. },
+                    pallet_contracts::Event::<MinimalSandboxRuntime>::ContractEmitted {
+                        data, ..
+                    },
                 ) => Some(data.as_slice()),
                 _ => None,
             })

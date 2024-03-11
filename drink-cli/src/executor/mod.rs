@@ -5,7 +5,7 @@ use std::env;
 
 use anyhow::Result;
 use clap::Parser;
-use drink::Weight;
+use drink::{sandbox::prelude::*, Weight};
 use sp_core::crypto::AccountId32;
 
 use crate::{app_state::AppState, cli::CliCommand};
@@ -67,12 +67,7 @@ pub fn execute(app_state: &mut AppState) -> Result<()> {
 }
 
 fn build_blocks(app_state: &mut AppState, count: u32) {
-    app_state.chain_info.block_height = app_state
-        .session
-        .sandbox()
-        .build_blocks(count)
-        .expect("Failed to build block - chain is broken");
-
+    app_state.chain_info.block_height = app_state.session.sandbox().build_blocks(count);
     app_state.print(&format!("{count} blocks built"));
 }
 
@@ -80,7 +75,7 @@ fn add_tokens(app_state: &mut AppState, recipient: AccountId32, value: u128) -> 
     app_state
         .session
         .sandbox()
-        .mint_into(recipient.clone(), value)
+        .mint_into(&recipient, value)
         .map_err(|err| anyhow::format_err!("Failed to add token: {err:?}"))?;
     app_state.print(&format!("{value} tokens added to {recipient}",));
     Ok(())

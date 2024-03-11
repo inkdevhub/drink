@@ -30,10 +30,11 @@ mod counter {
 mod tests {
     use drink::{
         frame_support::sp_runtime::ModuleError,
-        minimal::RuntimeCall,
         pallet_balances,
+        runtime::{minimal::RuntimeCall, MinimalSandbox},
+        sandbox::prelude::*,
         session::{Session, NO_ARGS, NO_ENDOWMENT, NO_SALT},
-        AccountId32, DispatchError, MinimalRuntime, Sandbox, SandboxConfig,
+        AccountId32, DispatchError,
     };
 
     #[drink::contract_bundle_provider]
@@ -87,7 +88,7 @@ mod tests {
 
     #[test]
     fn we_can_dry_run_normal_runtime_transaction() {
-        let mut sandbox = Sandbox::<MinimalRuntime>::new().expect("Failed to create sandbox");
+        let mut sandbox = MinimalSandbox::default();
 
         // Bob will be the recipient of the transfer.
         let bob = AccountId32::new([2u8; 32]);
@@ -103,7 +104,7 @@ mod tests {
                         dest: bob.clone().into(),
                         value: 100,
                     }),
-                    Some(MinimalRuntime::default_actor()),
+                    Some(MinimalSandbox::default_actor()),
                 )
                 .expect("Failed to execute a call")
         });

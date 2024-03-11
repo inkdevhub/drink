@@ -15,11 +15,6 @@ scale-info = { version = "2.6", default-features = false, features = ["derive"],
 [dev-dependencies]
 drink = { path = "../../drink" }
 
-# testing custom runtime
-frame-support = "30.0.0"
-frame-system = "30.0.0"
-
-
 [lib]
 path = "lib.rs"
 

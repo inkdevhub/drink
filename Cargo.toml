@@ -32,6 +32,7 @@ crossterm = { version = "0.26.0" }
 darling = { version = "0.20.3" }
 parity-scale-codec = { version = "3.6.9" }
 parity-scale-codec-derive = { version = "3.6.9" }
+paste = { version = "1.0.7" }
 proc-macro2 = { version = "1" }
 quote = { version = "1" }
 ratatui = { version = "0.21.0" }

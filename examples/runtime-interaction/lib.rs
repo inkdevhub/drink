@@ -3,21 +3,22 @@ mod tests {
     use drink::{
         pallet_balances, pallet_contracts,
         pallet_contracts::Determinism,
-        runtime::{minimal::RuntimeCall, MinimalRuntime},
-        AccountId32, Sandbox, SandboxConfig,
+        runtime::{minimal::RuntimeCall, MinimalSandbox},
+        sandbox::prelude::*,
+        AccountId32,
     };
 
     #[test]
     fn we_can_make_a_token_transfer_call() {
         // We create a sandbox object, which represents a blockchain runtime.
-        let mut sandbox = Sandbox::<MinimalRuntime>::new().expect("Failed to create sandbox");
+        let mut sandbox = MinimalSandbox::default();
 
         // Bob will be the recipient of the transfer.
         const BOB: AccountId32 = AccountId32::new([2u8; 32]);
 
         // Firstly, let us check that the recipient account (`BOB`) is not the default actor, that
         // will be used as the caller.
-        assert_ne!(MinimalRuntime::default_actor(), BOB);
+        assert_ne!(MinimalSandbox::default_actor(), BOB);
 
         // Recipient's balance before the transfer.
         let initial_balance = sandbox.free_balance(&BOB);
@@ -30,7 +31,7 @@ mod tests {
 
         // Submit the call to the runtime.
         sandbox
-            .runtime_call(call_object, Some(MinimalRuntime::default_actor()))
+            .runtime_call(call_object, Some(MinimalSandbox::default_actor()))
             .expect("Failed to execute a call");
 
         // In the end, the recipient's balance should be increased by 100.
@@ -39,14 +40,14 @@ mod tests {
 
     #[test]
     fn we_can_work_with_the_contracts_pallet_in_low_level() {
-        let mut sandbox = Sandbox::<MinimalRuntime>::new().expect("Failed to create sandbox");
+        let mut sandbox = MinimalSandbox::default();
 
         // A few runtime calls are also available directly from the sandbox. This includes a part of
         // the contracts API.
         let upload_result = sandbox
             .upload_contract(
                 wat::parse_str(CONTRACT).unwrap(),
-                MinimalRuntime::default_actor(),
+                MinimalSandbox::default_actor(),
                 None,
                 Determinism::Enforced,
             )
@@ -59,7 +60,7 @@ mod tests {
         });
 
         sandbox
-            .runtime_call(call_object, Some(MinimalRuntime::default_actor()))
+            .runtime_call(call_object, Some(MinimalSandbox::default_actor()))
             .expect("Failed to remove a contract");
     }
 
