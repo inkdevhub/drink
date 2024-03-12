@@ -18,15 +18,15 @@ homepage = "https://github.com/Cardinal-Cryptography/drink"
 license = "Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/Cardinal-Cryptography/drink"
-version = "0.13.0"
+version = "0.14.0"
 
 [workspace.dependencies]
 anyhow = { version = "1.0.71" }
 cargo_metadata = { version = "0.18.1" }
 clap = { version = "4.3.4" }
-contract-build = { version = "4.0.0-rc.4" }
-contract-metadata = { version = "4.0.0-rc.4" }
-contract-transcode = { version = "4.0.0-rc.4" }
+contract-build = { version = "4.0.0" }
+contract-metadata = { version = "4.0.0" }
+contract-transcode = { version = "4.0.0" }
 convert_case = { version = "0.6.0" }
 crossterm = { version = "0.26.0" }
 darling = { version = "0.20.3" }
@@ -58,5 +58,5 @@ sp-runtime-interface = { version = "26.0.0" }
 
 # Local dependencies
 
-drink = { version = "=0.13.0", path = "drink" }
-drink-test-macro = { version = "=0.13.0", path = "drink/test-macro" }
+drink = { version = "=0.14.0", path = "drink" }
+drink-test-macro = { version = "=0.14.0", path = "drink/test-macro" }
