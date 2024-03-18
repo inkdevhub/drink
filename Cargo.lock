@@ -1295,20 +1295,13 @@ dependencies = [
  "contract-metadata",
  "contract-transcode",
  "drink-test-macro",
- "frame-metadata",
  "frame-support",
  "frame-system",
- "pallet-balances",
- "pallet-contracts",
- "pallet-contracts-uapi-next",
- "pallet-timestamp",
+ "ink_sandbox",
  "parity-scale-codec",
  "parity-scale-codec-derive",
- "paste",
  "scale-info",
  "serde_json",
- "sp-externalities",
- "sp-io",
  "sp-runtime-interface",
  "thiserror",
  "wat",
@@ -1324,9 +1317,8 @@ dependencies = [
  "contract-transcode",
  "crossterm 0.26.1",
  "drink",
- "pallet-contracts",
+ "ink_sandbox",
  "ratatui",
- "sp-core",
  "thiserror",
 ]
 
@@ -2300,6 +2292,25 @@ dependencies = [
  "scale-encode",
  "scale-info",
  "xxhash-rust",
+]
+
+[[package]]
+name = "ink_sandbox"
+version = "5.0.0"
+dependencies = [
+ "frame-metadata",
+ "frame-support",
+ "frame-system",
+ "pallet-balances",
+ "pallet-contracts",
+ "pallet-timestamp",
+ "parity-scale-codec",
+ "paste",
+ "scale-info",
+ "sp-core",
+ "sp-externalities",
+ "sp-io",
+ "wat",
 ]
 
 [[package]]

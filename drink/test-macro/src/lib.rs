@@ -45,10 +45,10 @@ type SynResult<T> = Result<T, syn::Error>;
 ///
 /// The macro will also create a new mutable session object and pass it to the decorated function by value. You can
 /// configure which sandbox should be used (by specifying a path to a type implementing
-/// `drink::runtime::Sandbox` trait. Thus, your testcase function should accept a single argument:
+/// `ink_sandbox::Sandbox` trait. Thus, your testcase function should accept a single argument:
 /// `mut session: Session<_>`.
 ///
-/// By default, the macro will use `drink::runtime::MinimalSandbox`.
+/// By default, the macro will use `drink::minimal::MinimalSandbox`.
 ///
 /// # Example
 ///
@@ -92,7 +92,7 @@ fn test_internal(attr: TokenStream2, item: TokenStream2) -> SynResult<TokenStrea
 
     let sandbox = macro_args
         .sandbox
-        .unwrap_or(syn::parse2(quote! { ::drink::runtime::MinimalSandbox })?);
+        .unwrap_or(syn::parse2(quote! { ::drink::minimal::MinimalSandbox })?);
 
     Ok(quote! {
         #[test]

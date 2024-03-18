@@ -5,8 +5,7 @@ use std::env;
 
 use anyhow::Result;
 use clap::Parser;
-use drink::{sandbox::prelude::*, Weight};
-use sp_core::crypto::AccountId32;
+use drink::{sandbox_api::prelude::*, AccountId32, Weight};
 
 use crate::{app_state::AppState, cli::CliCommand};
 

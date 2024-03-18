@@ -1,11 +1,11 @@
 #[cfg(test)]
 mod tests {
     use drink::{
+        minimal::{MinimalSandbox, RuntimeCall},
         pallet_balances, pallet_contracts,
         pallet_contracts::Determinism,
-        runtime::{minimal::RuntimeCall, MinimalSandbox},
-        sandbox::prelude::*,
-        AccountId32,
+        sandbox_api::prelude::*,
+        AccountId32, Sandbox,
     };
 
     #[test]

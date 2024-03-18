@@ -11,18 +11,17 @@ pub use contract_transcode;
 use contract_transcode::ContractMessageTranscoder;
 use error::SessionError;
 use frame_support::{traits::fungible::Inspect, weights::Weight};
-use pallet_contracts::Determinism;
+use ink_sandbox::{
+    api::prelude::*, AccountIdFor, ContractExecResultFor, ContractInstantiateResultFor, Sandbox,
+};
 use parity_scale_codec::Decode;
 pub use record::{EventBatch, Record};
 
 use crate::{
-    runtime::{
-        pallet_contracts_debugging::{InterceptingExt, TracingExt},
-        AccountIdFor, HashFor,
-    },
-    sandbox::prelude::*,
+    minimal::MinimalSandboxRuntime,
+    pallet_contracts::{Config, Determinism},
+    pallet_contracts_debugging::{InterceptingExt, TracingExt},
     session::mock::MockRegistry,
-    ContractExecResultFor, ContractInstantiateResultFor, Sandbox, DEFAULT_GAS_LIMIT,
 };
 
 pub mod mock;
@@ -37,11 +36,13 @@ pub use bundle::ContractBundle;
 
 use self::mocking_api::MockingApi;
 use crate::{
-    errors::MessageResult, minimal::MinimalSandboxRuntime, session::transcoding::TranscoderRegistry,
+    errors::MessageResult,
+    // minimal::MinimalSandboxRuntime,
+    session::transcoding::TranscoderRegistry,
 };
 
-type BalanceOf<R> =
-    <<R as pallet_contracts::Config>::Currency as Inspect<AccountIdFor<R>>>::Balance;
+type BalanceOf<R> = <<R as Config>::Currency as Inspect<AccountIdFor<R>>>::Balance;
+type HashFor<R> = <R as frame_system::Config>::Hash;
 
 /// Convenient value for an empty sequence of call/instantiation arguments.
 ///
@@ -64,11 +65,11 @@ pub const NO_ENDOWMENT: Option<BalanceOf<MinimalSandboxRuntime>> = None;
 /// ```rust, no_run
 /// # use std::rc::Rc;
 /// # use contract_transcode::ContractMessageTranscoder;
+/// # use ink_sandbox::AccountId32;
 /// # use drink::{
 /// #   session::Session,
-/// #   AccountId32,
 /// #   session::{NO_ARGS, NO_SALT, NO_ENDOWMENT},
-/// #   runtime::MinimalSandbox
+/// #   minimal::MinimalSandbox
 /// # };
 /// #
 /// # fn get_transcoder() -> Rc<ContractMessageTranscoder> {
@@ -91,10 +92,10 @@ pub const NO_ENDOWMENT: Option<BalanceOf<MinimalSandboxRuntime>> = None;
 /// ```rust, no_run
 /// # use std::rc::Rc;
 /// # use contract_transcode::ContractMessageTranscoder;
+/// # use ink_sandbox::AccountId32;
 /// # use drink::{
 /// #   session::Session,
-/// #   AccountId32,
-/// #   runtime::MinimalSandbox,
+/// #   minimal::MinimalSandbox,
 /// #   session::{NO_ARGS, NO_ENDOWMENT, NO_SALT}
 /// # };
 /// # fn get_transcoder() -> Rc<ContractMessageTranscoder> {
@@ -119,7 +120,7 @@ pub const NO_ENDOWMENT: Option<BalanceOf<MinimalSandboxRuntime>> = None;
 /// #   local_contract_file,
 /// #   session::Session,
 /// #   session::{ContractBundle, NO_ARGS, NO_SALT, NO_ENDOWMENT},
-/// #   runtime::MinimalSandbox,
+/// #   minimal::MinimalSandbox
 /// # };
 ///
 /// # fn main() -> Result<(), drink::session::error::SessionError> {
@@ -135,7 +136,7 @@ pub const NO_ENDOWMENT: Option<BalanceOf<MinimalSandboxRuntime>> = None;
 /// ```
 pub struct Session<T: Sandbox>
 where
-    T::Runtime: pallet_contracts::Config,
+    T::Runtime: Config,
 {
     sandbox: T,
 
@@ -150,7 +151,7 @@ where
 
 impl<T: Sandbox> Default for Session<T>
 where
-    T::Runtime: pallet_contracts::Config,
+    T::Runtime: Config,
     T: Default,
 {
     fn default() -> Self {
@@ -164,7 +165,7 @@ where
             sandbox,
             mocks,
             actor: T::default_actor(),
-            gas_limit: DEFAULT_GAS_LIMIT,
+            gas_limit: T::default_gas_limit(),
             determinism: Determinism::Enforced,
             transcoders: TranscoderRegistry::new(),
             record: Default::default(),
@@ -174,7 +175,7 @@ where
 
 impl<T: Sandbox> Session<T>
 where
-    T::Runtime: pallet_contracts::Config,
+    T::Runtime: Config,
 {
     /// Sets a new actor and returns updated `self`.
     pub fn with_actor(self, actor: AccountIdFor<T::Runtime>) -> Self {

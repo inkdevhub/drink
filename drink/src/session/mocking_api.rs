@@ -1,11 +1,15 @@
 //! Mocking API for the sandbox.
+use ink_sandbox::{api::prelude::*, AccountIdFor, Sandbox};
+
 use super::Session;
 use crate::{
-    runtime::AccountIdFor, sandbox::prelude::*, session::mock::ContractMock, DEFAULT_GAS_LIMIT,
+    pallet_contracts::Config,
+    session::mock::ContractMock,
+    // DEFAULT_GAS_LIMIT,
 };
 
 /// Interface for basic mocking operations.
-pub trait MockingApi<R: pallet_contracts::Config> {
+pub trait MockingApi<R: Config> {
     /// Deploy `mock` as a standard contract. Returns the address of the deployed contract.
     fn deploy(&mut self, mock: ContractMock) -> AccountIdFor<R>;
 
@@ -16,7 +20,7 @@ pub trait MockingApi<R: pallet_contracts::Config> {
 
 impl<T: Sandbox> MockingApi<T::Runtime> for Session<T>
 where
-    T::Runtime: pallet_contracts::Config,
+    T::Runtime: Config,
 {
     fn deploy(&mut self, mock: ContractMock) -> AccountIdFor<T::Runtime> {
         // We have to deploy some contract. We use a dummy contract for that. Thanks to that, we
@@ -37,7 +41,7 @@ where
                 vec![],
                 salt,
                 T::default_actor(),
-                DEFAULT_GAS_LIMIT,
+                T::default_gas_limit(),
                 None,
             )
             .result
