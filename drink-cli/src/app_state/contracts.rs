@@ -1,7 +1,7 @@
 use std::{path::PathBuf, rc::Rc};
 
 use contract_transcode::ContractMessageTranscoder;
-use sp_core::crypto::AccountId32;
+use drink::AccountId32;
 use ContractIndex::NoContracts;
 
 use crate::app_state::ContractIndex::CurrentContract;

@@ -1,14 +1,14 @@
 use std::rc::Rc;
 
 use contract_transcode::{ContractMessageTranscoder, Value};
+use frame_system::Config as SysConfig;
+use ink_sandbox::{pallet_contracts, AccountIdFor, EventRecordOf};
 use parity_scale_codec::{Decode, Encode};
 
 use crate::{
     errors::MessageResult,
-    minimal::MinimalSandboxRuntime,
-    runtime::{minimal::RuntimeEvent, AccountIdFor},
+    minimal::{MinimalSandboxRuntime, RuntimeEvent},
     session::{error::SessionError, BalanceOf},
-    EventRecordOf,
 };
 
 type ContractInstantiateResult<R> =
@@ -133,11 +133,11 @@ impl<Config: pallet_contracts::Config> Record<Config> {
 }
 
 /// A batch of runtime events that were emitted during a single contract interaction.
-pub struct EventBatch<R: frame_system::Config> {
+pub struct EventBatch<R: SysConfig> {
     events: Vec<EventRecordOf<R>>,
 }
 
-impl<R: frame_system::Config> EventBatch<R> {
+impl<R: SysConfig> EventBatch<R> {
     /// Returns all the events that were emitted during the contract interaction.
     pub fn all_events(&self) -> &[EventRecordOf<R>] {
         &self.events

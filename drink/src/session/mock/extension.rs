@@ -1,11 +1,11 @@
 use std::sync::{Arc, Mutex};
 
-use pallet_contracts::{chain_extension::ReturnFlags, debug::ExecResult, ExecReturnValue};
 use parity_scale_codec::{Decode, Encode};
 
 use crate::{
     errors::MessageResult,
-    runtime::pallet_contracts_debugging::InterceptingExtT,
+    pallet_contracts::{chain_extension::ReturnFlags, debug::ExecResult, ExecReturnValue},
+    pallet_contracts_debugging::InterceptingExtT,
     session::mock::{MockRegistry, Selector},
 };
 

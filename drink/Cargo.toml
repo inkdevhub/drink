@@ -12,20 +12,13 @@ description = "Minimal sufficient architecture that allows for a fully functiona
 [dependencies]
 contract-metadata = { workspace = true, optional = true}
 contract-transcode = { workspace = true, optional = true }
-frame-metadata = { workspace = true }
 frame-support = { workspace = true }
 frame-system = { workspace = true }
-pallet-balances = { workspace = true }
-pallet-contracts = { workspace = true }
-pallet-contracts-uapi = { workspace = true }
-pallet-timestamp = { workspace = true }
 parity-scale-codec = { workspace = true }
 parity-scale-codec-derive = { workspace = true }
-sp-externalities = { workspace = true }
-sp-io = { workspace = true }
 sp-runtime-interface = { workspace = true }
+ink_sandbox = { workspace = true }
 
-paste = { workspace = true }
 scale-info = { workspace = true }
 serde_json = { workspace = true, optional = true }
 thiserror = { workspace = true }

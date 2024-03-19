@@ -36,7 +36,7 @@ mod contract_calling_chain_extension {
 #[cfg(test)]
 mod tests {
     use drink::{
-        create_minimal_sandbox,
+        create_sandbox,
         session::{Session, NO_ARGS, NO_ENDOWMENT, NO_SALT},
     };
 
@@ -46,9 +46,10 @@ mod tests {
     enum BundleProvider {}
 
     // We can inject arbitrary chain extension into the minimal runtime as follows:
-    create_minimal_sandbox!(
+    create_sandbox!(
         SandboxWithCE,
-        crate::chain_extension_runtime_side::StakingExtension
+        crate::chain_extension_runtime_side::StakingExtension,
+        drink::pallet_contracts_debugging::DrinkDebug
     );
 
     /// Test that we can call chain extension from ink! contract and get a correct result.

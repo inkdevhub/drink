@@ -30,11 +30,11 @@ mod counter {
 mod tests {
     use drink::{
         frame_support::sp_runtime::ModuleError,
+        minimal::{MinimalSandbox, RuntimeCall},
         pallet_balances,
-        runtime::{minimal::RuntimeCall, MinimalSandbox},
-        sandbox::prelude::*,
+        sandbox_api::prelude::*,
         session::{Session, NO_ARGS, NO_ENDOWMENT, NO_SALT},
-        AccountId32, DispatchError,
+        AccountId32, DispatchError, Sandbox,
     };
 
     #[drink::contract_bundle_provider]

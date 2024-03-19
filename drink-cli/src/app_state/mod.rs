@@ -1,8 +1,7 @@
 use std::{env, path::PathBuf};
 
 pub use contracts::{Contract, ContractIndex, ContractRegistry};
-use drink::{runtime::MinimalSandbox, session::Session, Sandbox, Weight, DEFAULT_GAS_LIMIT};
-use sp_core::crypto::AccountId32;
+use drink::{minimal::MinimalSandbox, session::Session, AccountId32, Sandbox, Weight};
 pub use user_input::UserInput;
 
 use crate::app_state::output::Output;
@@ -24,7 +23,7 @@ impl Default for ChainInfo {
         Self {
             block_height: 0,
             actor: MinimalSandbox::default_actor(),
-            gas_limit: DEFAULT_GAS_LIMIT,
+            gas_limit: MinimalSandbox::default_gas_limit(),
         }
     }
 }

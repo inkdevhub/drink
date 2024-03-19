@@ -1,5 +1,5 @@
 use clap::Parser;
-use sp_core::crypto::{AccountId32, Ss58Codec};
+use drink::{AccountId32, Ss58Codec};
 
 #[derive(Parser)]
 pub enum CliCommand {

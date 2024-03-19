@@ -1,5 +1,4 @@
-use drink::contracts_api::decode_debug_buffer;
-use pallet_contracts::ContractResult;
+use drink::{pallet_contracts::ContractResult, sandbox_api::contracts_api::decode_debug_buffer};
 use ratatui::{
     style::{Color, Modifier, Style},
     text::Span,

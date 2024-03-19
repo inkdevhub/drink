@@ -1,11 +1,14 @@
-use pallet_contracts::{
-    debug::{CallSpan, ExportedFunction},
-    ExecReturnValue, Tracing,
+use ink_sandbox::AccountIdFor;
+
+use crate::{
+    pallet_contracts::{
+        debug::{CallSpan, ExportedFunction},
+        Config, ExecReturnValue, Tracing,
+    },
+    pallet_contracts_debugging::DrinkDebug,
 };
 
-use crate::runtime::{pallet_contracts_debugging::DrinkDebug, AccountIdFor};
-
-impl<R: pallet_contracts::Config> Tracing<R> for DrinkDebug {
+impl<R: Config> Tracing<R> for DrinkDebug {
     type CallSpan = DrinkCallSpan<AccountIdFor<R>>;
 
     fn new_call_span(
@@ -36,7 +39,7 @@ pub struct DrinkCallSpan<AccountId> {
 
 impl<AccountId: parity_scale_codec::Encode> CallSpan for DrinkCallSpan<AccountId> {
     fn after_call(self, output: &ExecReturnValue) {
-        crate::runtime::pallet_contracts_debugging::runtime::contract_call_debugger::after_call(
+        crate::pallet_contracts_debugging::runtime::contract_call_debugger::after_call(
             self.contract_address.encode(),
             matches!(self.entry_point, ExportedFunction::Call),
             self.input_data.to_vec(),

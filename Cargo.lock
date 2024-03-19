@@ -1290,25 +1290,18 @@ checksum = "9ea835d29036a4087793836fa931b08837ad5e957da9e23886b29586fb9b6650"
 
 [[package]]
 name = "drink"
-version = "0.14.0"
+version = "0.15.0"
 dependencies = [
  "contract-metadata",
  "contract-transcode",
  "drink-test-macro",
- "frame-metadata",
  "frame-support",
  "frame-system",
- "pallet-balances",
- "pallet-contracts",
- "pallet-contracts-uapi-next",
- "pallet-timestamp",
+ "ink_sandbox",
  "parity-scale-codec",
  "parity-scale-codec-derive",
- "paste",
  "scale-info",
  "serde_json",
- "sp-externalities",
- "sp-io",
  "sp-runtime-interface",
  "thiserror",
  "wat",
@@ -1316,7 +1309,7 @@ dependencies = [
 
 [[package]]
 name = "drink-cli"
-version = "0.14.0"
+version = "0.15.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -1324,15 +1317,14 @@ dependencies = [
  "contract-transcode",
  "crossterm 0.26.1",
  "drink",
- "pallet-contracts",
+ "ink_sandbox",
  "ratatui",
- "sp-core",
  "thiserror",
 ]
 
 [[package]]
 name = "drink-test-macro"
-version = "0.14.0"
+version = "0.15.0"
 dependencies = [
  "cargo_metadata",
  "contract-build",
@@ -2300,6 +2292,27 @@ dependencies = [
  "scale-encode",
  "scale-info",
  "xxhash-rust",
+]
+
+[[package]]
+name = "ink_sandbox"
+version = "5.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "503461a34d86043375b4206fec7c3f46e9efafa7b6617290ad3430142296801a"
+dependencies = [
+ "frame-metadata",
+ "frame-support",
+ "frame-system",
+ "pallet-balances",
+ "pallet-contracts",
+ "pallet-timestamp",
+ "parity-scale-codec",
+ "paste",
+ "scale-info",
+ "sp-core",
+ "sp-externalities",
+ "sp-io",
+ "wat",
 ]
 
 [[package]]

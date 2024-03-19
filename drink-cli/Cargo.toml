@@ -18,7 +18,5 @@ contract-transcode = { workspace = true }
 ratatui = { workspace = true, features = ["all-widgets"]  }
 thiserror = { workspace = true }
 
-pallet-contracts = { workspace = true }
-sp-core = { workspace = true, features = ["serde"] }
-
+ink_sandbox = { workspace = true }
 drink = { workspace = true, features = ["session"] }
