@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use contract_transcode::{ContractMessageTranscoder, Value};
 use frame_system::Config as SysConfig;
@@ -176,7 +176,7 @@ impl EventBatch<MinimalSandboxRuntime> {
     /// **WARNING 2**: This method will ignore anonymous events.
     pub fn contract_events_decoded(
         &self,
-        transcoder: &Rc<ContractMessageTranscoder>,
+        transcoder: &Arc<ContractMessageTranscoder>,
     ) -> Vec<Value> {
         let signature_topics = transcoder
             .metadata()

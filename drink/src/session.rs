@@ -3,7 +3,6 @@
 use std::{
     fmt::Debug,
     mem,
-    rc::Rc,
     sync::{Arc, Mutex},
 };
 
@@ -63,7 +62,7 @@ pub const NO_ENDOWMENT: Option<BalanceOf<MinimalSandboxRuntime>> = None;
 ///
 /// `Session` has two APIs: chain-ish and for singular actions. The first one can be used like:
 /// ```rust, no_run
-/// # use std::rc::Rc;
+/// # use std::sync::Arc;
 /// # use contract_transcode::ContractMessageTranscoder;
 /// # use ink_sandbox::AccountId32;
 /// # use drink::{
@@ -72,8 +71,8 @@ pub const NO_ENDOWMENT: Option<BalanceOf<MinimalSandboxRuntime>> = None;
 /// #   minimal::MinimalSandbox
 /// # };
 /// #
-/// # fn get_transcoder() -> Rc<ContractMessageTranscoder> {
-/// #   Rc::new(ContractMessageTranscoder::load("").unwrap())
+/// # fn get_transcoder() -> Arc<ContractMessageTranscoder> {
+/// #   Arc::new(ContractMessageTranscoder::load("").unwrap())
 /// # }
 /// # fn contract_bytes() -> Vec<u8> { vec![] }
 /// # fn bob() -> AccountId32 { AccountId32::new([0; 32]) }
@@ -90,7 +89,7 @@ pub const NO_ENDOWMENT: Option<BalanceOf<MinimalSandboxRuntime>> = None;
 ///
 /// The second one serves for one-at-a-time actions:
 /// ```rust, no_run
-/// # use std::rc::Rc;
+/// # use std::sync::Arc;
 /// # use contract_transcode::ContractMessageTranscoder;
 /// # use ink_sandbox::AccountId32;
 /// # use drink::{
@@ -98,8 +97,8 @@ pub const NO_ENDOWMENT: Option<BalanceOf<MinimalSandboxRuntime>> = None;
 /// #   minimal::MinimalSandbox,
 /// #   session::{NO_ARGS, NO_ENDOWMENT, NO_SALT}
 /// # };
-/// # fn get_transcoder() -> Rc<ContractMessageTranscoder> {
-/// #   Rc::new(ContractMessageTranscoder::load("").unwrap())
+/// # fn get_transcoder() -> Arc<ContractMessageTranscoder> {
+/// #   Arc::new(ContractMessageTranscoder::load("").unwrap())
 /// # }
 /// # fn contract_bytes() -> Vec<u8> { vec![] }
 /// # fn bob() -> AccountId32 { AccountId32::new([0; 32]) }
@@ -224,7 +223,7 @@ where
     pub fn with_transcoder(
         mut self,
         contract_address: AccountIdFor<T::Runtime>,
-        transcoder: &Rc<ContractMessageTranscoder>,
+        transcoder: &Arc<ContractMessageTranscoder>,
     ) -> Self {
         self.set_transcoder(contract_address, transcoder);
         self
@@ -234,7 +233,7 @@ where
     pub fn set_transcoder(
         &mut self,
         contract_address: AccountIdFor<T::Runtime>,
-        transcoder: &Rc<ContractMessageTranscoder>,
+        transcoder: &Arc<ContractMessageTranscoder>,
     ) {
         self.transcoders.register(contract_address, transcoder);
     }
@@ -263,7 +262,7 @@ where
         args: &[S],
         salt: Vec<u8>,
         endowment: Option<BalanceOf<T::Runtime>>,
-        transcoder: &Rc<ContractMessageTranscoder>,
+        transcoder: &Arc<ContractMessageTranscoder>,
     ) -> Result<Self, SessionError> {
         self.deploy(
             contract_bytes,
@@ -292,7 +291,7 @@ where
         args: &[S],
         salt: Vec<u8>,
         endowment: Option<BalanceOf<T::Runtime>>,
-        transcoder: &Rc<ContractMessageTranscoder>,
+        transcoder: &Arc<ContractMessageTranscoder>,
     ) -> Result<AccountIdFor<T::Runtime>, SessionError> {
         let data = transcoder
             .encode(constructor, args)

@@ -1,6 +1,6 @@
 //! This module provides simple utilities for loading and parsing `.contract` files in context of `drink` tests.
 
-use std::{path::PathBuf, rc::Rc};
+use std::{path::PathBuf, sync::Arc};
 
 use contract_metadata::ContractMetadata;
 use contract_transcode::ContractMessageTranscoder;
@@ -19,7 +19,7 @@ pub struct ContractBundle {
     /// WASM blob of the contract
     pub wasm: Vec<u8>,
     /// Transcoder derived from the ABI/metadata
-    pub transcoder: Rc<ContractMessageTranscoder>,
+    pub transcoder: Arc<ContractMessageTranscoder>,
 }
 
 impl ContractBundle {
@@ -40,7 +40,7 @@ impl ContractBundle {
                 ))
             })?;
 
-        let transcoder = Rc::new(ContractMessageTranscoder::new(ink_metadata));
+        let transcoder = Arc::new(ContractMessageTranscoder::new(ink_metadata));
 
         let wasm = metadata
             .source

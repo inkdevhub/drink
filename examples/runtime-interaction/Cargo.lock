@@ -1326,7 +1326,7 @@ checksum = "9ea835d29036a4087793836fa931b08837ad5e957da9e23886b29586fb9b6650"
 
 [[package]]
 name = "drink"
-version = "0.14.0"
+version = "0.16.0"
 dependencies = [
  "contract-metadata",
  "contract-transcode",
@@ -1345,7 +1345,7 @@ dependencies = [
 
 [[package]]
 name = "drink-test-macro"
-version = "0.14.0"
+version = "0.16.0"
 dependencies = [
  "cargo_metadata",
  "contract-build",
@@ -2338,6 +2338,8 @@ dependencies = [
 [[package]]
 name = "ink_sandbox"
 version = "5.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "503461a34d86043375b4206fec7c3f46e9efafa7b6617290ad3430142296801a"
 dependencies = [
  "frame-metadata",
  "frame-support",

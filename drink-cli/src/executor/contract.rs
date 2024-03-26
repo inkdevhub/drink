@@ -1,7 +1,7 @@
 use std::{
     fs,
     path::{Path, PathBuf},
-    rc::Rc,
+    sync::Arc,
 };
 
 use contract_build::{BuildMode, ExecuteArgs, ManifestPath, OptimizationPasses, Verbosity};
@@ -71,7 +71,7 @@ pub fn deploy(app_state: &mut AppState, constructor: String, args: Vec<String>, 
         app_state.print_error("Failed to create transcoder from metadata file.");
         return;
     };
-    let transcoder = Rc::new(transcoder);
+    let transcoder = Arc::new(transcoder);
 
     match app_state.session.deploy(
         contract_bytes,
