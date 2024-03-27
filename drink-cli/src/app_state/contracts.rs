@@ -1,4 +1,4 @@
-use std::{path::PathBuf, rc::Rc};
+use std::{path::PathBuf, sync::Arc};
 
 use contract_transcode::ContractMessageTranscoder;
 use drink::AccountId32;
@@ -10,7 +10,7 @@ pub struct Contract {
     pub name: String,
     pub address: AccountId32,
     pub base_path: PathBuf,
-    pub transcoder: Rc<ContractMessageTranscoder>,
+    pub transcoder: Arc<ContractMessageTranscoder>,
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug, Default)]
