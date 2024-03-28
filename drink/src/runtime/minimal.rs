@@ -132,6 +132,7 @@ mod construct_runtime {
         type ReserveIdentifier = [u8; 8];
         type FreezeIdentifier = ();
         type MaxLocks = ();
+        type MaxHolds = ConstU32<10>;
         type MaxReserves = ();
         type MaxFreezes = ();
         type RuntimeHoldReason = RuntimeHoldReason;
@@ -198,7 +199,6 @@ mod construct_runtime {
         type RuntimeHoldReason = RuntimeHoldReason;
         type Environment = ();
         type Xcm = ();
-        type ApiVersion = ();
     }
 
     // ------------ Implement `drink::Runtime` trait ---------------------------------------------------

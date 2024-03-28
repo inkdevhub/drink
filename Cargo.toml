@@ -45,16 +45,16 @@ wat = { version = "1.0.71" }
 # Substrate dependencies
 
 frame-metadata = { version = "16.0.0" }
-frame-support = { version = "30.0.0"}
-frame-system = { version = "30.0.0" }
-pallet-balances = { version = "30.0.0" }
-pallet-contracts = { version = "29.0.0" }
-pallet-contracts-uapi = { package = "pallet-contracts-uapi-next", version = "=6.0.3", default-features = false }
-pallet-timestamp = { version = "29.0.0"}
-sp-core = { version = "30.0.0" }
-sp-externalities = { version = "0.27.0" }
-sp-io = { version = "32.0.0" }
-sp-runtime-interface = { version = "26.0.0" }
+frame-support = { git = "https://github.com/paritytech/polkadot-sdk", branch = "at/riscv" }
+frame-system = { git = "https://github.com/paritytech/polkadot-sdk", branch = "at/riscv" }
+pallet-balances = { git = "https://github.com/paritytech/polkadot-sdk", branch = "at/riscv" }
+pallet-contracts = { git = "https://github.com/paritytech/polkadot-sdk", branch = "at/riscv" }
+pallet-contracts-uapi = { git = "https://github.com/paritytech/polkadot-sdk", branch = "at/riscv" }
+pallet-timestamp = { git = "https://github.com/paritytech/polkadot-sdk", branch = "at/riscv" }
+sp-core = { git = "https://github.com/paritytech/polkadot-sdk", branch = "at/riscv" }
+sp-externalities = { git = "https://github.com/paritytech/polkadot-sdk", branch = "at/riscv" }
+sp-io = { git = "https://github.com/paritytech/polkadot-sdk", branch = "at/riscv" }
+sp-runtime-interface = { git = "https://github.com/paritytech/polkadot-sdk", branch = "at/riscv" }
 
 # Local dependencies
 
