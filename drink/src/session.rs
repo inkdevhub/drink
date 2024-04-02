@@ -542,7 +542,9 @@ where
         });
 
         let ret = match &result.result {
-            Ok(exec_result) if exec_result.did_revert() => Err(SessionError::CallReverted),
+            Ok(exec_result) if exec_result.did_revert() => {
+                Err(SessionError::CallReverted(exec_result.data.clone()))
+            }
             Ok(exec_result) => {
                 self.record.push_call_return(exec_result.data.clone());
                 self.record.last_call_return_decoded::<V>()

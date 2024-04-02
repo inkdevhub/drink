@@ -25,8 +25,8 @@ pub enum SessionError {
     #[error("Code upload failed: {0:?}")]
     UploadFailed(DispatchError),
     /// Call has been reverted by the contract.
-    #[error("Contract call has been reverted")]
-    CallReverted,
+    #[error("Contract call has been reverted. Encoded error: {0:?}")]
+    CallReverted(Vec<u8>),
     /// Contract call failed (aborted by the pallet).
     #[error("Contract call failed before execution: {0:?}")]
     CallFailed(DispatchError),
