@@ -1,7 +1,10 @@
 //! Module exposing errors and result types for the session API.
 
 use frame_support::sp_runtime::DispatchError;
+use parity_scale_codec::Decode;
 use thiserror::Error;
+
+use crate::errors::MessageResult;
 
 /// Session specific errors.
 #[derive(Error, Debug)]
@@ -36,4 +39,16 @@ pub enum SessionError {
     /// There is no registered transcoder to encode/decode messages for the called contract.
     #[error("Missing transcoder")]
     NoTranscoder,
+}
+
+impl SessionError {
+    /// Check if the error is a revert error and if so, decode the error message.
+    pub fn decode_revert<T: Decode>(&self) -> Option<MessageResult<T>> {
+        match self {
+            SessionError::CallReverted(error) => {
+                Some(MessageResult::decode(&mut &error[..]).expect("Failed to decode error"))
+            }
+            _ => None,
+        }
+    }
 }
