@@ -463,6 +463,22 @@ where
         self.call_internal::<_, V>(None, message, args, endowment)
     }
 
+    /// Calls the last deployed contract. Expect it to be reverted and the message result to be of
+    /// type `Result<_, E>`.
+    pub fn call_and_expect_error<S: AsRef<str> + Debug, E: Debug + Decode>(
+        &mut self,
+        message: &str,
+        args: &[S],
+        endowment: Option<BalanceOf<T::Runtime>>,
+    ) -> Result<E, SessionError> {
+        Ok(self
+            .call_internal::<_, Result<(), E>>(None, message, args, endowment)
+            .expect_err("Call should fail")
+            .decode_revert::<Result<(), E>>()?
+            .expect("Call should return an error")
+            .expect_err("Call should return an error"))
+    }
+
     /// Calls a contract with a given address. In case of a successful call, returns the encoded
     /// result.
     pub fn call_with_address<S: AsRef<str> + Debug, V: Decode>(
@@ -542,7 +558,9 @@ where
         });
 
         let ret = match &result.result {
-            Ok(exec_result) if exec_result.did_revert() => Err(SessionError::CallReverted),
+            Ok(exec_result) if exec_result.did_revert() => {
+                Err(SessionError::CallReverted(exec_result.data.clone()))
+            }
             Ok(exec_result) => {
                 self.record.push_call_return(exec_result.data.clone());
                 self.record.last_call_return_decoded::<V>()
