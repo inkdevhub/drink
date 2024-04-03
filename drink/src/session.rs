@@ -470,13 +470,13 @@ where
         message: &str,
         args: &[S],
         endowment: Option<BalanceOf<T::Runtime>>,
-    ) -> E {
-        self.call_internal::<_, Result<(), E>>(None, message, args, endowment)
+    ) -> Result<E, SessionError> {
+        Ok(self
+            .call_internal::<_, Result<(), E>>(None, message, args, endowment)
             .expect_err("Call should fail")
-            .decode_revert::<Result<(), E>>()
-            .expect("Call should be reverted")
+            .decode_revert::<Result<(), E>>()?
             .expect("Call should return an error")
-            .expect_err("Call should return an error")
+            .expect_err("Call should return an error"))
     }
 
     /// Calls a contract with a given address. In case of a successful call, returns the encoded

@@ -7,7 +7,7 @@ use thiserror::Error;
 use crate::errors::MessageResult;
 
 /// Session specific errors.
-#[derive(Error, Debug)]
+#[derive(Clone, Error, Debug)]
 pub enum SessionError {
     /// Encoding data failed.
     #[error("Encoding call data failed: {0}")]
@@ -43,12 +43,12 @@ pub enum SessionError {
 
 impl SessionError {
     /// Check if the error is a revert error and if so, decode the error message.
-    pub fn decode_revert<T: Decode>(&self) -> Option<MessageResult<T>> {
+    pub fn decode_revert<T: Decode>(&self) -> Result<MessageResult<T>, Self> {
         match self {
             SessionError::CallReverted(error) => {
-                Some(MessageResult::decode(&mut &error[..]).expect("Failed to decode error"))
+                Ok(MessageResult::decode(&mut &error[..]).expect("Failed to decode error"))
             }
-            _ => None,
+            _ => Err(self.clone()),
         }
     }
 }
