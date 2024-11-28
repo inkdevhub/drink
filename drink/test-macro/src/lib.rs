@@ -21,7 +21,7 @@ type SynResult<T> = Result<T, syn::Error>;
 ///
 /// - Your crate must have `drink` in its dependencies (and it shouldn't be renamed).
 /// - You mustn't import `drink::test` in the scope, where the macro is used. In other words, you
-/// should always use the macro only with a qualified path `#[drink::test]`.
+///   should always use the macro only with a qualified path `#[drink::test]`.
 /// - Your crate cannot be part of a cargo workspace.
 ///
 /// # Impact
@@ -32,14 +32,14 @@ type SynResult<T> = Result<T, syn::Error>;
 /// Contracts to be built:
 ///  - current cargo package if contains a `ink-as-dependency` feature
 ///  - all dependencies declared in the `Cargo.toml` file with the `ink-as-dependency` feature
-/// enabled (works with non-local packages as well).
+///    enabled (works with non-local packages as well).
 ///
 /// ## Compilation features
 ///
 /// 1. The root contract package (if any) is assumed to be built without any features.
 ///
 /// 2. All contract dependencies will be built with a union of all features enabled on that package (through potentially
-/// different configurations or dependency paths), **excluding** `ink-as-dependency` and `std` features.
+///    different configurations or dependency paths), **excluding** `ink-as-dependency` and `std` features.
 ///
 /// # Creating a session object
 ///

@@ -122,13 +122,10 @@ fn find_wasm_blob(cwd: &Path) -> Option<(String, PathBuf)> {
     let Ok(entries) = fs::read_dir(cwd.join("target/ink")) else {
         return None;
     };
-    let Some(file) = entries
+    let file = entries
         .into_iter()
         .filter_map(|e| e.ok())
-        .find(|e| e.path().extension().unwrap_or_default() == "wasm")
-    else {
-        return None;
-    };
+        .find(|e| e.path().extension().unwrap_or_default() == "wasm")?;
 
     let raw_name = file
         .file_name()

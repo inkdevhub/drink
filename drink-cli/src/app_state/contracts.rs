@@ -10,6 +10,7 @@ pub struct Contract {
     pub name: String,
     pub address: AccountId32,
     pub base_path: PathBuf,
+    #[allow(dead_code)]
     pub transcoder: Arc<ContractMessageTranscoder>,
 }
 
