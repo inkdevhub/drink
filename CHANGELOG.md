@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0]
+
+### Changed
+
+- For ink! 5.1 support: Bump `ink`, `cargo-contract`, `frame-` and `sp-` crates.
+- Use Rust 1.81 as the default toolchain.
+
 ## [0.17.0]
 
 ### Added
