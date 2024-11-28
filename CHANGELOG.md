@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0]
+
+### Added
+
+- Return error when call was reverted.
+
+## [0.16.0]
+
+### Changed
+
+- Switch types from Rc to Arc.
+
 ## [0.15.0]
 
 ### Changed
